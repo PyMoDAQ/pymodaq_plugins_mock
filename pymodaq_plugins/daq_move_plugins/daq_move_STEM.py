@@ -4,8 +4,8 @@ from pymodaq.daq_utils.daq_utils import ThreadCommand
 from easydict import EasyDict as edict
 
 
-from pymodaq.plugins.hardware.STEM import orsayscan
-from pymodaq.plugins.hardware.STEM.orsayscan_position import OrsayScanPosition
+from pymodaq_plugins.hardware.STEM import orsayscan
+from pymodaq_plugins.hardware.STEM.orsayscan_position import OrsayScanPosition
 
 class DAQ_Move_STEM(DAQ_Move_base):
     """
