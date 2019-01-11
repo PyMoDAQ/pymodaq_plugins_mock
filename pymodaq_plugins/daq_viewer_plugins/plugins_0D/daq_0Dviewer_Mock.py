@@ -125,7 +125,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         """
         data_tot=[]
         data_tot_bis=[]
-        for data in self.data_mock:
+        for ind,data in enumerate(self.data_mock):
             data=np.roll(data,self.ind_data)
             if Naverage>1:
                 data_tot.append(np.array([np.mean(data[0:Naverage-1])]))

@@ -190,20 +190,21 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             set_Mock_data
         """
      
-        
+        "live is an attempt to export data as fast as possible"
         if 'live' in kwargs:
             if kwargs['live']:
                 self.live=True
+                self.live=False #don't want to use that for the moment
 
         if self.live:
             while self.live:
                 data=self.average_data(Naverage)
                 QThread.msleep(100)
-                self.data_grabed_signal_temp.emit(data)
+                self.data_grabed_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
             data=self.average_data(Naverage)
-            QThread.msleep(100)
+            QThread.msleep(000)
             self.data_grabed_signal.emit(data)
 
 

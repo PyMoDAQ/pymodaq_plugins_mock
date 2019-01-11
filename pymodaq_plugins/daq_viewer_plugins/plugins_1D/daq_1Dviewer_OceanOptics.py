@@ -36,6 +36,7 @@ class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
             {'title': 'N spectrometers:','name': 'Nspectrometers', 'type': 'int', 'value': 0 , 'default':0, 'min':0},
              {'title': 'Spectrometers:','name': 'spectrometers', 'type': 'group', 'children': []},
             ]
+
     hardware_averaging=True
 
 

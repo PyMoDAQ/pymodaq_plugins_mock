@@ -22,6 +22,7 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
         utility_classes.DAQ_Viewer_base
     """
     params= comon_parameters+[
+             {'name': 'rolling', 'type': 'int', 'value': 0, 'min':0},
              {'name': 'Mock1', 'type': 'group', 'children':[
                 {'name': 'Npts', 'type': 'int', 'value': 200 , 'default':200, 'min':10},
                 {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
@@ -76,12 +77,17 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
             list
                 The computed data_mock list.
         """
+        ind = -1
         self.data_mock=[]
         for param in self.settings.children():#the first one is ROIselect only valid in the 2D case
-            if param.name()!='ROIselect' and param.name()!='controller_status':
+            if param.name()!='ROIselect' and param.name()!='controller_status' and param.name()!='rolling':
+                ind+=1
                 self.x_axis=np.linspace(0,param.children()[0].value()-1,param.children()[0].value())
-                data_tmp=param.children()[1].value()*gauss1D(self.x_axis,param.children()[2].value(),param.children()[3].value(),param.children()[4].value())+param.children()[5].value()*np.random.rand((param.children()[0].value()))
-                data_tmp=np.roll(data_tmp,self.ind_data)
+                data_tmp=param.children()[1].value()*gauss1D(self.x_axis,param.children()[2].value(),param.children()[3].value(),param.children()[4].value())
+                if ind == 0:
+                    data_tmp = data_tmp * np.sin(self.x_axis / 4) ** 2
+                data_tmp+=param.children()[5].value()*np.random.rand((param.children()[0].value()))
+                data_tmp=np.roll(data_tmp,self.ind_data*self.settings.child(('rolling')).value())
                 self.data_mock.append(data_tmp)
         self.ind_data+=1
         return self.data_mock
