@@ -19,6 +19,7 @@ class DAQ_Move_Kinesis_Flipper(DAQ_Move_base):
         --------
         daq_utils.ThreadCommand
     """
+    _controller_units = 'binary position'
 
     #Kinesis_path=os.environ['Kinesis'] #environement variable pointing to 'C:\\Program Files\\Thorlabs\\Kinesis'
     #to be adjusted on the different computers

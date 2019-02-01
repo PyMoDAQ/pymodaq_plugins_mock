@@ -21,6 +21,8 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
         daq_utils.ThreadCommand
 
     """
+    _controller_units = 'degrees'
+
     Kinesis_path='C:\\Program Files\\Thorlabs\\Kinesis'
     try:
         from System import Decimal

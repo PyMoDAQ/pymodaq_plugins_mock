@@ -12,6 +12,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
         *params*          dictionnary
         =============== ==============
     """
+    _controller_units = 'whatever'
     is_multiaxes=False
     stage_names=[]
 

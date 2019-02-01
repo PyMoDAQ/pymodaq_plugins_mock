@@ -4,30 +4,40 @@ import os
 from pymodaq.daq_utils.daq_utils import ThreadCommand
 from easydict import EasyDict as edict
 import platform
+from pipython import GCSDevice
+from pipython.interfaces.gcsdll import DLLDEVICES, get_dll_name, get_dll_path
+
+
 
 class DAQ_Move_PI(DAQ_Move_base):
     """
-        Wrapper object to access the Physik Instrumente fonctionnalities, similar wrapper for all controllers.
-
-        =============== =======================
-        **Attributes**   **Type**
-        *GCS_path*       string
-        *gcs_device*     string
-        *devices*        instance of GCSDevice
-        *params*         dictionnary list
-        =============== =======================
-
-        See Also
-        --------
-        daq_utils.ThreadCommand
+    Plugin using the Pi wrapper shipped with new hardware. It is compatible with :
+    DLLDEVICES = {
+    'PI_GCS2_DLL': ['C-413', 'C-663.11', 'C-863.11', 'C-867', 'C-877', 'C-884', 'C-885', 'C-887',
+                    'C-891', 'E-517', 'E-518', 'E-545', 'E-709', 'E-712', 'E-723', 'E-725',
+                    'E-727', 'E-753', 'E-754', 'E-755', 'E-852B0076', 'E-861', 'E-870', 'E-871',
+                    'E-873', 'C-663.12'],
+    'C7XX_GCS_DLL': ['C-702', ],
+    'C843_GCS_DLL': ['C-843', ],
+    'C848_DLL': ['C-848', ],
+    'C880_DLL': ['C-880', ],
+    'E816_DLL': ['E-621', 'E-625', 'E-665', 'E-816', 'E816', ],
+    'E516_DLL': ['E-516', ],
+    'PI_Mercury_GCS_DLL': ['C-663.10', 'C-863.10', 'MERCURY', 'MERCURY_GCS1', ],
+    'PI_HydraPollux_GCS2_DLL': ['HYDRA', 'POLLUX', 'POLLUX2', 'POLLUXNT', ],
+    'E7XX_GCS_DLL': ['DIGITAL PIEZO CONTROLLER', 'E-710', 'E-761', ],
+    'HEX_GCS_DLL': ['HEXAPOD', 'HEXAPOD_GCS1', ],
+    'PI_G_GCS2_DLL': ['UNKNOWN', ],
     """
+
+    _controller_units = 'mm'  # dependent on the stage type so to be updated accordingly using self.controller_units = new_unit
+
     GCS_path = ""
     GCS_paths = ["C:\\ProgramData\\PI\\GCSTranslator","C:\\Program Files (x86)\\PI\\GCSTranslator"]
     devices = []
     #GCS_path = "C:\\Program Files (x86)\\PI\\GCSTranslator"
 
-    from pipython import GCSDevice
-    from pipython.interfaces.gcsdll import DLLDEVICES
+    dll_name=''
     for GCS_path_tmp in GCS_paths:
         try:
             #check for installed dlls
@@ -50,15 +60,12 @@ class DAQ_Move_PI(DAQ_Move_base):
         except:
             pass
 
-
-
-
-
     import serial.tools.list_ports as list_ports
+    devices.extend([str(port) for port in list(list_ports.comports())])
     is_multiaxes=False
     stage_names=[]
 
-    params= [{'title': 'GCS2 library:', 'name': 'gcs_lib', 'type': 'browsepath', 'value': GCS_path},
+    params= [{'title': 'GCS2 library:', 'name': 'gcs_lib', 'type': 'browsepath', 'value': os.path.join(GCS_path_tmp,dll_name), 'filetype': True},
            {'title': 'Connection_type:', 'name': 'connect_type', 'type': 'list', 'value':'USB', 'values': ['USB', 'TCP/IP' , 'RS232']},
            {'title': 'Devices:', 'name': 'devices', 'type': 'list', 'values': devices},
            {'title': 'Daisy Chain Options:', 'name': 'dc_options', 'type': 'group', 'children': [
@@ -179,35 +186,46 @@ class DAQ_Move_PI(DAQ_Move_base):
             --------
             DAQ_Move_base.close
         """
-        from pipython import GCSDevice
-        from pipython.interfaces.gcsdll import DLLDEVICES
+
         try:
             self.close()
         except: pass
-        device = self.settings.child(('devices')).value().rsplit(' ')
-        dll = None
-        flag = False
-        for dll_tmp in DLLDEVICES:
-            for dev in DLLDEVICES[dll_tmp]:
-                for d in device:
-                    if d in dev or dev in d:
-                        res=self.check_dll_exist(dll_tmp)
-                        if res[0]:
-                            dll = res[1]
-                            flag = True
-                            break
-                if flag:
-                    break
-            if flag:
-                break
 
-        if dll is None:
-            raise Exception('No valid dll found for the given device')
+        device = self.settings.child(('devices')).value()
+        if self.settings.child(('connect_type')).value() == 'TCP/IP' or self.settings.child(('connect_type')).value() == 'RS232':
+            dll_path_tot = self.settings.child(('gcs_lib')).value()
 
-        self.controller=GCSDevice(gcsdll=os.path.join(self.settings.child(('gcs_lib')).value(),dll))
+        else:
+
+            # device = self.settings.child(('devices')).value().rsplit(' ')
+            # dll = None
+            # flag = False
+            # for dll_tmp in DLLDEVICES:
+            #     for dev in DLLDEVICES[dll_tmp]:
+            #         for d in device:
+            #             if (d in dev or dev in d) and d != '':
+            #                 res=self.check_dll_exist(dll_tmp)
+            #                 if res[0]:
+            #                     dll = res[1]
+            #                     flag = True
+            #                     break
+            #         if flag:
+            #             break
+            #     if flag:
+            #         break
+            #
+            # if dll is None:
+            #     raise Exception('No valid dll found for the given device')
+            # dll_path = os.path.split(self.settings.child(('gcs_lib')).value())[0]
+            # dll_path_tot = os.path.join(dll_path,dll)
+            dll_name = get_dll_name(device = self.settings.child(('devices')).value())
+            dll_path_tot = get_dll_path(dll_name)
+            self.settings.child(('gcs_lib')).setValue(dll_path_tot)
+
+        self.controller=GCSDevice(gcsdll=dll_path_tot)
 
     def check_dll_exist(self, dll_name):
-        files=os.listdir(self.settings.child(('gcs_lib')).value())
+        files=os.listdir(os.path.split(self.settings.child(('gcs_lib')).value())[0])
         machine=''
         if '64' in platform.machine():
             machine = '64'

@@ -21,6 +21,9 @@ class DAQ_Move_Conex(DAQ_Move_base):
         --------
         daq_utils.ThreadCommand
     """
+
+    _controller_units = 'µm'
+
     #find available COM ports
     import serial.tools.list_ports
     ports =[str(port)[0:4] for port in list(serial.tools.list_ports.comports())]

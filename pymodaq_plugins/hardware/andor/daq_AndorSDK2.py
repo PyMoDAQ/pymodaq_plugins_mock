@@ -12,11 +12,13 @@ from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq_plugins.hardware.andor import _andorsdk
 from pymodaq.daq_utils import custom_parameter_tree
 
+import sys
+is_64bits = sys.maxsize > 2**32
 
 if platform.system() == "Linux":
     libpath=ctypes.util.find_library('libandor') #to be checked
 elif platform.system() == "Windows":
-    if platform.machine() == "AMD64":
+    if is_64bits:
         libpath=ctypes.util.find_library('atmcd64d')
     else:
         libpath=ctypes.util.find_library('atmcd32d')

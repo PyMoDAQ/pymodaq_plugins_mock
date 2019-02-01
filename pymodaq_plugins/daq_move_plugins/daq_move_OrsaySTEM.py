@@ -7,7 +7,7 @@ from easydict import EasyDict as edict
 from pymodaq_plugins.hardware.STEM import orsayscan
 from pymodaq_plugins.hardware.STEM.orsayscan_position import OrsayScanPosition
 
-class DAQ_Move_STEM(DAQ_Move_base):
+class DAQ_Move_OrsaySTEM(DAQ_Move_base):
     """
         Wrapper object to access the Mock fonctionnalities, similar wrapper for all controllers.
 
@@ -16,6 +16,7 @@ class DAQ_Move_STEM(DAQ_Move_base):
         *params*          dictionnary
         =============== ==============
     """
+    _controller_units = 'pxls'  # dependent on the eventual calibration so to be updated accordingly using self.controller_units = new_unit
 
     is_multiaxes=True
     stage_names=['X','Y']
@@ -45,7 +46,7 @@ class DAQ_Move_STEM(DAQ_Move_base):
             ============== ================================================ ==========================================================================================
 
         """
-        super(DAQ_Move_STEM,self).__init__(parent,params_state)
+        super(DAQ_Move_OrsaySTEM, self).__init__(parent, params_state)
 
 
     def ini_stage(self, controller=None):

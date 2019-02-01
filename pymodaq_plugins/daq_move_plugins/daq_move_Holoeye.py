@@ -41,6 +41,7 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
     is_multiaxes=False
     stage_names=[]
 
+    _controller_units = 'greyscale' #dependent on the shaping_type so to be updated accordingly using self.controller_units = new_unit
 
     params= [{'title': 'Show Preview?:', 'name': 'show_preview', 'type': 'bool', 'value': False},
              {'title': 'Shaping type:', 'name': 'shaping_type', 'type': 'list', 'value': HoloeyeControls.names()[2],  'values': HoloeyeControls.names()},
@@ -154,6 +155,7 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
             if param.value()=='FullScreen':
                 self.settings.child('bounds','is_bounds').setValue(True)
                 self.settings.child('bounds','max_bound').setValue(255)
+                self.controller_units = 'greyscale'
 
                 #self.settings.child('
             elif param.value()=='SplitScreen':
@@ -161,9 +163,12 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
                 if self.settings.child('splitting', 'split_control').value()=='Screen spliting':
                     self.settings.child('bounds','max_bound').setValue(1)
                 else: 
-                    self.settings.child('bounds','max_bound').setValue(255)                
+                    self.settings.child('bounds','max_bound').setValue(255)
+                self.controller_units = 'pxl'
+
             elif param.value()=='File':
                 self.settings.child('bounds','is_bounds').setValue(False)
+                self.controller_units = 'file'
 
         elif param.name()=='show_preview':
             self.controller.utilsSLMPreviewShow(param.value())

@@ -12,6 +12,8 @@ class DAQ_Move_Spectro270M(DAQ_Move_base):
         *params*          list of dictionnaries
         =============== ==============
     """
+    _controller_units = 'nm'
+
     ##checking VISA ressources
     try:
         from visa import ResourceManager

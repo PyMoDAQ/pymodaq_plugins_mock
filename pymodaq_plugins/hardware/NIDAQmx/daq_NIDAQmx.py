@@ -7,6 +7,7 @@ from easydict import EasyDict as edict
 from collections import OrderedDict
 from enum import IntEnum
 from pymodaq.daq_viewer.utility_classes import comon_parameters
+import PyDAQmx
 
 class DAQ_NIDAQ_source(IntEnum):
     """
@@ -23,6 +24,43 @@ class DAQ_NIDAQ_source(IntEnum):
     @classmethod
     def names(cls):
         return [name for name, member in cls.__members__.items()]
+
+class DAQ_ai_types(IntEnum):
+    """
+        Enum class of Ai types
+
+        =============== ==========
+        **Attributes**   **Type**
+        =============== ==========
+    """
+    Voltage=0
+    Current=1
+    Thermocouple=2
+    @classmethod
+    def names(cls):
+        return [name for name, member in cls.__members__.items()]
+
+class DAQ_thermocouples(IntEnum):
+    """
+        Enum class of thermocouples type
+
+        =============== ==========
+        **Attributes**   **Type**
+        =============== ==========
+    """
+    J=PyDAQmx.DAQmx_Val_J_Type_TC
+    K=PyDAQmx.DAQmx_Val_K_Type_TC
+    N=PyDAQmx.DAQmx_Val_N_Type_TC
+    R=PyDAQmx.DAQmx_Val_R_Type_TC
+    S=PyDAQmx.DAQmx_Val_S_Type_TC
+    T=PyDAQmx.DAQmx_Val_T_Type_TC
+    B=PyDAQmx.DAQmx_Val_B_Type_TC
+    E=PyDAQmx.DAQmx_Val_E_Type_TC
+    @classmethod
+    def names(cls):
+        return [name for name, member in cls.__members__.items()]
+
+
 
 class DAQ_NIDAQmx(DAQ_Viewer_base):
     """
@@ -46,13 +84,25 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
              {'title':'Signal type:', 'name': 'NIDAQ_type', 'type': 'list', 'values': DAQ_NIDAQ_source.names()},
              {'title':'Devices:', 'name': 'NIDAQ_devices', 'type': 'list'},
              {'title':'Channels:', 'name': 'channels', 'type': 'itemselect'},
-             {'title':'AI Settings::', 'name': 'AI_settings', 'type': 'group', 'children':[
-                 {'title':'Nsamples:', 'name': 'Nsamples', 'type': 'int', 'value': 1000, 'default': 1000, 'min': 1},
+             {'title':'AI Settings:', 'name': 'ai_settings', 'type': 'group', 'children':[
+                 {'title': 'AI type:', 'name': 'ai_type', 'type': 'list', 'values': DAQ_ai_types.names()},
+                 {'title':'Nsamples:', 'name': 'Nsamples', 'type': 'int', 'value': 1000, 'default': 1000, 'min':1},
                  {'title':'Frequency:', 'name': 'frequency', 'type': 'float', 'value': 1000, 'default': 1000, 'min': 0, 'suffix': 'Hz'},
-                 {'title':'Voltage Min:', 'name': 'volt_min', 'type': 'float', 'value': -10, 'default': -10, 'min': -10, 'max': 10, 'suffix': 'V'},
-                 {'title':'Voltage Max:', 'name': 'volt_max', 'type': 'float', 'value': 10, 'default': 10, 'min': -10, 'max': 10, 'suffix': 'V'},
+                 {'title': 'Voltages:', 'name': 'voltage_settings', 'type': 'group', 'children': [
+                     {'title':'Voltage Min:', 'name': 'volt_min', 'type': 'float', 'value': -10, 'suffix': 'V'},
+                     {'title':'Voltage Max:', 'name': 'volt_max', 'type': 'float', 'value': 10, 'suffix': 'V'},
+                     ]},
+                 {'title': 'Current:', 'name': 'current_settings', 'type': 'group', 'visible': False, 'children': [
+                     {'title': 'Current Min:', 'name': 'curr_min', 'type': 'float', 'value': -1, 'suffix': 'A'},
+                     {'title': 'Current Max:', 'name': 'curr_max', 'type': 'float', 'value': 1,  'suffix': 'A'},
                  ]},
-             {'title':'Counter Settings::', 'name': 'counter_settings', 'type': 'group', 'children':[
+                 {'title': 'Thermocouple:', 'name': 'thermoc_settings', 'type': 'group', 'visible': False, 'children': [
+                     {'title': 'Thc. type:', 'name': 'thermoc_type', 'type': 'list', 'values': DAQ_thermocouples.names(), 'value': 'K'},
+                     {'title': 'Temp. Min (°C):', 'name': 'T_min', 'type': 'float', 'value': 0, 'suffix': '°C'},
+                     {'title': 'Temp. Max (°C):', 'name': 'T_max', 'type': 'float', 'value': 50, 'suffix': '°C'},
+                 ]},
+                 ]},
+             {'title':'Counter Settings:', 'name': 'counter_settings', 'type': 'group', 'children':[
                  {'title':'Edge type::', 'name': 'edge', 'type': 'list', 'values':['Rising','Falling']},
                  {'title':'Counting time (ms):', 'name': 'counting_time', 'type': 'float', 'value': 100, 'default': 100, 'min': 0},
                  ]},
@@ -95,10 +145,10 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
         elif param.name()=='NIDAQ_type':
             self.update_NIDAQ_channels()
             if param.value()==DAQ_NIDAQ_source(0).name: #analog input
-                self.settings.child(('AI_settings')).show()
+                self.settings.child(('ai_settings')).show()
                 self.settings.child(('counter_settings')).hide()
             elif param.value()==DAQ_NIDAQ_source(1).name: #counter input
-                self.settings.child(('AI_settings')).hide()
+                self.settings.child(('ai_settings')).hide()
                 self.settings.child(('counter_settings')).show()
                 self.update_task()
 
@@ -107,6 +157,12 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                 self.refresh_hardware()
                 QtWidgets.QApplication.processEvents()
                 self.settings.child(('refresh_hardware')).setValue(False)
+
+        elif param.name() == 'ai_type':
+            self.settings.child('ai_settings', 'voltage_settings').show(param.value()=='Voltage')
+            self.settings.child('ai_settings', 'current_settings').show(param.value() == 'Current')
+            self.settings.child('ai_settings', 'thermoc_settings').show(param.value() == 'Thermocouple')
+            self.update_task()
 
         else:
             self.update_task()
@@ -160,11 +216,11 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
 
                 if type_signal==DAQ_NIDAQ_source(0).name: #analog input
                     self.PyDAQmx.DAQmxGetDevAIPhysicalChans(device,buff,len(buff))
-                    channels=buff.value.decode()[5:].split(', '+device+'/')
 
                 elif type_signal==DAQ_NIDAQ_source(1).name: #counter
                     self.PyDAQmx.DAQmxGetDevCIPhysicalChans(device,buff,len(buff))
-                    channels=buff.value.decode()[5:].split(', '+device+'/')
+
+                channels=buff.value.decode()[len(device):].split(','+device+'/')
                 if len(channels)>=1:
                     self.settings.child(('channels')).setValue(dict(all_items=channels,selected=[channels[0]]))
         except Exception as e:
@@ -201,20 +257,47 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             channels=self.settings.child(('channels')).value()['selected']
             device=self.settings.child(('NIDAQ_devices')).value()
 
-            if self.settings.child(('NIDAQ_type')).value()==DAQ_NIDAQ_source(0).name: #analog input
+            if self.settings.child(('NIDAQ_type')).value() == 'Analog_Input': #analog input
 
                 for channel in channels:
-                    err_code=self.task.CreateAIVoltageChan(device+"/"+channel,"",self.PyDAQmx.DAQmx_Val_Cfg_Default,self.settings.child('AI_settings','volt_min').value(),
-                                 self.settings.child('AI_settings','volt_max').value(),self.PyDAQmx.DAQmx_Val_Volts,None)
+                    ai_type = self.settings.child('ai_settings', 'ai_type').value()
+
+                    if ai_type == "Voltage":
+                        err_code = self.task.CreateAIVoltageChan(device + "/" + channel, "",
+                                     self.PyDAQmx.DAQmx_Val_Cfg_Default,
+                                     self.settings.child('ai_settings', 'voltage_settings', 'volt_min').value(),
+                                     self.settings.child('ai_settings', 'voltage_settings', 'volt_max').value(),
+                                     self.PyDAQmx.DAQmx_Val_Volts, None)
+
+                    elif ai_type == "Current":
+                        err_code = self.task.CreateAICurrentChan(device + "/" + channel, "",
+                                      self.PyDAQmx.DAQmx_Val_Cfg_Default,
+                                      self.settings.child('ai_settings', 'current_settings', 'curr_min').value(),
+                                      self.settings.child('ai_settings', 'current_settings', 'curr_max').value(),
+                                      self.PyDAQmx.DAQmx_Val_Amps,
+                                      self.PyDAQmx.DAQmx_Val_Internal,
+                                      0., None)
+
+                    elif ai_type == "Thermocouple":
+                        err_code = self.task.CreateAIThrmcplChan(device + "/" + channel, "",
+                                      self.settings.child('ai_settings', 'thermoc_settings', 'T_min').value(),
+                                      self.settings.child('ai_settings', 'thermoc_settings', 'T_max').value(),
+                                      self.PyDAQmx.DAQmx_Val_DegC,
+                                      DAQ_thermocouples[self.settings.child('ai_settings', 'thermoc_settings', 'thermoc_type').value()].value,
+                                      self.PyDAQmx.DAQmx_Val_BuiltIn, 0., "")
+
                     if err_code is None:
-                        err_code=self.task.CfgSampClkTiming(None,self.settings.child('AI_settings','frequency').value(),self.PyDAQmx.DAQmx_Val_Rising,
-                                                            self.PyDAQmx.DAQmx_Val_FiniteSamps,self.settings.child('AI_settings','Nsamples').value())
+                        err_code=self.task.CfgSampClkTiming(None,self.settings.child('ai_settings','frequency').value(),self.PyDAQmx.DAQmx_Val_Rising,
+                                                            self.PyDAQmx.DAQmx_Val_FiniteSamps,self.settings.child('ai_settings','Nsamples').value())
 
                         if err_code is not None:
-                            status=self.task.GetErrorString(err_code);raise Exception(status)
-                    else:status=self.task.GetErrorString(err_code);raise Exception(status)
+                            status=self.task.GetErrorString(err_code)
+                            raise Exception(status)
+                    else:
+                        status=self.task.GetErrorString(err_code)
+                        raise Exception(status)
 
-            elif self.settings.child(('NIDAQ_type')).value()==DAQ_NIDAQ_source(1).name: #counter
+            elif self.settings.child(('NIDAQ_type')).value() == 'Counter': #counter
                 if self.settings.child('counter_settings','edge').value()=="Rising":
                     edge=self.PyDAQmx.DAQmx_Val_Rising
                 else:
@@ -228,7 +311,7 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             self.status.controller=self.task
         except Exception as e:
             self.status.info=str(e)
-            self.status.initialized=False
+            self.status.initialized=True
             self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
 
     def ini_detector(self, controller=None):
@@ -287,19 +370,19 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
         if self.settings.child(('NIDAQ_type')).value()==DAQ_NIDAQ_source(0).name: #analog input
             data_tot = []
             read = self.PyDAQmx.int32()
-            N=self.settings.child('AI_settings','Nsamples').value()
+            N=self.settings.child('ai_settings','Nsamples').value()
             data = np.zeros(N*len(channels), dtype=np.float64)
-            self.task.StartTask()
-            self.task.ReadAnalogF64(self.PyDAQmx.DAQmx_Val_Auto,10.0,self.PyDAQmx.DAQmx_Val_GroupByChannel,data,len(data),self.PyDAQmx.byref(read),None)
-            self.task.StopTask()
+            #self.task.StartTask()
+            self.task.ReadAnalogF64(self.PyDAQmx.DAQmx_Val_Auto,50.0,self.PyDAQmx.DAQmx_Val_GroupByChannel,data,len(data),self.PyDAQmx.byref(read),None)
+            #self.task.StopTask()
 
             if self.control_type == "0D":
                 for ind in range(len(channels)):
-                    data_tot.append(np.array([np.mean(data[ind*N:(ind+1)*N-1])]))
+                    data_tot.append(np.array([np.mean(data[ind*N:(ind+1)*N])]))
                 self.data_grabed_signal.emit([OrderedDict(name='NI AI', data=data_tot, type='Data0D')])
             else:
                 for ind in range(len(channels)):
-                    data_tot.append(data[ind*N:(ind+1)*N-1])
+                    data_tot.append(data[ind*N:(ind+1)*N])
                 self.data_grabed_signal.emit([OrderedDict(name='NI AI', data=data_tot, type='Data1D')])
 
         elif self.settings.child(('NIDAQ_type')).value()==DAQ_NIDAQ_source(1).name: #counter input
@@ -329,5 +412,8 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
         """
             not implemented.
         """
-
+        try:
+            self.task.StopTask()
+        except:
+            pass
         return ""

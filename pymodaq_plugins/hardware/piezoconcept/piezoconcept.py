@@ -50,7 +50,6 @@ class PiezoConcept(object):
         return com_ports
     
     def init_communication(self,com_port):
-        com_port='COM9'
         if com_port in self.com_ports:
             self._piezo=self._VISA_rm.open_resource(com_port)
             #set attributes
@@ -89,16 +88,22 @@ class PiezoConcept(object):
         self._piezo.timeout=self.timeout
         return info
     
-    def move_axis(self,move_type='ABS',pos=Position(axis='X',pos=100,unit='u')):
-        if move_type=='ABS':
-            self.write_command('MOVE{:s} {:f}{:s}'.format(pos.axis,pos.pos,pos.unit))
-        elif move_type=='REL':
-            self.write_command('MOVR{:s} {:f}{:s}'.format(pos.axis,pos.pos,pos.unit))
+    def move_axis(self, move_type='ABS', pos=Position(axis='X', pos=100, unit='u')):
+        if pos.unit == 'u':
+            cmd = '{:s} {:f}{:s}'.format(pos.axis, pos.pos, pos.unit)
+        else:
+            cmd = '{:s} {:d}{:s}'.format(pos.axis, pos.pos, pos.unit)
+        if move_type == 'ABS':
+            cmd = 'MOVE' + cmd
+
+        elif move_type == 'REL':
+            cmd = 'MOVR' + cmd
         else:
             raise Exception('{:s} is not a valid displacement type'.format(move_type))
 
+        self.write_command(cmd)
 
-    def get_position(self,axis='X'):
+    def get_position(self, axis='X'):
         """ return the given axis position
         Parameters
         ----------
@@ -110,8 +115,8 @@ class PiezoConcept(object):
             an instance of the Position class containing the attributes:
                 axis (either ('X' or 'Y'), pos and unit (either 'u' or 'n')
         """    
-        pos_str=self._piezo.query('GET_{:s}'.format(axis))
-        pos=Position(axis,float(pos_str[0:-3]),pos_str[-2])
+        pos_str = self._piezo.query('GET_{:s}'.format(axis))
+        pos= Position(axis,float(pos_str[0:-3]),pos_str[-2])
         return pos
 
     def set_time_interval(self,time=Time(50.,'m')):
