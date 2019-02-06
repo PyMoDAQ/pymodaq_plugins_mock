@@ -153,8 +153,6 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         """
         """
         try:
-            print('emit')
-            #lock = QMutexLocker(self.locker)
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
                 rates = self.get_rates()
@@ -162,7 +160,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
-                    self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=False)
+                    self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=True)
 
                 self.data_grabed_signal.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
 
@@ -174,8 +172,6 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         """
         """
         try:
-            print('emit temp')
-            #lock = QMutexLocker(self.locker)
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
                 rates = self.get_rates()
@@ -183,7 +179,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
-                    self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel)
+                    self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=False)
 
                 self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
 
@@ -224,10 +220,15 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         self.actual_mode = mode
 
     def ini_channels(self):
-        self.controller.TH260_SetSyncDiv(self.device, self.settings.child('line_settings', 'sync_settings', 'divider').value())
-        self.controller.TH260_SetSyncCFD(self.device, self.settings.child('line_settings', 'sync_settings', 'level').value(),
-                                                      self.settings.child('line_settings', 'sync_settings', 'zerox').value())
-        self.controller.TH260_SetSyncChannelOffset(self.device, self.settings.child('line_settings', 'sync_settings', 'offset').value())
+        self.controller.TH260_SetSyncDiv(self.device,
+                                         self.settings.child('line_settings', 'sync_settings', 'divider').value())
+
+        self.controller.TH260_SetSyncCFD(self.device,
+                                         self.settings.child('line_settings', 'sync_settings', 'level').value(),
+                                         self.settings.child('line_settings', 'sync_settings', 'zerox').value())
+
+        self.controller.TH260_SetSyncChannelOffset(self.device, self.settings.child('line_settings', 'sync_settings',
+                                                                                    'offset').value())
 
         self.controller.TH260_SetInputCFD(self.device, 0,
                                           self.settings.child('line_settings', 'ch1_settings', 'level').value(),
@@ -235,11 +236,12 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         self.controller.TH260_SetInputCFD(self.device, 1,
                                           self.settings.child('line_settings', 'ch2_settings', 'level').value(),
                                           self.settings.child('line_settings', 'ch2_settings', 'zerox').value())
+
         self.controller.TH260_SetInputChannelOffset(self.device, 0,
                                           self.settings.child('line_settings', 'ch1_settings', 'offset').value())
         self.controller.TH260_SetInputChannelOffset(self.device, 1,
-                                                    self.settings.child('line_settings', 'ch2_settings',
-                                                                        'offset').value())
+                                          self.settings.child('line_settings', 'ch2_settings', 'offset').value())
+
         param = self.settings.child('line_settings', 'ch1_settings', 'deadtime')
         code = param.opts['limits'].index(param.value())
         self.controller.TH260_SetInputDeadTime(self.device, 0, code)
@@ -249,7 +251,6 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
 
         self.Nchannels = self.controller.TH260_GetNumOfInputChannels(self.device)
         if self.Nchannels >= 1:
-            self.settings.child('line_settings', 'ch2_settings', 'enabled').setValue(False)
             self.settings.child('line_settings', 'ch2_settings').hide()
             self.controller.TH260_SetInputChannelEnable(self.device, channel=0,
                                                         enable=self.settings.child('line_settings', 'ch1_settings',
@@ -301,7 +302,8 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             self.acq_timer.setInterval(500)
             self.acq_timer.timeout.connect(self.check_acquisition)
 
-            self.set_acq_mode(self.settings.child('acquisition', 'acq_type').value(),update=True)
+            #init the device and memory in the selected mode
+            self.set_acq_mode(self.settings.child('acquisition', 'acq_type').value(), update=True)
 
             model, partn, version = self.controller.TH260_GetHardwareInfo(self.device)
             serial = self.controller.TH260_GetSerialNumber(self.device)
@@ -310,10 +312,9 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             self.ini_channels()
 
             self.set_get_resolution()
+            self.set_get_resolution(wintype='nbins')
 
-            #self.locker = QMutex()
-
-            #self.general_timer.start(200)  # Timer event fired every 500ms
+            self.general_timer.start()  # Timer event fired every 200ms
 
             #%%%%%%% init axes from image
             self.x_axis = self.get_xaxis()
@@ -336,7 +337,6 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             QThread.msleep(100)
             #self.emit_data_tmp()
 
-
         self.controller.TH260_StopMeas(self.device)
         self.emit_data()
 
@@ -348,7 +348,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         else:
             self.acq_timer.stop()
             QtWidgets.QApplication.processEvents()  # this to be sure the timer is not fired while emitting data
-            #self.controller.TH260_StopMeas(self.device)
+            self.controller.TH260_StopMeas(self.device)
             QtWidgets.QApplication.processEvents()  #this to be sure the timer is not fired while emitting data
             self.emit_data()
 
@@ -446,6 +446,13 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         elif wintype =='nbins':
             Nbins = self.controller.TH260_SetHistoLen(self.device, int(np.log(Nbins/1024)/np.log(2)))
             self.settings.child('acquisition', 'timings', 'nbins').setValue(Nbins)
+            mode = self.settings.child('acquisition', 'acq_type').value()
+            N = len([k for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']])
+            if mode == 'Counting':
+                self.datas = [np.zeros((1,), dtype=np.uint32) for ind in range(N)]
+            elif mode == 'Histo':
+                self.datas = [np.zeros((Nbins,), dtype=np.uint32) for ind in range(N)]
+            self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
 
         self.settings.child('acquisition', 'timings', 'window').setValue(Nbins*resolution/1e6)  # in ms
         self.set_acq_mode(self.settings.child('acquisition', 'acq_type').value())
@@ -531,8 +538,8 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                 time_acq = int(self.settings.child('acquisition', 'acq_time').value()*1000)  # in ms
                 self.controller.TH260_ClearHistMem(self.device)
                 self.controller.TH260_StartMeas(self.device, time_acq)
-                #self.acq_timer.start()
-                self.poll_acquisition()
+                self.acq_timer.start()
+                #self.poll_acquisition()
             elif mode == 'FLIM':
                 self.general_timer.stop()
 
