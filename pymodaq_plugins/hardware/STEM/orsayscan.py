@@ -96,9 +96,6 @@ _OrsayScanGetRotation = _buildFunction(_library.OrsayScanGetRotation, [c_void_p]
 #bool SCAN_EXPORT OrsayScanStartImaging(void* o, short gene, short mode, short lineaverage);
 _OrsayScanStartImaging = _buildFunction(_library.OrsayScanStartImaging, [c_void_p, c_short, c_short, c_short], c_bool)
 
-#bool SCAN_EXPORT OrsayScanStartSpim(void* o, short gene, short mode, short lineaverage, int nbspectraperpixel, bool sumpectra);
-_OrsayScanStartSpim = _buildFunction(_library.OrsayScanStartSpim, [c_void_p, c_short, c_short, c_short, c_int, c_bool], c_bool)
-
 #bool SCAN_EXPORT OrsayScanStopImaging(void* o, int gene, bool cancel);
 _OrsayScanStopImaging = _buildFunction(_library.OrsayScanStopImaging, [c_void_p, c_int, c_bool], c_bool)
 
@@ -106,7 +103,7 @@ _OrsayScanStopImaging = _buildFunction(_library.OrsayScanStopImaging, [c_void_p,
 _OrsayScanStopImagingA = _buildFunction(_library.OrsayScanStopImagingA, [c_void_p, c_int, c_bool], c_bool)
 
 #void SCAN_EXPORT OrsayScanSetImagingMode(void* o, int gene, int stripes);
-_OrsayScanSetImagingMode = _buildFunction(_library.OrsayScanSetImagingMode, [c_void_p, c_int, c_int], None);
+_OrsayScanSetImagingMode = _buildFunction(_library.OrsayScanSetImagingMode, [c_void_p, c_int, c_int], None)
 
 #bool SCAN_EXPORT OrsayScanSetScanClock(void* o, int gene, int mode);
 _OrsayScanSetScanClock = _buildFunction(_library.OrsayScanSetScanClock, [c_void_p, c_int, c_int], c_bool)
@@ -144,7 +141,7 @@ _OrsayScanregisterUnlockerA = _buildFunction(_library.OrsayScanRegisterDataUnloc
 
 # ajout de fonctions VG.
 #bool SCAN_EXPORT OrsayScanSetProbeAt(self.orsayscan, int gene, int px, int py);
-_OrsayScanSetProbeAt = _buildFunction(_library.OrsayScanSetProbeAt, [c_void_p, c_int, c_int, c_int], c_bool);
+_OrsayScanSetProbeAt = _buildFunction(_library.OrsayScanSetProbeAt, [c_void_p, c_int, c_int, c_int], c_bool)
 
 #void SCAN_EXPORT OrsayScanSetEHT(self.orsayscan, double val);
 _OrsayScanSetEHT = _buildFunction(_library.OrsayScanSetEHT, [c_void_p, c_double], None);
@@ -153,62 +150,64 @@ _OrsayScanSetEHT = _buildFunction(_library.OrsayScanSetEHT, [c_void_p, c_double]
 _OrsayScanGetEHT = _buildFunction(_library.OrsayScanGetEHT, [c_void_p], c_double);
 
 #double SCAN_EXPORT OrsayScanGetMaxFieldSize(self.orsayscan);
-_OrsayScanGetMaxFieldSize = _buildFunction(_library.OrsayScanGetMaxFieldSize, [c_void_p], c_double);
+_OrsayScanGetMaxFieldSize = _buildFunction(_library.OrsayScanGetMaxFieldSize, [c_void_p], c_double)
 
 #double SCAN_EXPORT OrsayScanGetFieldSize(self.orsayscan);
 _OrsayScanGetFieldSize = _buildFunction(_library.OrsayScanGetFieldSize, [c_void_p], c_double);
 
 #double SCAN_EXPORT OrsayScanGetScanAngle(self.orsayscan, short *mirror);
-_OrsayScanGetScanAngle = _buildFunction(_library.OrsayScanGetScanAngle, [c_void_p, c_short], c_double);
+_OrsayScanGetScanAngle = _buildFunction(_library.OrsayScanGetScanAngle, [c_void_p, c_short], c_double)
 
 #bool SCAN_EXPORT OrsayScanSetFieldSize(self.orsayscan, double field);
-_OrsayScanSetFieldSize = _buildFunction(_library.OrsayScanSetFieldSize, [c_void_p, c_double], c_bool);
+_OrsayScanSetFieldSize = _buildFunction(_library.OrsayScanSetFieldSize, [c_void_p, c_double], c_bool)
 
 
 #bool SCAN_EXPORT OrsayScanSetBottomBlanking(self.orsayscan, short mode, short source, double beamontime, bool risingedge, unsigned int nbpulses, double delay);
-_OrsayScanSetBottomBlanking = _buildFunction(_library.OrsayScanSetBottomBlanking, [c_void_p, c_short, c_double, c_bool, c_uint, c_double], c_bool);
+_OrsayScanSetBottomBlanking = _buildFunction(_library.OrsayScanSetBottomBlanking, [c_void_p, c_short, c_double, c_bool, c_uint, c_double], c_bool)
 
 #bool SCAN_EXPORT OrsayScanSetTopBlanking(self.orsayscan, short mode, short source, double beamontime, bool risingedge, unsigned int nbpulses, double delay);
-_OrsayScanSetTopBlanking = _buildFunction(_library.OrsayScanSetTopBlanking, [c_void_p, c_short, c_double, c_bool, c_uint, c_double], c_bool);
+_OrsayScanSetTopBlanking = _buildFunction(_library.OrsayScanSetTopBlanking, [c_void_p, c_short, c_double, c_bool, c_uint, c_double], c_bool)
 
 
 #bool SCAN_EXPORT OrsayScanSetCameraSync(self.orsayscan, bool eels, int divider, double width, bool risingedge);
-_OrsayScanSetCameraSync = _buildFunction(_library.OrsayScanSetCameraSync, [c_void_p, c_bool, c_int, c_double, c_bool], c_bool);
+_OrsayScanSetCameraSync = _buildFunction(_library.OrsayScanSetCameraSync, [c_void_p, c_bool, c_int, c_double, c_bool], c_bool)
 
 #void SCAN_EXPORT OrsayScanObjectiveStigmateur(self.orsayscan, double x, double y);
-_OrsayScanObjectiveStigmateur = _buildFunction(_library.OrsayScanObjectiveStigmateur, [c_void_p, c_double, c_double], None);
+_OrsayScanObjectiveStigmateur = _buildFunction(_library.OrsayScanObjectiveStigmateur, [c_void_p, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanObjectiveStigmateurCentre(self.orsayscan, double xcx, double xcy, double ycx, double ycy);
-_OrsayScanObjectiveStigmateurCentre = _buildFunction(_library.OrsayScanObjectiveStigmateurCentre, [c_void_p, c_double, c_double, c_double, c_double], None);
+_OrsayScanObjectiveStigmateurCentre = _buildFunction(_library.OrsayScanObjectiveStigmateurCentre, [c_void_p, c_double, c_double, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanCondensorStigmateur(self.orsayscan, double x, double y);
-_OrsayScanCondensorStigmateur = _buildFunction(_library.OrsayScanCondensorStigmateur, [c_void_p, c_double, c_double], None);
+_OrsayScanCondensorStigmateur = _buildFunction(_library.OrsayScanCondensorStigmateur, [c_void_p, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanGrigson(self.orsayscan, double x1, double x2, double y1, double y2);
-_OrsayScanGrigson = _buildFunction(_library.OrsayScanGrigson, [c_void_p, c_double, c_double, c_double, c_double], None);
+_OrsayScanGrigson = _buildFunction(_library.OrsayScanGrigson, [c_void_p, c_double, c_double, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanAlObjective(self.orsayscan, double x1, double x2, double y1, double y2);
-_OrsayScanAlObjective = _buildFunction(_library.OrsayScanAlObjective, [c_void_p, c_double, c_double, c_double, c_double], None);
+_OrsayScanAlObjective = _buildFunction(_library.OrsayScanAlObjective, [c_void_p, c_double, c_double, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanAlGun(self.orsayscan, double x1, double x2, double y1, double y2);
-_OrsayScanAlGun = _buildFunction(_library.OrsayScanAlGun, [c_void_p, c_double, c_double, c_double, c_double], None);
+_OrsayScanAlGun = _buildFunction(_library.OrsayScanAlGun, [c_void_p, c_double, c_double, c_double, c_double], None)
 
 #void SCAN_EXPORT OrsayScanAlStigObjective(self.orsayscan, double x1, double x2, double y1, double y2);
-_OrsayScanAlStigObjective = _buildFunction(_library.OrsayScanAlStigObjective, [c_void_p, c_double, c_double, c_double, c_double], None);
+_OrsayScanAlStigObjective = _buildFunction(_library.OrsayScanAlStigObjective, [c_void_p, c_double, c_double, c_double, c_double], None)
 
 
 #void SCAN_EXPORT OrsayScanSetLaser(self.orsayscan, double frequency, int nbpulses, bool bottomblanking, short sync);
-_OrsayScanSetLaser = _buildFunction(_library.OrsayScanSetLaser, [c_void_p, c_double, c_int, c_bool, c_short], None);
+_OrsayScanSetLaser = _buildFunction(_library.OrsayScanSetLaser, [c_void_p, c_double, c_int, c_bool, c_short], None)
 
 #void SCAN_EXPORT OrsayScanStartLaser(self.orsayscan, int mode);
-_OrsayScanStartLaser = _buildFunction(_library.OrsayScanStartLaser, [c_void_p, c_int], None);
+_OrsayScanStartLaser = _buildFunction(_library.OrsayScanStartLaser, [c_void_p, c_int], None)
 
 #void SCAN_EXPORT OrsayScanCancelLaser(self.orsayscan);
-_OrsayScanCancelLaser = _buildFunction(_library.OrsayScanCancelLaser, [c_void_p], None);
+_OrsayScanCancelLaser = _buildFunction(_library.OrsayScanCancelLaser, [c_void_p], None)
 
 #int SCAN_EXPORT OrsayScanGetLaserCount(self.orsayscan);
-_OrsayScanGetLaserCount = _buildFunction(_library.OrsayScanGetLaserCount, [c_void_p], c_int);
+_OrsayScanGetLaserCount = _buildFunction(_library.OrsayScanGetLaserCount, [c_void_p], c_int)
 
+#void SCAN_EXPORT SetClockSimulationTime(void *o, int gene, double dt);
+_OrsayScanSetClockSimulationTime = _buildFunction(_library.SetClockSimulationTime, [c_void_p, c_int, c_double], None)
 
 class orsayScan(object):
     """Class controlling orsay scan hardware
@@ -234,10 +233,6 @@ class orsayScan(object):
         self._minor = cminor.value
         if self._major < 5:
             raise AttributeError("No device connected")
-
-    def close(self):
-        _OrsayScanClose(self.orsayscan)
-        self.orsaycamera = None
 
     def __verifyUnsigned32Bit(self, value):
         """
@@ -298,7 +293,7 @@ class orsayScan(object):
         """
         Donne le temps effectif de la durée de balayage d'une image
         """
-        return _OrsayScanGetImageTime(self.orsayscan, self.gene)
+        return _OrsayScanGetImageTime(self.orsayscan)
 
     def SetInputs(self, inputs):
         """
@@ -421,28 +416,6 @@ class orsayScan(object):
         voir programe demo
         """
         _OrsayScanregisterUnlockerA(self.orsayscan, fn)
-
-    def startSpim(self, mode, linesaveraging,Nspectra=1,save2D=False):
-        """
-        Démarre l'acquitisition de l'image.
-        mode: --- expliqué plus tard ---
-        lineaveraging: nombre de lignes à faire avant de passer à la ligne suivante.
-        retourne vrai si l'acquisition a eu lieu.
-        """
-        return _OrsayScanStartSpim(self.orsayscan, self.gene, mode, linesaveraging,Nspectra,save2D)
-
-    def setScanClock(self,trigger_input=0):
-        """
-        set the input line for starting the next pixel in the STEM imaging (pin 9 and 5 on subD9)
-        Parameters
-        ----------
-        trigger_input: 0 for pin 9, 1 for pin 5, 2 for CL ready, 3 for In3, 4 for EELS ready
-
-        Returns
-        -------
-
-        """
-        return _OrsayScanSetScanClock(self.orsayscan, self.gene, trigger_input)
 
     def startImaging(self, mode, linesaveraging):
         """
@@ -625,3 +598,10 @@ class orsayScan(object):
         """ donne le nombre d'impulsions déjà faites """
         return _OrsayScanGetLaserCount(self.orsayscan)
    
+    #bool SCAN_EXPORT OrsayScanSetScanClock(void* o, int gene, int mode);
+    def OrsayScanSetClock(self, source):
+        return _OrsayScanSetScanClock(self.orsayscan, self.gene, source)
+
+    #void SCAN_EXPORT SetClockSimulationTime(void *o, int gene, double dt);
+    def OrsayScanSetClockSimulationTime(self, dt):
+        _OrsayScanSetClockSimulationTime(self.orsayscan, self.gene, dt)

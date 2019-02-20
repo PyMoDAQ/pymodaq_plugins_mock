@@ -3,11 +3,11 @@ import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from enum import IntEnum
 import ctypes
 from pymodaq.daq_viewer.utility_classes import comon_parameters
-from pymodaq_plugins.hardware.STEM import orsaycamera
+
 
 
 class Orsay_Camera_manufacturer(IntEnum):
@@ -370,8 +370,8 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
                 Nx, Ny = self.controller.getImageSize()
                 self.settings.child('image_size','Nx').setValue(Nx)
                 self.settings.child('image_size','Ny').setValue(Ny)
-            # elif param.name()=='exposure':
-            #     self.controller.setExposureTime(self.settings.child(('exposure')).value())
+            elif param.name()=='exposure':
+                self.controller.setExposureTime(self.settings.child(('exposure')).value())
             elif param.name()=='set_point':
                 self.controller.setTemperature(param.value())
             elif param.name()=='manufacturer':
@@ -388,7 +388,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
 
     def dataLocker(self,camera, datatype, sx, sy, sz):
         """
@@ -537,7 +537,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
 
     def ini_detector(self, controller=None):
         """
@@ -558,7 +558,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
         """
         self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
         try:
-            from pymodaq.plugins.hardware.STEM import orsaycamera
+            from pymodaq_plugins.hardware.STEM import orsaycamera
             manufacturer=Orsay_Camera_manufacturer[self.settings.child(('manufacturer')).value()].value
             if self.settings.child(('controller_status')).value()=="Slave":
                 if controller is None: 
@@ -620,7 +620,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             return self.status
 
         except Exception as e:
-            self.status.info=str(e)
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -738,7 +738,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
             if self.settings.child('camera_mode_settings','camera_mode').value()=='Camera':
                 self.controller.setAccumulationNumber(Naverage) #stop the acquisition after Navergae image if third argument of startfocus is 1
-                self.controller.startFocus(self.settings.child(('exposure')).value(), "2d", 1) 
+                self.controller.startFocus(self.settings.child(('exposure')).value(), "2d", 1)
 
             else: #spim mode
                 SPIMX=self.settings.child('camera_mode_settings','spim_x').value()
@@ -749,7 +749,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             #%%%%% Start acquisition with the given exposure in ms, in "1d" or "2d" mode
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),"log"]))
 
     def stop(self):
         """

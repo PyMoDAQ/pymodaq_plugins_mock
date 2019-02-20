@@ -1,6 +1,6 @@
 from pymodaq.daq_move.utility_classes import DAQ_Move_base  # base class
 from pymodaq.daq_move.utility_classes import comon_parameters  # common set of parameters for all actuators
-from pymodaq.daq_utils.daq_utils import ThreadCommand  # object used to send info back to the main thread
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
 
 class DAQ_Move_Mock(DAQ_Move_base):
@@ -129,8 +129,8 @@ class DAQ_Move_Mock(DAQ_Move_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 

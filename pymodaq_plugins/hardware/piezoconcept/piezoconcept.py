@@ -1,16 +1,18 @@
 import pyvisa
+import numpy as np
 
 class Position(object):
-    units=['n','u']
-    axes=['X','Y']
-    def __init__(self,axis='X',pos=100., unit='u'):
+    units=['n', 'u']
+    axes=['X', 'Y']
+
+    def __init__(self,axis='X', pos=100., unit='u'):
         if axis in self.axes:
-            self.axis=axis
+            self.axis = axis
         else:
             raise Exception('{:s} is not a valid axis'.format(axis))
-        self.pos=pos
+        self.pos = pos
         if unit in self.units:
-            self.unit=unit
+            self.unit = unit
         else:
             raise Exception('{:s} is not a valid unit'.format(unit))
         
@@ -21,11 +23,11 @@ class Position(object):
         return self.__str__()
     
 class Time(object):
-    units=['u','m','s'] #valid units
+    units=['u', 'm', 's'] #valid units
     def __init__(self,time=100., unit='u'):
-        self.time=time
+        self.time = time
         if unit in self.units:
-            self.unit=unit
+            self.unit = unit
         else:
             raise Exception('{:s} is not a valid unit'.format(unit))
             
@@ -36,13 +38,21 @@ class Time(object):
         return self.__str__()  
     
 class PiezoConcept(object):
-    
+
     def __init__(self):
-        super(PiezoConcept,self).__init__()
+        super(PiezoConcept, self).__init__()
         self._piezo=None
-        self._VISA_rm=pyvisa.ResourceManager()
-        self.com_ports=self.get_ressources()
-        self.timeout=2000 #by default
+        self._VISA_rm = pyvisa.ResourceManager()
+        self.com_ports = self.get_ressources()
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, to):
+        self._timeout = to
+        self._piezo.timeout = to
 
     def get_ressources(self):
         infos=self._VISA_rm.list_resources_info()
@@ -60,7 +70,7 @@ class PiezoConcept(object):
             self._piezo.flow_control=0
             self._piezo.read_termination=self._piezo.LF
             self._piezo.write_termination=self._piezo.LF
-            self._piezo.timeout=self.timeout
+            self.timeout = 2000
         else:
             raise IOError('{:s} is not a valid port'.format(com_port))
             
@@ -69,30 +79,30 @@ class PiezoConcept(object):
         self._VISA_rm.close() 
         
     def get_controller_infos(self):
-        self._piezo.write('INFOS')
-        return self.get_read()
-            
-    def write_command(self,command):
+        self._write_command('INFOS')
+        return self._get_read()
+
+    def _query(self, command):
+        ret = self._piezo.query(command)
+        return ret
+
+    def _write_command(self, command):
         self._piezo.write(command)
-        if self._piezo.read(encoding='mbcs')!='Ok':
-            raise IOError('wrong return from controller')
+
     
-    def get_read(self):
-        self._piezo.timeout=100
-        info=''
+    def _get_read(self):
+        self._piezo.timeout = 100
+        info = ''
         try:
             while True:
-                info+=self._piezo.read(encoding='mbcs')+'\n'
+                info += self._piezo.read(encoding='mbcs')+'\n'
         except pyvisa.errors.VisaIOError as e:
             pass
-        self._piezo.timeout=self.timeout
+        self._piezo.timeout = self._timeout
         return info
     
-    def move_axis(self, move_type='ABS', pos=Position(axis='X', pos=100, unit='u')):
-        if pos.unit == 'u':
-            cmd = '{:s} {:f}{:s}'.format(pos.axis, pos.pos, pos.unit)
-        else:
-            cmd = '{:s} {:d}{:s}'.format(pos.axis, pos.pos, pos.unit)
+    def move_axis(self, move_type='ABS', pos=Position(axis='X', pos=100, unit='n')):
+        cmd = '{:s} {:d}{:s}'.format(pos.axis, int(pos.pos), pos.unit)
         if move_type == 'ABS':
             cmd = 'MOVE' + cmd
 
@@ -101,10 +111,11 @@ class PiezoConcept(object):
         else:
             raise Exception('{:s} is not a valid displacement type'.format(move_type))
 
-        self.write_command(cmd)
+        ret = self._query(cmd)
+        return ret
 
     def get_position(self, axis='X'):
-        """ return the given axis position
+        """ return the given axis position always in nm
         Parameters
         ----------
         axis: str, default 'X'
@@ -115,73 +126,136 @@ class PiezoConcept(object):
             an instance of the Position class containing the attributes:
                 axis (either ('X' or 'Y'), pos and unit (either 'u' or 'n')
         """    
-        pos_str = self._piezo.query('GET_{:s}'.format(axis))
-        pos= Position(axis,float(pos_str[0:-3]),pos_str[-2])
+        pos_str = self._query('GET_{:s}'.format(axis))
+        pos_list = pos_str.split(' ')
+        unit = pos_list[1][0]
+        if unit == 'u':
+            pos = int(float(pos_list[0])*1000)
+            unit = 'n'
+        else:
+            pos = int(pos_list[0])
+
+        pos = Position(axis, pos, unit)
         return pos
 
-    def set_time_interval(self,time=Time(50.,'m')):
-        if type(time)==Time:
-            self.write_command('STIME {:d}{:s}'.format(time.time,time.unit))
+    def set_time_interval(self, time=Time(50., 'm')):
+        if isinstance(time, Time):
+            self._query('STIME {:.0f}{:s}'.format(time.time, time.unit))
         else:
             raise Exception('Wrong time argument')
             
     def get_time_interval(self):
-        time_str=self._piezo.query('GTIME')
-        time_list=time_str.split(' ')
-        return Time(int(time_list[0]),time_list[1][0])
+        time_str = self._piezo.query('GTIME')
+        time_list = time_str.split(' ')
+        return Time(float(time_list[0]), time_list[1][0])
     
-    def set_positions_simple(self,Xpositions,Ypositions,Zpositions=[]):
-        """ prepare the controller with arbitrary positions
+    def set_positions_simple(self, Xpositions=[], Ypositions=[], Zpositions=[]):
+        """ prepare the controller with arbitrary positions in nanometers
         Parameters
         ----------
-        Xpositions: list of the X positions (instances of Position)
-        Ypositions: list of the Y positions (instances of Position)
-        Zpositions: list of the Z positions (instances of Position)
-        """    
-        Nx=len(Xpositions)
-        Ny=len(Ypositions)
-        Nz=len(Zpositions)
+        Xpositions: (ndarray, dtype=int) X positions in nm
+        Ypositions: (ndarray, dtype=int) X positions in nm
+        Zpositions: (ndarray, dtype=int) X positions in nm
+        """
+        Nx = len(Xpositions)
+        Ny = len(Ypositions)
+        Nz = len(Zpositions)
         
-        self.write_command('ARBWF {:d} {:d} {:d}'.format(Nx,Ny,Nz))
-        
+        ret = self._query('ARBWF {:d} {:d} {:d}'.format(Nx, Ny, Nz))
+        if ret != 'Ok':
+            raise IOError('{:}: Positions not set'.format(ret))
         for xpos in Xpositions:
-            self.write_command('ADDPX {:f}{:s}'.format(xpos.pos,xpos.unit))
+            ret = self._query('ADDPX {:d}{:s}'.format(int(xpos), 'n'))
+            if ret != 'Ok':
+                raise IOError('{:}: Added point not set'.format(ret))
+
         for ypos in Ypositions:
-            self.write_command('ADDPY {:f}{:s}'.format(ypos.pos,ypos.unit))
+            ret = self._query('ADDPY {:d}{:s}'.format(int(ypos), 'n'))
+            if ret != 'Ok':
+                raise IOError('{:}: Added point not set'.format(ret))
+
         for zpos in Zpositions:
-            self.write_command('ADDPZ {:f}{:s}'.format(zpos.pos,zpos.unit))
-            
+            ret = self._query('ADDPZ {:d}{:s}'.format(int(zpos), 'n'))
+            if ret != 'Ok':
+                raise IOError('{:}: Added point not set'.format(ret))
+
     def run_simple(self):
-        self.write_command('RUNWF')
-            
-    def set_positions_arbitrary(self,positions):
-        """ prepare the controller with arbitrary positions
+        """ run the previously set waveforms
+        After writing the command the controller should return the number of steps for each axis, for instance:
+        '21.00\n11.00\n2.00\n'
+        then :
+        'Scan completed\n' once the scan is completed
+        check this return using self._get_read(), in order to check when the scan is finished
+
+        """
+        self._write_command('RUNWF')
+
+
+    def set_positions_arbitrary(self, xaxis=None, yaxis=None, zaxis=None):
+        """ prepare the controller with arbitrary positions. At least one array should be set
         Parameters
         ----------
-        positions: list of 2 lists
-            containing respectively the X positions (instances of Position)
-            and the Y positions
-        """    
-        Npoints=len(positions[0])
-        self.write_command('ARB3D {:d}'.format(Npoints))
+        xaxis: (ndarray) positions in nanometers for the Xaxis (0 if None)
+        yaxis: (ndarray) positions in nanometers for the Yaxis (0 if None)
+        zaxis: (ndarray) positions in nanometers for the Zaxis (0 if None)
+        """
+
+        if xaxis is not None:
+            Npoints = len(xaxis)
+        elif yaxis is not None:
+            Npoints = len(yaxis)
+        elif zaxis is not None:
+            Npoints = len(zaxis)
+        else:
+            raise Exception('No valid array are set')
+
+        if xaxis is not None:
+            assert len(xaxis) == Npoints
+        else:
+            xaxis = np.zeros((Npoints,), dtype=np.int32)
+        if yaxis is not None:
+            assert len(yaxis) == Npoints
+        else:
+            yaxis = np.zeros((Npoints,), dtype=np.int32)
+        if zaxis is not None:
+            assert len(zaxis) == len(xaxis)
+        else:
+            zaxis = np.zeros((Npoints,), dtype=np.int32)
+
+        ret = self._query('ARB3D {:d}'.format(Npoints))
+        if ret != 'Ok':
+            raise IOError('{:}: ARB3D not set'.format(ret))
         
         for ind_pos in range(Npoints):
-            self.write_command('ADD3D {:f}{:s} {:f}{:s} {:f}{:s}'.format(positions[0].pos,
-                               positions[0].unit,positions[1].pos,positions[1].unit,
-                                        0,'u'))
+            ret = self._query('ADD3D {:d}n {:d}n {:d}n'.format(int(xaxis[ind_pos]),
+                                                               int(yaxis[ind_pos]),
+                                                               int(zaxis[ind_pos])))
+            if ret != 'Ok':
+                raise IOError('{:}: ADD3D not set'.format(ret))
             
     def run_arbitrary(self):
-        self.write_command('RUN3D ')
+        self._write_command('RUN3D')
         
-    def get_TTL_state(self,port=1):
-        if port>4 or port<1:
+    def get_TTL_state(self, port=1):
+        """
+        Return the configuration state of the given TTL (1 to 4)
+        Parameters
+        ----------
+        port: (int) TTL number (1 to 4)
+
+        Returns
+        -------
+        list of str : on the form 'status:\nInput rising\nAxis1\n'
+        """
+        if port > 4 or port < 1:
             raise Exception('Invalid IO port number (1-4)')
         else:
             self._piezo.write('DISIO {:d}'.format(port))
-            info=self.get_read()
+            info = self._get_read()
+            info = info.split('\n')
         return info
     
-    def set_TTL_state(self,port,axis,IO='disabled',ttl_options=dict(slope='rising',type='start',ind_start=0,ind_stop=0)):
+    def set_TTL_state(self, port, axis, IO='disabled', ttl_options=dict(slope='rising', type='start', ind_start=0, ind_stop=0)):
         """ define a given TTL input/output
         Parameters
         ----------
@@ -193,31 +267,28 @@ class PiezoConcept(object):
             containing the keys:
                 slope: str either 'rising' or 'falling' (valid only in 'input' IO mode)
                 type: str either 'start', 'end', 'given_step' or 'gate_step' (valid only in 'output' IO mode)
-                ind_start: step number to start the TTL (valid for given and gate mode)
-                ind_stop: step number to stop the gate (valid for gate mode)
+                ind_start: step number to start the TTL (valid for given_step and gate_step mode)
+                ind_stop: step number to stop the gate (valid for gate_step mode)
         """
-        axes=['X','Y','Z']
-        ind_axis=axes.index(axis)+1
-        if IO=='disabled':
-            self.write_command('CHAIO {:d}{:s}'.format(port,IO[0]))
-        elif IO=='input':
-            self.write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port,IO[0],ind_axis,ttl_options['slope'][0]))
-        elif IO=='output':
-            if ttl_options['type']=='start':
-                self.write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port,'o',ind_axis,'s'))
-            elif ttl_options['type']=='end':
-                self.write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port,'o',ind_axis,'e'))
-            elif ttl_options['type']=='given_step':
-                self.write_command('CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port,'o',ind_axis,'n',ttl_options['ind_start']))
-            elif ttl_options['type']=='gate_step':
-                self.write_command('CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port,'o',ind_axis,'g',ttl_options['ind_start'],ttl_options['ind_stop']))
+        axes = ['X', 'Y', 'Z']
+        ind_axis = axes.index(axis) + 1
+        if IO == 'disabled':
+            ret = self._query('CHAIO {:d}{:s}'.format(port, IO[0]))
+        elif IO == 'input':
+            ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, IO[0], ind_axis, ttl_options['slope'][0]))
+        elif IO == 'output':
+            if ttl_options['type'] == 'start':
+                ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 's'))
+            elif ttl_options['type'] == 'end':
+                ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 'e'))
+            elif ttl_options['type'] == 'given_step':
+                ret = self._query('CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port, 'o', ind_axis, 'n', ttl_options['ind_start']))
+            elif ttl_options['type'] == 'gate_step':
+                ret = self._query('CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port, 'o', ind_axis, 'g', ttl_options['ind_start'],
+                                                             ttl_options['ind_stop']))
 
         else:
             raise Exception('Not valid IO type for TTL')
-    
-    
-    
-    
-    
-    
-    
+
+        if ret != 'Ok':
+            raise IOError('{:}: set_TTL_state wrong return'.format(ret))

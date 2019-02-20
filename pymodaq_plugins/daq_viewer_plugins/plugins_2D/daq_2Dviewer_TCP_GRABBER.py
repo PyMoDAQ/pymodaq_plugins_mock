@@ -2,7 +2,7 @@ from PyQt5.QtCore import pyqtSignal
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_viewer.utility_classes import DAQ_TCP_server
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 
 class DAQ_2DViewer_TCP_GRABBER(DAQ_TCP_server):
     """
@@ -71,7 +71,7 @@ class DAQ_2DViewer_TCP_GRABBER(DAQ_TCP_server):
             return self.status
 
         except Exception as e:
-            self.status.info=str(e)
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -133,7 +133,7 @@ class DAQ_2DViewer_TCP_GRABBER(DAQ_TCP_server):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),"log"]))
 
     def stop(self):
         """

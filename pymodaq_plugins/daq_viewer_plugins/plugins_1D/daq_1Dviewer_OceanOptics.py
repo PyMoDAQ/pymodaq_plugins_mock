@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 import sys
 import clr
 from easydict import EasyDict as edict
@@ -127,8 +127,8 @@ class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -162,7 +162,7 @@ class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
             self.data_grabed_signal.emit(datas)
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),"log"]))
 
     def stop(self):
         """

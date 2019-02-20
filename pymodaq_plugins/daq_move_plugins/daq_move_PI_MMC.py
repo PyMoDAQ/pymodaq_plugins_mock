@@ -2,7 +2,7 @@ from PyQt5.QtCore import QThread
 from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
 import os
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
 import platform
 from pymodaq_plugins.hardware.PI.mmc_wrapper import MMC_Wrapper
@@ -87,7 +87,7 @@ class DAQ_Move_PI_MMC(DAQ_Move_base):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status", [str(e), 'log']))
+            self.emit_status(ThreadCommand("Update_Status", [getLineInfo()+ str(e), 'log']))
 
 
     def enumerate_devices(self):
@@ -98,7 +98,7 @@ class DAQ_Move_PI_MMC(DAQ_Move_base):
             self.settings.child('controller_address').setOpts(limits=devices)
             return devices
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status",[str(e),'log']))
+            self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))
 
     def ini_stage(self,controller=None):
         """
@@ -141,8 +141,8 @@ class DAQ_Move_PI_MMC(DAQ_Move_base):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 

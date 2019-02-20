@@ -4,7 +4,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 from enum import IntEnum
@@ -359,7 +359,7 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
             else:
                 self.controller.set(OpenCVProp['CV_CAP_'+param.name()].value,param.value())
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
 
 
 
@@ -397,8 +397,8 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 

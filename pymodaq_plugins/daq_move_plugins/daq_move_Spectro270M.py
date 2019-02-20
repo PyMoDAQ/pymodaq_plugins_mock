@@ -1,6 +1,6 @@
 from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
 
 class DAQ_Move_Spectro270M(DAQ_Move_base):
@@ -124,8 +124,8 @@ class DAQ_Move_Spectro270M(DAQ_Move_base):
 
             return self.status
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 

@@ -7,7 +7,7 @@ from holoeye import slmdisplaysdk
 from pymodaq.daq_utils.daq_utils import select_file
 from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 
 from pymodaq.daq_utils import daq_utils, h5browser
 from easydict import EasyDict as edict
@@ -135,8 +135,8 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -296,7 +296,7 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
             self.current_position=position#+np.random.rand()-0.5
             self.poll_moving()
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
 
 
 

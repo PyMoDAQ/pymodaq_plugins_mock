@@ -1,4 +1,4 @@
-"""
+﻿"""
 Class controlling orsay scan hardware.
 """
 import sys
@@ -39,7 +39,7 @@ if (sys.maxsize > 2**32):
     libname = os.path.dirname(__file__)
     libname = os.path.join(libname, "Cameras.dll")
     _library = cdll.LoadLibrary(libname)
-    #print(f"OrsayCamera library: {_library}")
+    print("OrsayCamera library: ", _library)
 else:
     raise Exception("It must a python 64 bit version")
 
@@ -126,7 +126,7 @@ _OrsayCameraStartFocus = _buildFunction(_library.StartFocus, [c_void_p, c_float,
 #bool CAMERAS_EXPORT StopFocus(void *o);
 _OrsayCameraStopFocus = _buildFunction(_library.StopFocus, [c_void_p],c_bool )
 #bool CAMERAS_EXPORT SetExposureTime(void *o, double pose);
-_OrsayCameraSetExposureTime = _buildFunction(_library.SetCameraExposureTime, [c_void_p, c_double], c_bool)
+# _OrsayCameraSetExposureTime = _buildFunction(_library.SetExposureTime, [c_void_p, c_double], c_bool)
 #bool CAMERAS_EXPORT StartDarkCalibration(void *o, long numofimages);
 #_OrsayCameraStartDarkCalibration = _buildFunction(_library.StartDarkCalibration, [c_void_p, c_long], c_bool)
 #long CAMERAS_EXPORT GetNumOfSpeed(void *o, short p);
@@ -186,12 +186,10 @@ class orsayCamera(object):
     """Class controlling orsay camera class
        Requires Cameras.dll library to run.
     """
-    def close(self):
-        _OrsayCameraClose(self.orsaycamera)
-        self.orsaycamera = None
+
     def __logger(self, message, debug):
-#        print(f"log: {_convertToString23(message)}")
-        pass
+        print("log: ", _convertToString23(message))
+
     def __init__(self, manufacturer, model, sn, simul):
         self.manufacturer = manufacturer
         self.fnlog = LOGGERFUNC(self.__logger)
@@ -202,14 +200,14 @@ class orsayCamera(object):
             raise Exception ("Camera not created")
         if not _OrsayCameraInit_data_structures(self.orsaycamera):
             raise Exception ("Camera not initialised properly")
-#        print(f"Camera: {_OrsayCameraIsCameraThere(self.orsaycamera)}")
-        self.setFan(0)
-        #print("*** Put Fan on as temporary situation (no water in camera at the moment ***")
+        print("Camera: ", _OrsayCameraIsCameraThere(self.orsaycamera))
+        self.setFan(1)
+        print("*** Put Fan on as temporary situation (no water in camera at the moment ***")
 
     def registerLogger(self, fn):
         "Replaces the original logger function"
         _OrsayCameraRegisterLogger(fn)
-
+        
     def getImageSize(self):
         "Read size of image given by the current setting"
         sx = c_long()
@@ -284,19 +282,16 @@ class orsayCamera(object):
         _OrsayCameraSetSpimMode(self.orsaycamera, mode)
 
     def startSpim(self, nbspectra, nbspectraperpixel, dwelltime, is2D):
-        "Start spectrum imaging acquisition"
+        "Start spectrum imaging accquisition"
         _OrsayCameraStartSpim(self.orsaycamera, nbspectra, nbspectraperpixel, dwelltime, c_bool(is2D))
 
     def pauseSpim(self):
-        "Pause spectrum imaging acquisition"
+        "Pause spectrum imaging accquisition"
         _OrsayCameraPauseSpim(self.orsaycamera)
 
     def resumeSpim(self, mode):
-        "Resume spectrum imaging acquisition with mode: 0:SPIMSTOPPED, 1:SPIMRUNNING, 2:SPIMPAUSED, 3:SPIMSTOPEOL, 4:SPIMSTOPEOF, 5:SPIMONLINE"
+        "Resume spectrum imaging accquisition with mode: 0:SPIMSTOPPED, 1:SPIMRUNNING, 2:SPIMPAUSED, 3:SPIMSTOPEOL, 4:SPIMSTOPEOF, 5:SPIMONLINE"
         _OrsayCameraResumeSpim(self.orsaycamera, mode)
-
-    def stopSpim(self, immediate):
-        return _OrsayCameraStopSpim(self.orsaycamera, immediate)
 
     def isCameraThere(self):
         "Check if the camera exists"
@@ -320,17 +315,17 @@ class orsayCamera(object):
     def startFocus(self, exposure, displaymode, accumulate):
         "Start imaging displaymode: 1d, 2d  accumulate if images/spectra have to be summed"
         mode = 0
-        if (displaymode == "1d"):
+        if (displaymode.lower == "2d"):
             mode = 1
-        return _OrsayCameraStartFocus(self.orsaycamera, exposure, mode, accumulate)
+        _OrsayCameraStartFocus(self.orsaycamera, exposure, mode, accumulate)
 
     def stopFocus(self):
         "Stop imaging"
-        return _OrsayCameraStopFocus(self.orsaycamera)
+        _OrsayCameraStopFocus(self.orsaycamera)
 
-    def setExposureTime(self, exposure):
-        "Defines exposure time, usefull to get then frame rate including readout time"
-        _OrsayCameraSetExposureTime(self.orsaycamera, exposure)
+    # def setExposureTime(self, exposure):
+    #     "Defines exposure time, usefull to get then frame rate including readout time"
+    #     _OrsayCameraSetExposureTime(self.orsaycamera, exposure)
 
     def getNumofSpeeds(self, cameraport):
         "Find the number of speeds available for a specific readout port, they can be port dependant on some cameras"
@@ -351,10 +346,7 @@ class orsayCamera(object):
 
     def getCurrentSpeed(self, cameraport):
         "Find the speed used"
-        if isinstance(cameraport, int):
-            return _OrsayCameraGetCurrentSpeed(self.orsaycamera, c_short(cameraport))
-        else:
-            return 0
+        return _OrsayCameraGetCurrentSpeed(self.orsaycamera, cameraport)
 
     def getAllPortsParams(self):
         "Find the list of speeds por all ports return a tuple of (port name, (speeds,), (gains,)"
@@ -446,6 +438,8 @@ class orsayCamera(object):
 
     def setCurrentPort(self, cameraport):
         "Choose the current port"
+        print("type of cameraport", end = "")
+        print(type(cameraport))
         if isinstance(cameraport, int):
             return _OrsayCameraSetCameraPort(self.orsaycamera, c_long(cameraport))
         else:
@@ -481,7 +475,7 @@ class orsayCamera(object):
 
     def getReadoutSpeed(self):
         "Return expected frame rate"
-        return _OrsayCameraGetReadoutSpeed(self.orsaycamera)
+        return _OrsayCameraGetReadoutSpeed(self.orsaycamera).value
 
     def getPixelTime(self, cameraport, speed):
         "Returns time to shift a pixel for a specific port and speed"
@@ -499,7 +493,7 @@ class orsayCamera(object):
         "Roper specific - fast and ultra high speed readout"
         sx = c_short()
         sy = c_short()
-        res = _OrsayCameraGetTurboMode(self.orsaycamera, byref(sx), byref(sy))
+        res = _OrsayCameraGetTurboMode(self.orsaycamera, byref(sx), byref(sy)).value
         return res, sx.value, sy.value
 
     def setExposureMode(self, mode, edge):

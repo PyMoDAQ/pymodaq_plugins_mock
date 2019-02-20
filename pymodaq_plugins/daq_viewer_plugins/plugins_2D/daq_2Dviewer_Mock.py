@@ -5,7 +5,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
     """
@@ -85,7 +85,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
                 self.image[self.settings.child('ROIselect','y0').value():self.settings.child('ROIselect','y0').value()+self.settings.child('ROIselect','height').value(),
                            self.settings.child('ROIselect','x0').value():self.settings.child('ROIselect','x0').value()+self.settings.child('ROIselect','width').value()]=data_mock
             except Exception as e:
-                self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+                self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
         else:
             x_axis=np.linspace(0,self.settings.child(('Nx')).value(),self.settings.child(('Nx')).value(),endpoint=False)
             y_axis=np.linspace(0,self.settings.child(('Ny')).value(),self.settings.child(('Ny')).value(),endpoint=False)
@@ -131,8 +131,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 

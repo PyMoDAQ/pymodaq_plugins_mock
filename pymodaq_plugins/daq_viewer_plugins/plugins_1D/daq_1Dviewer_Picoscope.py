@@ -4,7 +4,7 @@ import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
 import pymodaq_plugins.hardware.picoscope.picoscope_5000A as picoscope
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from bitstring import BitArray
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
@@ -325,8 +325,8 @@ class DAQ_1DViewer_Picoscope(DAQ_Viewer_base):
                 return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -424,7 +424,7 @@ class DAQ_1DViewer_Picoscope(DAQ_Viewer_base):
                     QThread.msleep(status[1])
             return status
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status",[str(e),'log']))
+            self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))
 
 
     @pyqtSlot()
@@ -457,5 +457,5 @@ class DAQ_1DViewer_Picoscope(DAQ_Viewer_base):
             self.data_grabed_signal.emit([OrderedDict(name='picoscope',data=data_export, type='Data1D')])
                 
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status",[str(e),'log']))
+            self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))
 

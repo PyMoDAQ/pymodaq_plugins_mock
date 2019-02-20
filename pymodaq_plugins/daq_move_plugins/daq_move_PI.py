@@ -1,7 +1,7 @@
 from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
 import os
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
 import platform
 from pipython import GCSDevice
@@ -116,7 +116,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                 try:
                     self.controller.CloseConnection()
                 except Exception as e:
-                    self.emit_status(ThreadCommand("Update_Status",[str(e),'log']))
+                    self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))
                 self.ini_device()
 
             elif param.name()=='connect_type':
@@ -146,7 +146,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                     self.controller.SVO(axe,param.value())
 
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status", [str(e), 'log']))
+            self.emit_status(ThreadCommand("Update_Status", [getLineInfo()+ str(e), 'log']))
 
 
     def enumerate_devices(self):
@@ -176,7 +176,7 @@ class DAQ_Move_PI(DAQ_Move_base):
 
             return devices
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status",[str(e),'log']))
+            self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))
 
     def ini_device(self):
         """
@@ -320,8 +320,8 @@ class DAQ_Move_PI(DAQ_Move_base):
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.status.info=getLineInfo()+ str(e)
             self.status.initialized=False
             return self.status
 
@@ -364,7 +364,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                         self.controller.RON(axe,True)
                         self.controller.FRF(axe)
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e)+" / Referencing not enabled with this dll",'log']))
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e)+" / Referencing not enabled with this dll",'log']))
 
     def close(self):
         """
