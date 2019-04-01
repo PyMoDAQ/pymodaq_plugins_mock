@@ -191,45 +191,23 @@ class PiezoConcept(object):
         self._write_command('RUNWF')
 
 
-    def set_positions_arbitrary(self, xaxis=None, yaxis=None, zaxis=None):
+    def set_positions_arbitrary(self, positions):
         """ prepare the controller with arbitrary positions. At least one array should be set
         Parameters
         ----------
-        xaxis: (ndarray) positions in nanometers for the Xaxis (0 if None)
-        yaxis: (ndarray) positions in nanometers for the Yaxis (0 if None)
-        zaxis: (ndarray) positions in nanometers for the Zaxis (0 if None)
+        positions: (list) of 2 (or 3 if Z) arbitrary positions
         """
 
-        if xaxis is not None:
-            Npoints = len(xaxis)
-        elif yaxis is not None:
-            Npoints = len(yaxis)
-        elif zaxis is not None:
-            Npoints = len(zaxis)
-        else:
-            raise Exception('No valid array are set')
-
-        if xaxis is not None:
-            assert len(xaxis) == Npoints
-        else:
-            xaxis = np.zeros((Npoints,), dtype=np.int32)
-        if yaxis is not None:
-            assert len(yaxis) == Npoints
-        else:
-            yaxis = np.zeros((Npoints,), dtype=np.int32)
-        if zaxis is not None:
-            assert len(zaxis) == len(xaxis)
-        else:
-            zaxis = np.zeros((Npoints,), dtype=np.int32)
-
+        Npoints = len(positions)
         ret = self._query('ARB3D {:d}'.format(Npoints))
         if ret != 'Ok':
             raise IOError('{:}: ARB3D not set'.format(ret))
         
-        for ind_pos in range(Npoints):
-            ret = self._query('ADD3D {:d}n {:d}n {:d}n'.format(int(xaxis[ind_pos]),
-                                                               int(yaxis[ind_pos]),
-                                                               int(zaxis[ind_pos])))
+        for pos in positions:
+            if len(pos) == 2:
+                pos.append(0)
+            pos = [int(p) for p in pos]
+            ret = self._query('ADD3D {:d}n {:d}n {:d}n'.format(*pos))
             if ret != 'Ok':
                 raise IOError('{:}: ADD3D not set'.format(ret))
             

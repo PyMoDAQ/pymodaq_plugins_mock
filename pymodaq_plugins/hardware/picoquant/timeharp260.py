@@ -694,18 +694,18 @@ class Th260(object):
         res = self._TH260_GetFlags(device, byref(flags))
         if res == 0:
             ret=[]
-            flags = Bits(int=flags.value, length=32)
-            if len(flags.find('0x0001')) != 0:
+            #flags = Bits(int=flags.value, length=32)
+            if flags.value & 0x0001 > 1:
                 ret.append('OVERFLOW')
-            if len(flags.find('0x0002')) != 0:
+            if flags.value & 0x0002 > 1:
                 ret.append('FIFOFULL')
-            if len(flags.find('0x0004')) != 0:
+            if flags.value & 0x0004 > 1:
                 ret.append('SYNC_LOST')
-            if len(flags.find('0x0008')) != 0:
+            if flags.value & 0x0008 > 1:
                 ret.append('EVTS_DROPPED')
-            if len(flags.find('0x0010')) != 0:
+            if flags.value & 0x0010 > 1:
                 ret.append('SYSERROR')
-            if len(flags.find('0x0020')) != 0:
+            if flags.value & 0x0020 > 1:
                 ret.append('SOFTERROR')
             return ret
         else:
@@ -816,16 +816,16 @@ class Th260(object):
             raise IOError(ErrorCodes(res).name)
 
 
-    def TH260_ReadFiFo(self, device: int = 0, count: int= 0):
+    def TH260_ReadFiFo(self, device: int = 0, count: int= 0, buffer_ptr=POINTER(c_uint)()):
         """
         Read queue in TTTR mode
         Parameters
         ----------
         device: (int) device index if multiple devices 0..3 (default 0)
         count: (int) number of TTTR records the buffer can hold (min = TTREADMIN (128), max = TTREADMAX (131072))
+        buffer_ptr (POINTER(c_uint)()): pointer to a 4096 aligned buffer
         Returns
         -------
-        ndarray: stored TTR data (dtype=uint32)
         int: the number of TTTR records received
         Notes
         -----
@@ -835,11 +835,10 @@ class Th260(object):
         If the buffer does not meet this requirement the library will use an internal buffer and copy the data. This slows down data
         throughput.
          """
-        buffer = np.zeros((count,), dtype=np.uint32)
         nactual = c_int()
-        res = self.TH260_ReadFiFo(device, buffer.ctypes.data_as(POINTER(c_uint)), count, byref(nactual))
+        res = self._TH260_ReadFiFo(device, buffer_ptr, count, byref(nactual))
         if res == 0:
-            return buffer, nactual.value
+            return nactual.value
         else:
             raise IOError(ErrorCodes(res).name)
 

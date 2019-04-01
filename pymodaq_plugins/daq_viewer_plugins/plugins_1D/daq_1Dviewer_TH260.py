@@ -1,24 +1,34 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QThread, QTimer, QMutex, QMutexLocker
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
+import os
 import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, extract_TTTR_histo_every_pixels
+from pyqtgraph.parametertree import Parameter, ParameterTree
+import pyqtgraph.parametertree.parameterTypes as pTypes
+import pymodaq.daq_utils.custom_parameter_tree as customparameter
+
 from enum import IntEnum
 import ctypes
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq_plugins.hardware.picoquant import timeharp260
+from pymodaq.daq_utils.daq_utils import get_set_local_dir
+local_path = get_set_local_dir()
+import tables
+from phconvert import pqreader
+import time
+import datetime
 
-
-
-class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
+class DAQ_1DViewer_TH260(DAQ_Viewer_base):
     """
         See Also
         --------
         utility_classes.DAQ_Viewer_base
     """
-    params= comon_parameters+[
+
+    params = comon_parameters+[
             {'title': 'Device index:', 'name': 'device', 'type': 'int', 'value': 0, 'max': 3, 'min': 0},
             {'title': 'Infos:', 'name': 'infos', 'type': 'str', 'value': "", 'readonly': True},
             {'title': 'Line Settings:', 'name': 'line_settings', 'type': 'group', 'expanded': False, 'children': [
@@ -44,9 +54,12 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                     {'title': 'Deadtime (ns):', 'name': 'deadtime', 'type': 'list', 'value': 24, 'values': [24, 44, 66, 88, 112, 135, 160, 180]},
                 ]},
              ]},
-             {'title': 'Acquisition:', 'name': 'acquisition', 'type': 'group', 'expanded': True, 'children': [
+            {'title': 'Acquisition:', 'name': 'acquisition', 'type': 'group', 'expanded': True, 'children': [
                  {'title': 'Acq. type:', 'name': 'acq_type', 'type': 'list',
-                                'value': 'Histo', 'values': ['Counting', 'Histo', 'FLIM']},
+                                'value': 'Histo', 'values': ['Counting', 'Histo', 'T3']},
+                 {'title': 'Base path:', 'name': 'base_path', 'type': 'browsepath', 'value': 'E:\Data',
+                 'filetype': False, 'readonly': True, 'visible': False },
+                 {'title': 'Temp. File:', 'name': 'temp_file', 'type': 'str', 'value': '', 'visible': False},
                  {'title': 'Acq. time (s):', 'name': 'acq_time', 'type': 'int', 'value': 1, 'min': 0.1,
                                     'max': 360000},
                  {'title': 'Elapsed time (s):', 'name': 'elapsed_time', 'type': 'int', 'value': 0, 'min': 0,
@@ -57,7 +70,7 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                      {'title': 'Base Resolution (ps):', 'name': 'base_resolution', 'type': 'float', 'value': 25, 'min': 0, 'readonly': True},
                      {'title': 'Resolution (ns):', 'name': 'resolution', 'type': 'float', 'value': 0.2, 'min': 0},
                      {'title': 'Time window (s):', 'name': 'window', 'type': 'float', 'value': 100, 'min': 0, 'readonly': True, 'enabled': False, 'siPrefix': True},
-                     {'title': 'Nbins:', 'name': 'nbins', 'type': 'list', 'value': 2048 , 'values': [1024*(2**lencode) for lencode in range(6)]},
+                     {'title': 'Nbins:', 'name': 'nbins', 'type': 'list', 'value': 1024, 'values': [1024*(2**lencode) for lencode in range(6)]},
                      {'title': 'Offset (ns):', 'name': 'offset', 'type': 'int', 'value': 0, 'max': 100000000, 'min': 0},
                  ]},
 
@@ -68,35 +81,16 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                      {'title': 'CH2 rate (cts/s):', 'name': 'ch2_rate', 'type': 'int', 'value': 0, 'min': 0, 'readonly': True, 'siPrefix': True},
                      {'title': 'Nrecords:', 'name': 'records', 'type': 'int', 'value': 0, 'min': 0, 'readonly': True,  'siPrefix': True},
                  ]},
-                 {'title': 'Markers:', 'name': 'markers', 'type': 'group', 'expanded': True, 'visible': True, 'children': [
-                     {'title': 'Marker1:', 'name': 'marker1', 'type': 'group', 'expanded': True, 'children': [
-                         {'title': 'Enabled?:', 'name': 'enabled', 'type': 'bool', 'value': True},
-                         {'title': 'type:', 'name': 'type', 'type': 'list', 'value': 'Falling', 'values': ['Falling', 'Rising']},
-                     ]},
-                     {'title': 'Marker2:', 'name': 'marker2', 'type': 'group', 'expanded': True, 'children': [
-                         {'title': 'Enabled?:', 'name': 'enabled', 'type': 'bool', 'value': True},
-                         {'title': 'type:', 'name': 'type', 'type': 'list', 'value': 'Falling',
-                          'values': ['Falling', 'Rising']},
-                     ]},
-                     {'title': 'Marker3:', 'name': 'marker3', 'type': 'group', 'expanded': True, 'children': [
-                         {'title': 'Enabled?:', 'name': 'enabled', 'type': 'bool', 'value': True},
-                         {'title': 'type:', 'name': 'type', 'type': 'list', 'value': 'Falling',
-                          'values': ['Falling', 'Rising']},
-                     ]},
-                     {'title': 'Marker 4:', 'name': 'marker4', 'type': 'group', 'expanded': True, 'children': [
-                         {'title': 'Enabled?:', 'name': 'enabled', 'type': 'bool', 'value': True},
-                         {'title': 'type:', 'name': 'type', 'type': 'list', 'value': 'Falling',
-                          'values': ['Falling', 'Rising']},
-                     ]},
-                 ]},
              ]},
+
             ]
 
     hardware_averaging = False
+    stop_tttr = pyqtSignal()
 
     def __init__(self, parent=None, params_state=None):
 
-        super(DAQ_1DViewer_TH260_histo,self).__init__(parent, params_state) #initialize base class with commom attributes and methods
+        super(DAQ_1DViewer_TH260, self).__init__(parent, params_state) #initialize base class with commom attributes and methods
 
         self.device = None
         self.x_axis = None
@@ -108,6 +102,15 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
         self.channels_enabled = {'CH1': {'enabled': True, 'index': 0}, 'CH2': {'enabled': False, 'index': 1}}
         self.modes = ['Histo', 'T2', 'T3']
         self.actual_mode = 'Counting'
+        self.h5file = None
+        self.detector_thread = None
+        self.time_t3 = 0
+        self.time_t3_rate = 0
+        self.ind_reading = 0
+        self.histo_array = None
+
+    def emit_log(self,string):
+        self.emit_status(ThreadCommand('Update_Status', [string, 'log']))
 
     def commit_settings(self, param):
         """
@@ -129,6 +132,20 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
             if param.name() == 'acq_type':
                 self.set_acq_mode(param.value())
                 self.set_get_resolution(wintype='both')
+                if param.value() == 'Counting' or param.value() == 'Histo':
+                    self.settings.child('acquisition', 'temp_file').hide()
+                    self.settings.child('acquisition', 'base_path').hide()
+                else:
+                    self.settings.child('acquisition', 'temp_file').show()
+                    self.settings.child('acquisition', 'base_path').show()
+                #     self.settings.child('acquisition', 'timings', 'nbins').setOpts(
+                #         limits=[128 * (2 ** lencode) for lencode in range(6)])
+                #     self.settings.child('acquisition', 'timings', 'nbins').setValue(128)
+                #
+                # else:
+                #     self.settings.child('acquisition', 'timings', 'nbins').setOpts(
+                #         limits=[1024 * (2 ** lencode) for lencode in range(6)])
+                #     self.settings.child('acquisition', 'timings', 'nbins').setValue(1024)
 
             elif param.name() == 'nbins' or param.name() == 'resolution':
                 self.set_get_resolution(param.name())
@@ -147,7 +164,7 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                                   'CH1 rate (kcts/s)', 'CH2 Rate (kcts/s)'], Nvals=3, digits=6)]))
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
 
 
     def emit_data(self):
@@ -162,8 +179,15 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
                     self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=True)
-
+                records = np.sum(np.array([np.sum(data) for data in self.datas]))
+                self.settings.child('acquisition', 'rates', 'records').setValue(records)
                 self.data_grabed_signal.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
+                self.general_timer.start()
+
+            elif mode == 'T3':
+                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D')])
+                self.general_timer.start()
+
 
 
         except Exception as e:
@@ -181,11 +205,26 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
                     self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=False)
-
+                records = np.sum(np.array([np.sum(data) for data in self.datas]))
+                self.settings.child('acquisition', 'rates', 'records').setValue(records)
                 self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
+            elif mode == 'T3':
+                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D')])
+
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo()+ str(e), 'log']))
+
+    def process_histo_from_h5(self, Nx=1, Ny=1, channel=0, marker=65):
+        marker = 65
+        markers = self.h5file.get_node('/markers')[self.ind_reading:]
+        nanotimes = self.h5file.get_node('/nanotimes')[self.ind_reading:]
+
+        nbins = self.settings.child('acquisition', 'timings', 'nbins').value()
+        datas = extract_TTTR_histo_every_pixels(nanotimes, markers, marker=marker, Nx=Nx, Ny=Ny,
+                                        Ntime=nbins, ind_line_offset=self.ind_reading, channel=channel)
+        self.ind_reading += nanotimes.size
+        return datas
 
     def set_acq_mode(self, mode, update=False):
         """
@@ -202,23 +241,27 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
         labels = [k for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
         N = len(labels)
 
-        if mode == 'FLIM':
-            if mode != self.actual_mode or update:
-                self.controller.TH260_Initialize(self.device, mode=2)  # mode T3
-            self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=[], type='DataND')])
-        else:
-            if mode != self.actual_mode or update:
-                self.controller.TH260_Initialize(self.device, mode=0)  # histogram
-                if mode == 'Counting':
-                    self.datas = [np.zeros((1,), dtype=np.uint32) for ind in range(N)]
-                    self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data0D', labels=labels)])
-                elif mode == 'Histo':
-                    self.datas = [np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.uint32) for ind in range(N)]
-                    self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',
-                                                                    x_axis=self.get_xaxis(), labels=labels)])
+        if mode != self.actual_mode or update:
 
-        self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
-        self.actual_mode = mode
+            if mode == 'Counting':
+                self.controller.TH260_Initialize(self.device, mode=0)  # histogram
+                self.datas = [np.zeros((1,), dtype=np.uint32) for ind in range(N)]
+                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data0D', labels=labels)])
+                self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
+            elif mode == 'Histo':
+                self.controller.TH260_Initialize(self.device, mode=0)  # histogram
+                self.datas = [np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.uint32) for ind in range(N)]
+                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',
+                                                                x_axis=self.get_xaxis(), labels=labels)])
+                self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
+            elif mode == 'T3':
+                self.controller.TH260_Initialize(self.device, mode=3)  # T3 mode
+                self.datas = [np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.uint32) for ind in range(N)]
+                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',
+                                                                x_axis=self.get_xaxis(), labels=labels)])
+                self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
+
+            self.actual_mode = mode
 
     def ini_channels(self):
         self.controller.TH260_SetSyncDiv(self.device,
@@ -280,7 +323,7 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
         try:
 
             if self.settings.child(('controller_status')).value()=="Slave":
-                if controller is None: 
+                if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
                     self.controller=controller
@@ -296,7 +339,6 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
             self.general_timer = QTimer()
             self.general_timer.setInterval(200)
             self.general_timer.timeout.connect(self.update_timer)
-
 
             #set timer to check acquisition state
             self.acq_timer = QTimer()
@@ -314,8 +356,7 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
 
             self.set_get_resolution(wintype='both')
 
-            self.emit_status(ThreadCommand('init_lcd', [dict(labels=['Syn. Rate (kcts/s)',
-                                                                     'CH1 rate (kcts/s)', 'CH2 Rate (kcts/s)'], Nvals=3,
+            self.emit_status(ThreadCommand('init_lcd', [dict(labels=['CH1 rate (kcts/s)', 'CH2 Rate (kcts/s)'], Nvals=2,
                                                              digits=6)]))
 
             self.general_timer.start()  # Timer event fired every 200ms
@@ -334,6 +375,12 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
             return self.status
 
     def poll_acquisition(self):
+        """
+        valid only for histogramming mode
+        Returns
+        -------
+
+        """
         while not self.controller.TH260_CTCStatus(self.device):
             # elapsed_time = self.controller.TH260_GetElapsedMeasTime(self.device)  # in ms
             # self.settings.child('acquisition', 'elapsed_time').setValue(elapsed_time / 1000)  # in s
@@ -344,10 +391,14 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
         self.controller.TH260_StopMeas(self.device)
         self.emit_data()
 
+    @pyqtSlot(int)
+    def set_elapsed_time(self, elapsed_time):
+        self.settings.child('acquisition', 'elapsed_time').setValue(elapsed_time/1000)  # in s
+
     def check_acquisition(self):
         if not self.controller.TH260_CTCStatus(self.device):
             elapsed_time = self.controller.TH260_GetElapsedMeasTime(self.device)  # in ms
-            self.settings.child('acquisition', 'elapsed_time').setValue(elapsed_time/1000)  # in s
+            self.set_elapsed_time(elapsed_time)
             self.emit_data_tmp()
         else:
             self.acq_timer.stop()
@@ -359,18 +410,25 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
     def get_rates(self):
         vals = []
         sync_rate = self.controller.TH260_GetSyncRate(self.device)
-        self.settings.child('acquisition', 'rates', 'syncrate').setValue(sync_rate)
+
         vals.append([sync_rate/1000])
         for ind_channel in range(self.Nchannels):
             if self.settings.child('line_settings',  'ch{:d}_settings'.format(ind_channel+1), 'enabled').value():
                 rate = self.controller.TH260_GetCountRate(self.device, ind_channel)
                 vals.append([rate/1000])
-                self.settings.child('acquisition', 'rates', 'ch{:d}_rate'.format(ind_channel+1)).setValue(rate)
             else:
                 vals.append([0])
 
+        self.emit_rates(vals)
+        return vals
+
+    def emit_rates(self,vals):
+        self.settings.child('acquisition', 'rates', 'syncrate').setValue(vals[0][0]*1000)
+        for ind_channel in range(self.Nchannels):
+            self.settings.child('acquisition', 'rates', 'ch{:d}_rate'.format(ind_channel+1)).setValue(vals[ind_channel+1][0]*1000)
+
         if self.settings.child('acquisition', 'rates', 'large_display').value():
-            self.emit_status(ThreadCommand('lcd', [vals]))
+            self.emit_status(ThreadCommand('lcd', [vals[1:]]))
         return vals
 
     def set_sync_channel(self, param):
@@ -448,23 +506,26 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
             resolution=self.controller.TH260_GetResolution(self.device)/1000
             self.settings.child('acquisition', 'timings', 'resolution').setValue(resolution)
         if wintype =='nbins' or wintype =='both':
-            Nbins = self.controller.TH260_SetHistoLen(self.device, int(np.log(Nbins/1024)/np.log(2)))
-            self.settings.child('acquisition', 'timings', 'nbins').setValue(Nbins)
             mode = self.settings.child('acquisition', 'acq_type').value()
+
+            if mode == 'Counting' or mode == 'Histo':
+                Nbins = self.controller.TH260_SetHistoLen(self.device, int(np.log(Nbins/1024)/np.log(2)))
+            self.settings.child('acquisition', 'timings', 'nbins').setValue(Nbins)
 
             N = len([k for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']])
             if mode == 'Counting':
                 self.datas = [np.zeros((1,), dtype=np.uint32) for ind in range(N)]
-            elif mode == 'Histo':
+            elif mode == 'Histo' or mode == 'T3':
                 self.datas = [np.zeros((Nbins,), dtype=np.uint32) for ind in range(N)]
+                self.get_xaxis()
+                self.emit_x_axis()
             self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
 
 
         self.settings.child('acquisition', 'timings', 'window').setValue(Nbins*resolution/1e6)  # in ms
         self.set_acq_mode(self.settings.child('acquisition', 'acq_type').value())
 
-        self.get_xaxis()
-        self.emit_x_axis()
+
 
     def update_timer(self):
         """
@@ -480,12 +541,18 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
         """
 
         """
+        self.stop()
+        QtWidgets.QApplication.processEvents()
         self.datas = None
         self.data_pointers = None
         self.general_timer.stop()
         QtWidgets.QApplication.processEvents()
         #QThread.msleep(1000)
         self.controller.TH260_CloseDevice(self.device)
+        if self.h5file is not None:
+            if self.h5file.isopen:
+                self.h5file.flush()
+                self.h5file.close()
 
     def get_xaxis(self):
         """
@@ -548,19 +615,162 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
                 self.controller.TH260_StartMeas(self.device, time_acq)
                 self.acq_timer.start()
                 #self.poll_acquisition()
-            elif mode == 'FLIM':
+
+            elif mode == 'T3':
+                self.ind_reading = 0
+                self.Nx = 1
+                self.Ny = 1
+                self.init_h5file()
+                self.datas = np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.float64)
+                self.init_histo_group()
+
+                time_acq = int(self.settings.child('acquisition', 'acq_time').value() * 1000)  # in ms
                 self.general_timer.stop()
+
+                t3_reader = T3Reader(self.device, self.controller, time_acq, self.Nchannels)
+                self.detector_thread = QThread()
+                t3_reader.moveToThread(self.detector_thread)
+
+                t3_reader.data_signal[dict].connect(self.populate_h5)
+                self.stop_tttr.connect(t3_reader.stop_TTTR)
+
+                self.detector_thread.t3_reader = t3_reader
+                self.detector_thread.start()
+                self.detector_thread.setPriority(QThread.HighestPriority)
+                self.time_t3 = time.perf_counter()
+                self.time_t3_rate = time.perf_counter()
+                t3_reader.start_TTTR()
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo()+ str(e), "log"]))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), "log"]))
+
+    def init_histo_group(self):
+        histo_group = self.h5file.create_group(self.h5file.root, 'histograms')
+        self.histo_array = self.h5file.create_carray(histo_group, 'histogram', obj=self.datas,
+                                                     title='histogram')
+        x_axis = self.get_xaxis()
+        xarray = self.h5file.create_carray(histo_group, "x_axis", obj=x_axis['data'], title='x_axis')
+        xarray.attrs['shape'] = xarray.shape
+        xarray.attrs['type'] = 'signal_axis'
+        xarray.attrs['data_type'] = '1D'
+
+        self.histo_array._v_attrs['data_type'] = '1D'
+        self.histo_array._v_attrs['type'] = 'histo_data'
+        self.histo_array._v_attrs['shape'] = self.datas.shape
+
+
+    def get_new_file_name(self):
+        today = datetime.datetime.now()
+
+        date = today.strftime('%Y%m%d')
+        year = today.strftime('%Y')
+        curr_dir = os.path.join(self.settings.child('acquisition', 'base_path').value(), year, date)
+        if not os.path.isdir(curr_dir):
+            os.mkdir(curr_dir)
+
+        with os.scandir(curr_dir) as it:
+            files = []
+            for entry in it:
+                if entry.name.startswith('tttr_data') and entry.is_file():
+                    files.append(entry.name)
+            files.sort()
+            if files == []:
+                index = 0
+            else:
+                index = int(os.path.splitext(files[-1])[0][-3:])+1
+
+            file = 'tttr_data_{:03d}'.format(index)
+        return file, curr_dir
+
+    def init_h5file(self):
+
+        file, curr_dir = self.get_new_file_name()
+
+        self.settings.child('acquisition', 'temp_file').setValue(file+'.h5')
+        self.h5file = tables.open_file(os.path.join(curr_dir, file+'.h5'), mode='w')
+        h5group = self.h5file.root
+        h5group._v_attrs['settings'] = customparameter.parameter_to_xml_string(self.settings)
+        h5group._v_attrs.type = 'detector'
+        h5group._v_attrs['format_name'] = 'timestamps'
+
+        channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if
+                          self.channels_enabled[k]['enabled']]
+        self.marker_array = self.h5file.create_earray(self.h5file.root, 'markers', tables.UInt8Atom(), (0,),
+                                                      title='markers')
+        self.marker_array._v_attrs['data_type'] = '1D'
+        self.marker_array._v_attrs['type'] = 'tttr_data'
+
+        self.nanotimes_array = self.h5file.create_earray(self.h5file.root, 'nanotimes', tables.UInt16Atom(), (0,),
+                                                         title='nanotimes')
+        self.nanotimes_array._v_attrs['data_type'] = '1D'
+        self.nanotimes_array._v_attrs['type'] = 'tttr_data'
+
+        self.timestamp_array = self.h5file.create_earray(self.h5file.root, 'timestamps', tables.UInt64Atom(), (0,),
+                                                   title='timestamps')
+        self.timestamp_array._v_attrs['data_type'] = '1D'
+        self.timestamp_array._v_attrs['type'] = 'tttr_data'
+
+        # self.raw_datas_array = self.h5file.create_earray(self.h5file.root, 'raw_data', tables.UInt64Atom(), (0,),
+        #                                           title='raw_data')
+        # self.raw_datas_array._v_attrs['data_type'] = '1D'
+        # self.raw_datas_array._v_attrs['type'] = 'tttr_data'
+
+
+
+    @pyqtSlot(dict)
+    def populate_h5(self, datas):
+        """
+
+        Parameters
+        ----------
+        datas: (dict) dict(data=self.buffer[0:nrecords], rates=rates, elapsed_time=elapsed_time)
+
+        Returns
+        -------
+
+        """
+        if datas['data'] != []:
+            # self.raw_datas_array.append(datas['data'])
+            # self.raw_datas_array._v_attrs['shape'] = self.raw_datas_array.shape
+            detectors, timestamps, nanotimes = pqreader.process_t3records(
+                datas['data'], time_bit=10, dtime_bit=15, ch_bit=6, special_bit=True,
+                ovcfunc=pqreader._correct_overflow_nsync)
+
+            self.timestamp_array.append(timestamps)
+            self.timestamp_array._v_attrs['shape'] = self.timestamp_array.shape
+            self.nanotimes_array.append(nanotimes)
+            self.nanotimes_array._v_attrs['shape'] = self.nanotimes_array.shape
+            self.marker_array.append(detectors)
+            self.marker_array._v_attrs['shape'] = self.marker_array.shape
+            self.h5file.flush()
+
+        if time.perf_counter() - self.time_t3_rate > 0.5:
+            self.emit_rates(datas['rates'])
+            self.set_elapsed_time(datas['elapsed_time'])
+            self.settings.child('acquisition', 'rates', 'records').setValue(self.nanotimes_array.shape[0])
+            self.time_t3_rate = time.perf_counter()
+
+        elif time.perf_counter() - self.time_t3 > 5:
+            self.datas += np.squeeze(self.process_histo_from_h5(Nx=self.Nx, Ny=self.Ny))
+            self.histo_array[:] = self.datas
+            self.emit_data_tmp()
+            self.time_t3 = time.perf_counter()
+
+        if datas['acquisition_done']:
+            self.datas += np.squeeze(self.process_histo_from_h5(Nx=self.Nx, Ny=self.Ny))
+            self.histo_array[:] = self.datas
+            self.emit_data()
+
+
+
+
 
     def stop(self):
         """
             stop the camera's actions.
         """
         try:
-            #lock = QMutexLocker(self.locker)
             self.acq_timer.stop()
             QtWidgets.QApplication.processEvents()
             self.controller.TH260_StopMeas(self.device)
@@ -570,3 +780,65 @@ class DAQ_1DViewer_TH260_histo(DAQ_Viewer_base):
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo()+ str(e), "log"]))
 
         return ""
+
+
+class T3Reader(QObject):
+    data_signal = pyqtSignal(dict)  # dict(data=self.buffer[0:nrecords], rates=rates, elapsed_time=elapsed_time)
+
+    def __init__(self, device, controller, time_acq, Nchannels=2):
+        super(T3Reader, self).__init__()
+
+        self.Nchannels = Nchannels
+        self.device = device
+        self.controller = controller
+        self.time_acq = time_acq
+        self.acquisition_stoped = False
+        self.buffer = zeros_aligned(2 ** 14, 4096, dtype=np.uint32)
+        self.data_ptr = self.buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
+
+    def set_acquisition_stoped(self):
+        self.acquisition_stoped = True
+
+    def start_TTTR(self):
+
+        self.controller.TH260_StartMeas(self.device, self.time_acq)
+
+        while not self.acquisition_stoped:
+            if 'FIFOFULL' in self.controller.TH260_GetFlags(self.device):
+                print("\nFiFo Overrun!")
+                #self.stop_TTTR()
+
+            rates = self.get_rates()
+            elapsed_time = self.controller.TH260_GetElapsedMeasTime(self.device)  # in ms
+
+            nrecords = self.controller.TH260_ReadFiFo(self.device, self.buffer.size, self.data_ptr)
+
+            if nrecords > 0:
+                # We could just iterate through our buffer with a for loop, however,
+                # this is slow and might cause a FIFO overrun. So instead, we shrinken
+                # the buffer to its appropriate length with array slicing, which gives
+                # us a python list. This list then needs to be converted back into
+                # a ctype array which can be written at once to the output file
+                self.data_signal.emit(dict(data=self.buffer[0:nrecords], rates=rates, elapsed_time=elapsed_time, acquisition_done=False))
+            else:
+
+                if self.controller.TH260_CTCStatus(self.device):
+                    print("\nDone")
+                    self.stop_TTTR()
+                    self.data_signal.emit(dict(data=[], rates=rates, elapsed_time=elapsed_time, acquisition_done=True))
+            # within this loop you can also read the count rates if needed.
+
+    def stop_TTTR(self):
+        self.acquisition_stoped = True
+        self.controller.TH260_StopMeas(self.device)
+
+
+    def get_rates(self):
+        vals = []
+        sync_rate = self.controller.TH260_GetSyncRate(self.device)
+        vals.append([sync_rate/1000])
+        for ind_channel in range(self.Nchannels):
+            rate = self.controller.TH260_GetCountRate(self.device, ind_channel)
+            vals.append([rate/1000])
+        return vals
+
