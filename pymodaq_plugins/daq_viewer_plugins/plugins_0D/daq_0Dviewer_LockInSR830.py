@@ -52,8 +52,10 @@ class DAQ_0DViewer_LockInSR830(DAQ_Viewer_base):
                 break
         
        
-    except:
+    except Exception as e:
         devices=[]
+        device=''
+        raise e
 
     params= comon_parameters+[
                 {'title': 'VISA:','name': 'VISA_ressources', 'type': 'list', 'values': devices, 'value': device },
