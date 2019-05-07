@@ -5,19 +5,19 @@ import gettext
 import numpy
 import threading
 import typing
-
 # third party libraries
 
 # local libraries
 from nion.swift.model import HardwareSource
+from nion.utils import Registry
 
 from .orsayscan import orsayScan, LOCKERFUNC, UNLOCKERFUNC, UNLOCKERFUNCA
+from . ConfigDialog import ConfigDialog
 
 from nion.instrumentation import scan_base
 
 _ = gettext.gettext
 
-SIZEZ = 2
 
 AUTOSTEM_CONTROLLER_ID = "autostem_controller"
 
@@ -25,45 +25,64 @@ AUTOSTEM_CONTROLLER_ID = "autostem_controller"
 class Device:
 
     def __init__(self):
+        # these are required to register the device
+        self.scan_device_id = "orsay_scan_device"
+        self.scan_device_name = _("Orsay Scan")
+        self.stem_controller_id = AUTOSTEM_CONTROLLER_ID
+
         self.__is_scanning = False
         self.on_device_state_changed = None
-        self.__profiles = list()
-        self.__profiles.append(scan_base.ScanFrameParameters({"size": (512, 512), "pixel_time_us": 0.2}))
-        self.__profiles.append(scan_base.ScanFrameParameters({"size": (1024, 1024), "pixel_time_us": 0.2}))
-        self.__profiles.append(scan_base.ScanFrameParameters({"size": (2048, 2048), "pixel_time_us": 2.5}))
-        self.__frame_parameters = copy.deepcopy(self.__profiles[0])
-
+        self.flyback_pixels = 0
         self.__frame_number = 0
         self.__scan_size = [512, 512]
+        self.__sizez = 2
         self.orsayscan = orsayScan(1)
-        self.imagedata = numpy.empty((SIZEZ * self.__scan_size[1], self.__scan_size[0]), dtype = numpy.int16)
+        self.spimscan = orsayScan(2, self.orsayscan.orsayscan)
+        #list all inputs
+        totalinputs = self.orsayscan.getInputsCount()
+        self.dinputs = dict()
+        for index in range(totalinputs):
+            prop = self.orsayscan.getInputProperties(index)
+            self.dinputs[index] = [prop, False]
+        self.usedinputs = [[0, False, self.dinputs[0][0]], [1, False, self.dinputs[1][0]], [6, False, self.dinputs[6][0]], [7, False, self.dinputs[7][0]]]
+        self.orsayscan.SetInputs([1, 0])
+        __inputs = self.orsayscan.GetInputs()
+        for inp in __inputs[1]:
+            for k in self.usedinputs:
+                if k[0] == inp:
+                    k[1] = True
+        #
+        # Add eels camera if there
+        #
+        self.__eelscamera = HardwareSource.HardwareSourceManager().get_hardware_source_for_hardware_source_id("orsay_camera_kuro")
+        self.usedinputs.append([100, False, [0, 0, "eels", 100]])
+        channels = list(self.usedinputs[ch][1] for ch in range(len(self.usedinputs)))
+        self.__cameras_parsed = False
+
+        self.__profiles = list()
+        self.__profiles.append(scan_base.ScanFrameParameters({"size": (512, 512), "pixel_time_us": 0.2, "channels":channels}))
+        self.__profiles.append(scan_base.ScanFrameParameters({"size": (1024, 1024), "pixel_time_us": 0.2, "channels":channels}))
+        self.__profiles.append(scan_base.ScanFrameParameters({"size": (64, 64), "pixel_time_us": 1000, "channels":channels}))
+        self.__profiles.append(scan_base.ScanFrameParameters({"size": (2048, 2048), "pixel_time_us": 2.5, "channels":channels}))
+        self.__frame_parameters = copy.deepcopy(self.__profiles[0])
+
+        self.imagedata = numpy.empty((self.__sizez * self.__scan_size[1], self.__scan_size[0]), dtype = numpy.int16)
         self.imagedata_ptr = self.imagedata.ctypes.data_as(ctypes.c_void_p)
         self.has_data_event = threading.Event()
         self.fnlock = LOCKERFUNC(self.__data_locker)
         self.orsayscan.registerLocker(self.fnlock)
         self.fnunlock = UNLOCKERFUNCA(self.__data_unlockerA)
         self.orsayscan.registerUnlockerA(self.fnunlock)
-        self.orsayscan.setPixelTime(0.000002)
-        self.orsayscan.setScanScale(0, 5.0, 5.0)  # set the scan scale to 5v to match SuperScan, which output bank, then one for each direction
+        self.orsayscan.pixelTime = 0.000002
+        # set the scan scale to 5v to match SuperScan, which output bank, then one for each direction
+        self.orsayscan.setScanScale(0, 5.0, 5.0)
+        #for channel_index in range(self.channel_count):
+        #    self.set_channel_enabled(channel_index, channels_enabled[channel_index])
 
-        channels_enabled = self.channels_enabled
-        for channel_index in range(self.channel_count):
-            self.set_channel_enabled(channel_index, channels_enabled[channel_index])
-
-        print("OrsayScan Version: ", self.orsayscan.major)
+        print(f"OrsayScan Version: {self.orsayscan._major}")
         self.__angle = 0
 
     def close(self):
-        pass
-
-    @property
-    def blanker_enabled(self) -> bool:
-        """Return whether blanker is enabled."""
-        return False
-
-    @blanker_enabled.setter
-    def blanker_enabled(self, blanker_on: bool) -> None:
-        """Set whether blanker is enabled."""
         pass
 
     def change_pmt(self, channel_index: int, increase: bool) -> None:
@@ -76,24 +95,34 @@ class Device:
 
     @property
     def channel_count(self):
-        return self.orsayscan.getInputsCount()
+        # if not self.__cameras_parsed:
+        #     self.__eelscamera = HardwareSource.HardwareSourceManager().get_hardware_source_for_hardware_source_id(
+        #         "orsay_camera_kuro")
+        #     if self.__eelscamera is not None:
+        #         self.usedinputs.append([100, False, [0, 0, "eels", 100]])
+        #         channels = list(self.usedinputs[ch][1] for ch in range(len(self.usedinputs)))
+        # self.__cameras_parsed = True
+        return len(self.usedinputs)
 
     @property
     def channels_enabled(self) -> typing.Tuple[bool, ...]:
-        return tuple(value != 0 for value in self.orsayscan.GetInputs()[1])
+        #return tuple(self.dinputs[l][1] for l in range(len(self.dinputs)))
+        return self.__frame_parameters.channels
 
     def set_channel_enabled(self, channel_index: int, enabled: bool) -> bool:
         """in 16-bit mode, the number of channels used in hardware needs to be even
-        in case odd number is slected, last channels can be repeated twice.
+        in case odd number is selected, last channels can be repeated twice.
         call back function should then ignore this last channel; and it will match user interface
         in 32-bit mode, one channel can be enabled"""
         assert 0 <= channel_index < self.channel_count
-        self.orsayscan.SetInputs([2, 3])
-        # self.orsayscan.SetInputs([6, 7])  # hardware simulator
-        return True
+        #self.dinputs[channel_index][1] = enabled
+        changed = self.__frame_parameters.channels[channel_index] != enabled
+        self.__frame_parameters.channels[channel_index] = enabled
+        return changed
 
     def get_channel_name(self, channel_index: int) -> str:
-        return self.orsayscan.getInputProperties(channel_index)[2]
+        #return self.orsayscan.getInputProperties(self.usedinputs[channel_index])[2]
+        return self.usedinputs[channel_index][2][2]
 
     def read_partial(self, frame_number, pixels_to_skip) -> (typing.Sequence[dict], bool, bool, tuple, int, int):
         """Read or continue reading a frame.
@@ -114,36 +143,51 @@ class Device:
         a 'channel_id' indicating the index of the channel (may be an int or float).
         """
 
-        #self.__frame_number += 1
-        self.has_data_event.wait(5.0)
-        self.has_data_event.clear()
-        # should be a loop over selected channels.
-        data_arrays = self.imagedata[0:self.__scan_size[1], 0:self.__scan_size[0]].astype(numpy.float32), self.imagedata[self.__scan_size[1]:2*self.__scan_size[1], 0:self.__scan_size[0]].astype(numpy.float32)
-
+        gotit = self.has_data_event.wait(2.0)
+        #if gotit:
         frame_number = self.__frame_number
 
         _data_elements = []
 
         sub_area = None
-        for channel_index, data_array in enumerate(data_arrays):
-            data_element = dict()
-            image_metadata = self.__frame_parameters.as_dict()
-            image_metadata["pixel_time_us"] = float(self.orsayscan.getPixelTime() * 1E6)
-            image_metadata["pixels_x"] = self.__scan_size[1]
-            image_metadata["pixels_y"] = self.__scan_size[0]
-            image_metadata["center_x_nm"] = 0
-            image_metadata["center_y_nm"] = 0
-            image_metadata["rotation_deg"] = 0
-            image_metadata["channel_id"] = channel_index
-            data_element["data"] = data_array
-            data_element["properties"] = image_metadata
-            sub_area = ((0, 0), data_array.shape)
-            _data_elements.append(data_element)
+        channel_index = 0
+        dataposition = 0
+
+        for l in self.__frame_parameters.channels:
+            if l:
+                data_element = dict()
+                image_metadata = self.__frame_parameters.as_dict()
+                if self.usedinputs[channel_index][0] < 100:
+                    data_array = self.imagedata[dataposition*self.__scan_size[1]:(dataposition+1)*self.__scan_size[1], 0:self.__scan_size[0]].astype(numpy.float32)
+                    sub_area = ((0, 0), data_array.shape)
+                else:
+                    if self.isSpim and (self.__eelscamera is not None):
+                        data_array = self.__eelscamera.spimimagedata
+                        data_array.shape = (self.__scan_size[1], self.__scan_size[0], -1)
+                        image_metadata["sub_area"] =  ((0, 0, 0), data_array.shape)
+                        data_element["collection_dimension_count"] = 2
+                        data_element["datum_dimension_count"] = 1
+                        sub_area = ((0, 0, 0), data_array.shape)
+                dataposition = dataposition + 1
+                image_metadata["pixel_time_us"] = float(self.orsayscan.pixelTime * 1E6)
+                image_metadata["pixels_x"] = self.__scan_size[1]
+                image_metadata["pixels_y"] = self.__scan_size[0]
+                image_metadata["center_x_nm"] = 0
+                image_metadata["center_y_nm"] = 0
+                image_metadata["rotation_deg"] = 0
+                image_metadata["channel_id"] = channel_index
+                data_element["data"] = data_array
+                data_element["properties"] = image_metadata
+                _data_elements.append(data_element)
+            channel_index = channel_index + 1
 
         complete = True
         bad_frame = False
+        self.has_data_event.clear()
         pixels_to_skip = 0  # only important when sub_area is not full area
         return _data_elements, complete, bad_frame, sub_area, frame_number, pixels_to_skip
+        #else:
+        #    return None, False, False, None, 0,0
 
     def get_profile_frame_parameters(self, profile_index: int) -> scan_base.ScanFrameParameters:
         return copy.deepcopy(self.__profiles[profile_index])
@@ -153,9 +197,11 @@ class Device:
         self.__is_scanning = (self.orsayscan.getImagingKind() != 0)
         return self.__is_scanning
 
-    def show_configuration_dialog(self, api_broker) -> None:
+    def show_configuration_dialog(self, api_broker, document_controller) -> None:
         """Open settings dialog, if any."""
-        pass
+        api = api_broker.get_api(version="~1.0")
+        myConfig = ConfigDialog(document_controller)
+        #pass
 
     def save_frame_parameters(self) -> None:
         """Called when shutting down. Save frame parameters to persistent storage."""
@@ -163,17 +209,32 @@ class Device:
 
     def set_frame_parameters(self, frame_parameters: scan_base.ScanFrameParameters) -> None:
         """Called just before and during acquisition.
-
         Device should use these parameters for new acquisition; and update to these parameters during acquisition.
         """
-        self.orsayscan.setPixelTime(frame_parameters.pixel_time_us / 1E6)
-        if self.__frame_parameters.size != frame_parameters.size:
-            self.cancel()
-            print("Changing frame size to [" + str(frame_parameters.size[0]) + ", " + str(frame_parameters.size[1]) + "]");
-            self.orsayscan.setImageSize(frame_parameters.size[1], frame_parameters.size[0])
-            self.start_frame(True)
-        self.__frame_parameters = copy.deepcopy(frame_parameters)
+        needrestart = self.__is_scanning
+        if self.__frame_parameters.rotation_rad != frame_parameters.rotation_rad:
+            if needrestart:
+                self.cancel()
+            self.orsayscan.setScanRotation(frame_parameters.rotation_rad)
+            #print(self.orsayscan.getScanRotation())
+            if needrestart:
+                self.start_frame(True)
+        self.orsayscan.pixelTime = frame_parameters.pixel_time_us / 1E6
+        if self.__frame_parameters.size != frame_parameters.fov_nm:
+            if needrestart:
+                self.cancel()
+            self.orsayscan.SetFieldSize(frame_parameters.fov_nm*1e-9)
+            if needrestart:
+                self.start_frame(True)
 
+        if self.__frame_parameters.size != frame_parameters.size:
+            if needrestart:
+                self.cancel()
+            #print("Changing frame size to [" + str(frame_parameters.size[0]) + ", " + str(frame_parameters.size[1]) + "]");
+            self.orsayscan.setImageSize(frame_parameters.size[1], frame_parameters.size[0])
+            if needrestart:
+                self.start_frame(True)
+        self.__frame_parameters = copy.deepcopy(frame_parameters)
 
     def set_profile_frame_parameters(self, profile_index: int, frame_parameters: scan_base.ScanFrameParameters) -> None:
         """Set the acquisition parameters for the give profile_index (0, 1, 2)."""
@@ -185,12 +246,44 @@ class Device:
 
     def start_frame(self, is_continuous: bool) -> int:
         """Start acquiring. Return the frame number."""
-        self.__scan_size = self.orsayscan.getImageSize()
-        self.imagedata = numpy.empty((SIZEZ * self.__scan_size[1], self.__scan_size[0]), dtype = numpy.int16)
-        self.imagedata_ptr = self.imagedata.ctypes.data_as(ctypes.c_void_p)
-        self.__angle = 0
-        self.orsayscan.setScanRotation(self.__angle)
-        self.__is_scanning = self.orsayscan.startImaging(0, 1)
+        if not self.__is_scanning:
+            __inputs = []
+            self.isSpim = False
+
+            pos = 0
+            for l in self.__frame_parameters.channels:
+                #if l[1][1]:
+                if l:
+                    self.isSpim = self.usedinputs[pos][0] >= 100
+                    if not self.isSpim:
+                        __inputs.append(self.usedinputs[pos][0])
+                pos = pos + 1
+            lg = len(__inputs)
+            #
+            # si le nombre d'entrée est plus grand que 1, il doit être pair!
+            # limitation du firmware.
+            #
+            if lg > 0:
+                if lg % 2:
+                    __inputs.append(6)
+                self.orsayscan.SetInputs(__inputs)
+            self.__scan_size = self.orsayscan.getImageSize()
+            self.__sizez = self.orsayscan.GetInputs()[0]
+            if self.__sizez % 2:
+                self.__sizez += 1
+            self.imagedata = numpy.empty((self.__sizez * self.__scan_size[1], self.__scan_size[0]), dtype = numpy.int16)
+            self.imagedata_ptr = self.imagedata.ctypes.data_as(ctypes.c_void_p)
+            self.__angle = 0
+            self.orsayscan.setScanRotation(self.__angle)
+
+            if self.isSpim:
+                self.__eelscamera = HardwareSource.HardwareSourceManager().get_hardware_source_for_hardware_source_id("orsay_camera_kuro").camera
+                if self.__eelscamera is not None:
+                    self.__eelscamera.acquire_sequence_prepare(self.__scan_size[1] * self.__scan_size[0])
+            self.__is_scanning = self.orsayscan.startImaging(0, 1)
+            if self.isSpim:
+                self.__eelscamera.acquire_sequence_orsay(4)
+            self.__frame_number = 0
         return self.__frame_number
 
     def cancel(self) -> None:
@@ -206,7 +299,7 @@ class Device:
     def __data_locker(self, gene, datatype, sx, sy, sz):
         sx[0] = self.__scan_size[0]
         sy[0] = self.__scan_size[1]
-        sz[0] = SIZEZ
+        sz[0] = self.__sizez
         datatype[0] = 2
         return self.imagedata_ptr.value
 
@@ -229,9 +322,15 @@ class Device:
             #     print("Frame number: " + str(imagenb) + "    New rotation: " + str(self.__angle))
             self.__frame_number = imagenb
             self.has_data_event.set()
+            if self.isSpim:
+                status = self.__eelscamera.camera.getCCDStatus()
+                if status["mode"] == "idle":
+                    hardware_source = HardwareSource.HardwareSourceManager().get_hardware_source_for_hardware_source_id(
+                        self.scan_device_id)
+                    hardware_source.stop_playing()
 
 
 def run():
-    scan_adapter = scan_base.ScanAdapter(Device(), "orsay_scan_device", _("Orsay Scan"))
-    scan_hardware_source = scan_base.ScanHardwareSource(scan_adapter, AUTOSTEM_CONTROLLER_ID)
-    HardwareSource.HardwareSourceManager().register_hardware_source(scan_hardware_source)
+    scan_device = Device()
+    component_types = {"scan_device"}  # the set of component types that this component represents
+    Registry.register_component(scan_device, component_types)

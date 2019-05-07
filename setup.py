@@ -87,6 +87,8 @@ setup(
         'pyvisa',
         'pyDAQmx',
         'opencv-python',
+        'clr',
+        'harvesters',
 
         ],
     **setupOpts

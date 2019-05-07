@@ -22,22 +22,27 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
     """
 
     params = comon_parameters+[{'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1 , 'default':1, 'min':0, 'max': 3},
-            {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1 , 'default':0, 'min':0}, 
-            {'name': 'Nx', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
-            {'name': 'Ny', 'type': 'int', 'value': 30 , 'default':30, 'min':1},
+            {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1 , 'default':0, 'min':0},
+            {'name': 'rolling', 'type': 'int', 'value': 1, 'min': 0},
+            {'name': 'Nx', 'type': 'int', 'value': 100 , 'default':100, 'min':1},
+            {'name': 'Ny', 'type': 'int', 'value': 200 , 'default':200, 'min':1},
             {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
-            {'name': 'x0', 'type': 'slide', 'value': 10 , 'default':50, 'min':0},
-            {'name': 'y0', 'type': 'float', 'value': 10 , 'default':50, 'min':0},
-            {'name': 'dx', 'type': 'float', 'value': 5 , 'default':20, 'min':1},
-            {'name': 'dy', 'type': 'float', 'value': 10 , 'default':20, 'min':1},
+            {'name': 'x0', 'type': 'slide', 'value': 50 , 'default':50, 'min':0},
+            {'name': 'y0', 'type': 'float', 'value': 100 , 'default':100, 'min':0},
+            {'name': 'dx', 'type': 'float', 'value': 20 , 'default':20, 'min':1},
+            {'name': 'dy', 'type': 'float', 'value': 40 , 'default':40, 'min':1},
             {'name': 'n', 'type': 'float', 'value': 1 , 'default':1, 'min':1},
-            {'name': 'amp_noise', 'type': 'float', 'value': 4 , 'default':0.1, 'min':0}
+            {'name': 'amp_noise', 'type': 'float', 'value': 4 , 'default':0.1, 'min':0},
+            {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': []},
                 ]
     def __init__(self,parent=None,params_state=None): #init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
         super(DAQ_2DViewer_Mock,self).__init__(parent,params_state)
         self.x_axis=None
         self.y_axis=None
         self.live=False
+        self.ind_commit = 0
+        self.ind_data = 0
+
 
 
     def commit_settings(self,param):
@@ -55,6 +60,12 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         """
         self.set_Mock_data()
 
+        self.settings.child(('cam_settings')).addChild(
+        {'title': 'stuff{:03d}'.format(self.ind_commit),
+         'name': 'stuff{:03d}'.format(self.ind_commit), 'type': 'int', 'value': 0}, True)
+        self.ind_commit += 1
+        QtWidgets.QApplication.processEvents()
+        print(len(self.settings.child(('cam_settings')).children()))
     def set_Mock_data(self):
         """
             | Set the x_axis and y_axis with a linspace distribution from settings parameters.
@@ -81,6 +92,11 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
                                self.settings.child('ROIselect','height').value(),endpoint=False)
             data_mock=self.settings.child(('Amp')).value()*(mylib.gauss2D(x_axis,self.settings.child(('x0')).value(),self.settings.child(('dx')).value(),
                                y_axis,self.settings.child(('y0')).value(),self.settings.child(('dy')).value(),self.settings.child(('n')).value()))+self.settings.child(('amp_noise')).value()*np.random.rand(len(y_axis),len(x_axis))
+
+            for indy in range(data_mock.shape[0]):
+                data_mock[indy, :] = data_mock[indy, :] * np.sin(x_axis / 8) ** 2
+            data_mock = np.roll(data_mock, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
+
             try:
                 self.image[self.settings.child('ROIselect','y0').value():self.settings.child('ROIselect','y0').value()+self.settings.child('ROIselect','height').value(),
                            self.settings.child('ROIselect','x0').value():self.settings.child('ROIselect','x0').value()+self.settings.child('ROIselect','width').value()]=data_mock
@@ -89,10 +105,20 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         else:
             x_axis=np.linspace(0,self.settings.child(('Nx')).value(),self.settings.child(('Nx')).value(),endpoint=False)
             y_axis=np.linspace(0,self.settings.child(('Ny')).value(),self.settings.child(('Ny')).value(),endpoint=False)
-
-            self.image=self.settings.child(('Amp')).value()*(mylib.gauss2D(x_axis,self.settings.child(('x0')).value(),self.settings.child(('dx')).value(),
+            data_mock=self.settings.child(('Amp')).value()*(mylib.gauss2D(x_axis,self.settings.child(('x0')).value(),self.settings.child(('dx')).value(),
                                y_axis,self.settings.child(('y0')).value(),self.settings.child(('dy')).value(),self.settings.child(('n')).value()))+self.settings.child(('amp_noise')).value()*np.random.rand(len(y_axis),len(x_axis))
-        
+
+            for indy in range(data_mock.shape[0]):
+                data_mock[indy,:] = data_mock[indy,:]* np.sin(x_axis / 4) ** 2
+            data_mock = np.roll(data_mock, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
+            self.image = data_mock
+
+
+
+        self.ind_data += 1
+
+        QThread.msleep(100)
+
         return self.image
 
 

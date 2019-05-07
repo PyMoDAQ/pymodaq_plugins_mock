@@ -16,7 +16,7 @@ SIZEZ = 1
 
 imagedata = np.ones((2*SIZEY*SIZEX,), dtype = np.uint16)
 print (imagedata.ctypes.data_as(c_void_p))
-
+#%%
 def dataLocker(gene, datatype, sx, sy, sz):
     sx[0] = SIZEX
     sy[0] = SIZEY
@@ -32,12 +32,13 @@ def dataUnlocker(gene, newdata):
 def dataUnlockerA(gene, newdata,  imagenb, rect):
     if newdata:
         print ("Py Image[", gene, "]: ", "image nb: ", imagenb, "   pos: [", rect[0], ", ", rect[1], "]   size: [", rect[2], ", ", rect[3], "]")
-#    print ("Scan count: ", orsayscan.getScanCount())
 
+#    print ("Scan count: ", orsayscan.getScanCount())
+#%%
 orsayscan = orsayScan(1)
 spimscan = orsayScan(2, orsayscan.orsayscan)
 
-
+#%%
 #def testgeneimage():
 orsayscan.externalclock = (0.0, 0.001)
 clk = orsayscan.externalclock
@@ -45,10 +46,10 @@ clk = orsayscan.externalclock
 nbinputs = orsayscan.getInputsCount()
 k = 0
 while (k < nbinputs):
-    unipolar, offset, name = orsayscan.getInputProperties(k)
+    unipolar, offset, name, ind = orsayscan.getInputProperties(k)
     print ("Input:" , k, "   label: ", name, "   video offset: ", offset)
     k = k+1
-orsayscan.OrsayScanSetClock(-1)
+#orsayscan.OrsayScanSetClock(-1)
 #choose X and Y ramps.
 orsayscan.SetInputs([6])
 nbinputs, inputs = orsayscan.GetInputs()
@@ -73,7 +74,7 @@ orsayscan.startImaging(0, 1)
 input("")
 
 orsayscan.stopImaging(1)
-
+#%%
 #def testgenespim():
 nbinputs = spimscan.getInputsCount()
 k = 0

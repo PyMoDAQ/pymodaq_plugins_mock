@@ -211,7 +211,7 @@ class DAQ_Move_Conex(DAQ_Move_base):
         position=self.check_bound(self.current_position+position)-self.current_position
         self.target_position=position+self.current_position
 
-        position=self.set_position_with_scaling(position)
+        position=self.set_position_relative_with_scaling(position)
 
         out=self.controller.PR_Set(self.settings.child(('controller_address')).value(),
                               self.settings.child('multiaxes','axis').value(),position,"")

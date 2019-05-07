@@ -45,7 +45,7 @@ class DAQ_Move_PI(DAQ_Move_base):
             if '64' in platform.machine():
                 machine = "64"
             for dll_name_tmp in DLLDEVICES:
-                for file in os.listdir(GCS_path):
+                for file in os.listdir(GCS_path_tmp):
                     if dll_name_tmp in file and '.dll' in file and machine in file:
                         dll_name = file
                         flag = True
@@ -57,7 +57,7 @@ class DAQ_Move_PI(DAQ_Move_base):
             gcs_device = GCSDevice(gcsdll=os.path.join(GCS_path_tmp,dll_name))
             devices = gcs_device.EnumerateUSB()
             GCS_path = GCS_path_tmp
-        except:
+        except Exception as e:
             pass
 
     import serial.tools.list_ports as list_ports
@@ -218,10 +218,10 @@ class DAQ_Move_PI(DAQ_Move_base):
             #     raise Exception('No valid dll found for the given device')
             # dll_path = os.path.split(self.settings.child(('gcs_lib')).value())[0]
             # dll_path_tot = os.path.join(dll_path,dll)
-            dll_name = get_dll_name(device = self.settings.child(('devices')).value())
-            dll_path_tot = get_dll_path(dll_name)
-            self.settings.child(('gcs_lib')).setValue(dll_path_tot)
-
+            #dll_name = get_dll_name(self.settings.child(('devices')).value())
+            #dll_path_tot = get_dll_path(dll_name)
+            #self.settings.child(('gcs_lib')).setValue(dll_path_tot)
+            dll_path_tot = self.settings.child(('gcs_lib')).value()
         self.controller=GCSDevice(gcsdll=dll_path_tot)
 
     def check_dll_exist(self, dll_name):
@@ -443,7 +443,7 @@ class DAQ_Move_PI(DAQ_Move_base):
         position=self.check_bound(self.current_position+position)-self.current_position
         self.target_position=position+self.current_position
 
-
+        position = self.set_position_relative_with_scaling(position)
 
         if self.controller.HasMVR():
             out=self.controller.MVR(self.settings.child(('axis_address')).value(),position)

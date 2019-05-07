@@ -466,7 +466,7 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
         return self.y_axis
         return self.y_axis
 
-    def grab(self, Naverage=1, **kwargs):
+    def grab_data(self, Naverage=1, **kwargs):
         """
             | For each integer step of naverage range set mock data.
             | Construct the data matrix and send the data_grabed_signal once done.
@@ -481,8 +481,14 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
+        if not self.controller.isOpened():
+            self.controller.open()
+
         ret,frame=self.controller.read()
-        QThread.msleep(200)
+        # print(ret)
+        # print(frame[:,:,0])
+        # print(frame.shape)
+        # QThread.msleep(500)
         if ret:
             if self.settings.child(('colors')).value()=='gray':
                 data_cam = [cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)]

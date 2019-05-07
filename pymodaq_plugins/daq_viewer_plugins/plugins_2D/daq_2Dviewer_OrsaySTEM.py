@@ -80,8 +80,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
                      {'title': 'Scan mode:', 'name': 'scan_mode', 'type': 'list', 'value': 'Normal', 'values': ['Normal','Random','Ebm']}, 
                      ]},
                  {'title': 'Mag. Rot.:', 'name': 'mag_rot', 'type': 'group', 'children':[
-                     {'title': 'Field:', 'name': 'field', 'type': 'slide', 'value': 0, 'min': 0, 'max': 10},
-                     {'title': 'Angle (°):', 'name': 'angle', 'type': 'slide', 'min': -180, 'max': 180, 'value': 0}, 
+                     {'title': 'Field:', 'name': 'field', 'type': 'slide', 'value': 1e-7, 'limits': [1e-7, 1], 'subtype': 'log'},
+                     {'title': 'Angle (°):', 'name': 'angle', 'type': 'slide', 'limits': [-180, 180], 'value': 0, 'subtype': 'linear'},
                      ]},
                 {'title': 'Inputs:', 'name': 'inputs', 'type': 'group', 'children':[
                     {'title': 'Input 1:', 'name': 'input1', 'type': 'list', 'values': []}, 
@@ -112,7 +112,7 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
         self.data_stem_ready = False
         self.data_spectrum_ready = False
         self.stem_scan_finished = False
-
+        self.max_field = 1
         self.x_axis=None
         self.y_axis=None
         self.stem_scan=None
@@ -214,10 +214,9 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
 
             elif param.name()=='angle':
                 self.stem_scan.setScanRotation(self.settings.child('stem_settings','mag_rot','angle').value())
-
+                self.get_set_field()
             elif param.name()=='field':
-                mag=self.settings.child('stem_settings','mag_rot','field').value()
-                self.stem_scan.OrsayScanSetFieldSize(10**(-mag))
+                self.get_set_field()
 
             elif param.name()=='do_hyperspectroscopy':
                 if param.value():
@@ -440,7 +439,7 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
         self.inputs=[]
         k = 0
         while (k < nbinputs):
-            unipolar, offset, name = scan.getInputProperties(k)
+            unipolar, offset, name, ind = scan.getInputProperties(k)
             self.inputs.append(name)
             k+=1
         self.settings.child('stem_settings', 'inputs', 'input1').setOpts(limits=self.inputs)
@@ -572,10 +571,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
 
             #%%%%%%%%%%% set pixel time
             self.stem_scan.pixelTime=self.settings.child('stem_settings','times','pixel_time_live').value()/1e6
-
             self.stem_scan.setScanRotation(self.settings.child('stem_settings','mag_rot','angle').value())
-            mag=self.settings.child('stem_settings','mag_rot','field').value()
-            self.stem_scan.OrsayScanSetFieldSize(10**(-mag))
+            self.get_set_field()
 
             #%%%%%%% init axes from image
             self.x_axis=self.get_xaxis()
@@ -591,7 +588,13 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
             self.status.initialized=False
             return self.status
 
+    def get_set_field(self):
+        self.max_field = self.stem_scan.GetMaxFieldSize()
+        field = self.settings.child('stem_settings', 'mag_rot', 'field').value()
 
+        self.settings.child('stem_settings', 'mag_rot', 'field').setLimits( [self.settings.child('stem_settings', 'mag_rot', 'field').opts['limits'][0], self.max_field])
+        self.settings.child('stem_settings', 'mag_rot', 'field').setValue(field)
+        self.stem_scan.SetFieldSize(field)
 
     def close(self):
         """

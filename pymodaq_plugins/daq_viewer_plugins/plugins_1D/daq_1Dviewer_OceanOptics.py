@@ -8,9 +8,15 @@ import clr
 from easydict import EasyDict as edict
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
+
+
+
 class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
     """PyMoDAQ plugin controlling spectrometers from OceanOptics and using their OmniDriver wrapper ('NETOmniDriver-NET40')
-
+    The wrapper is interfaced using the clr package and then importing Omnidriver as a standart python package
+    https://oceanoptics.com/api/omnidriver/index.html?overview-summary.html
+    >>>clr.AddReference("NETOmniDriver-NET40")
+    >>>import OmniDriver as omnidriver
     The plugin enables the discovery of any connected usb spectrometers and can control them in parallel. It extracts the
     calibrated wavelength and will export datas that will be plotted with respect to this wavelengths vector.
 

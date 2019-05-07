@@ -240,7 +240,8 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
         position=self.check_bound(self.current_position+position)-self.current_position
         self.target_position=position+self.current_position
 
-        position=self.set_position_with_scaling(position)
+        position=self.set_position_relative_with_scaling(position)
+
         self.controller.MoveRelative(self.Generic.MotorDirection.Forward,self.Decimal(position),self.move_done_action)
 
     def move_Home(self):

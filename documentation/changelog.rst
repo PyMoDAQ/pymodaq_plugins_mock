@@ -3,6 +3,8 @@
 =========
 Changelog
 =========
+* :feature:`0` DAQ_Move_plugins: added the method *set_position_relative_with_scaling* to have correct steps in relative motion
+  when scaling options are set
 * :release:`1.0.4 <2019-04-01>`
 * :feature:`0` Added a plugin for Stanford research SR830 lockin amplifier
 * :feature:`0` Added a plugin for FLIM (Fluorescence lifetime imaging microscopy) measurements using both the

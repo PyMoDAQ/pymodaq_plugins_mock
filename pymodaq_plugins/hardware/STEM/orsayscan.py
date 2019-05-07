@@ -38,7 +38,7 @@ if (sys.maxsize > 2**32):
     libname = os.path.dirname(__file__)
     libname = os.path.join(libname, "Scan.dll")
     _library = cdll.LoadLibrary(libname)
-    print("OrsayScan library: ", _library)
+    #print(f"OrsayScan library: {_library}")
 else:
     raise Exception("It must a python 64 bit version")
 
@@ -54,16 +54,16 @@ _OrsayScangetVersion = _buildFunction(_library.OrsayScangetVersion, [c_void_p, P
 #int SCAN_EXPORT OrsayScanGetInputsCount(void* o);
 _OrsayScangetInputsCount = _buildFunction(_library.OrsayScanGetInputsCount, [c_void_p], c_int)
 
-#int SCAN_EXPORT OrsayScangetInputProperties(void* o, int nb, bool &unipolar, double &offset, char *buffer);
-_OrsayScanGetInputProperties =  _buildFunction(_library.OrsayScanGetInputProperties, [c_void_p, c_int, POINTER(c_bool), POINTER(c_double), POINTER(c_char)], c_int)
+#int SCAN_EXPORT OrsayScanGetInputProperties(void* o, int nb, bool &unipolar, double &offset, char *buffer);
+_OrsayScanGetInputProperties =  _buildFunction(_library.OrsayScanGetInputProperties, [c_void_p, c_int, POINTER(c_bool), POINTER(c_double), c_char_p], c_int)
 
 #	bool SCAN_EXPORT OrsayScanSetInputProperties(void* o, int nb, bool unipolar, double offset);
 _OrsayScanSetInputProperties = _buildFunction(_library.OrsayScanSetInputProperties, [c_void_p, c_int, c_bool, c_double], c_bool)
 
-#bool SCAN_EXPORT OrsayScansetImageSize(self.orsayscan, int gene, int x, int y);
+#bool SCAN_EXPORT OrsayScansetImageSize(void *o, int gene, int x, int y);
 _OrsayScansetImageSize = _buildFunction(_library.OrsayScansetImageSize, [c_void_p, c_int, c_int, c_int], c_bool)
 
-#	bool SCAN_EXPORT OrsayScangetImageSize(self.orsayscan, int gene, int *x, int *y);
+#	bool SCAN_EXPORT OrsayScangetImageSize(void *o, int gene, int *x, int *y);
 _OrsayScangetImageSize = _buildFunction(_library.OrsayScangetImageSize, [c_void_p, c_int, POINTER(c_int), POINTER(c_int)], c_bool)
 
 #bool SCAN_EXPORT OrsayScansetImageArea(void* o, int gene, int sx, int sy, int xd, int xf, int yd, int yf);
@@ -96,6 +96,9 @@ _OrsayScanGetRotation = _buildFunction(_library.OrsayScanGetRotation, [c_void_p]
 #bool SCAN_EXPORT OrsayScanStartImaging(void* o, short gene, short mode, short lineaverage);
 _OrsayScanStartImaging = _buildFunction(_library.OrsayScanStartImaging, [c_void_p, c_short, c_short, c_short], c_bool)
 
+#bool SCAN_EXPORT OrsayScanStartSpim(void* o, short gene, short mode, short lineaverage, int nbspectraperpixel, bool sumpectra);
+_OrsayScanStartSpim = _buildFunction(_library.OrsayScanStartSpim, [c_void_p, c_short, c_short, c_short, c_int, c_bool], c_bool)
+
 #bool SCAN_EXPORT OrsayScanStopImaging(void* o, int gene, bool cancel);
 _OrsayScanStopImaging = _buildFunction(_library.OrsayScanStopImaging, [c_void_p, c_int, c_bool], c_bool)
 
@@ -103,7 +106,7 @@ _OrsayScanStopImaging = _buildFunction(_library.OrsayScanStopImaging, [c_void_p,
 _OrsayScanStopImagingA = _buildFunction(_library.OrsayScanStopImagingA, [c_void_p, c_int, c_bool], c_bool)
 
 #void SCAN_EXPORT OrsayScanSetImagingMode(void* o, int gene, int stripes);
-_OrsayScanSetImagingMode = _buildFunction(_library.OrsayScanSetImagingMode, [c_void_p, c_int, c_int], None)
+_OrsayScanSetImagingMode = _buildFunction(_library.OrsayScanSetImagingMode, [c_void_p, c_int, c_int], None);
 
 #bool SCAN_EXPORT OrsayScanSetScanClock(void* o, int gene, int mode);
 _OrsayScanSetScanClock = _buildFunction(_library.OrsayScanSetScanClock, [c_void_p, c_int, c_int], c_bool)
@@ -114,17 +117,19 @@ _OrsayScanGetScansCount = _buildFunction(_library.OrsayScanGetScansCount, [c_voi
 #void SCAN_EXPORT OrsayScanSetScale(void* o, int sortie, double vx, double vy);
 _OrsayScanSetScale = _buildFunction(_library.OrsayScanSetScale, [c_void_p, c_int, c_double, c_double], None)
 
-#void SCAN_EXPORT OrsayScanSetImagingKind(self.orsayscan, int gene, int kind);
+#void SCAN_EXPORT OrsayScanSetImagingKind(void *o, int gene, int kind);
 _OrsayScanSetImagingKind = _buildFunction(_library.OrsayScanSetImagingKind, [c_void_p, c_int, c_int], None)
 
-#int SCAN_EXPORT OrsayScanGetImagingKind(self.orsayscan, int gene);
+#int SCAN_EXPORT OrsayScanGetImagingKind(void *o, int gene);
 _OrsayScanGetImagingKind = _buildFunction(_library.OrsayScanGetImagingKind, [c_void_p, c_int], c_int)
 
-#double SCAN_EXPORT OrsayScanGetVideoOffset(self.orsayscan, int index);
+#double SCAN_EXPORT OrsayScanGetVideoOffset(void *o, int index);
 _OrsayScanGetVideoOffset = _buildFunction(_library.OrsayScanGetVideoOffset, [c_void_p, c_int], c_double)
 
-#void SCAN_EXPORT OrsayScanSetVideoOffset(self.orsayscan, int index, double value);
+#void SCAN_EXPORT OrsayScanSetVideoOffset(void *o, int index, double value);
 _OrsayScanSetVideoOffset = _buildFunction(_library.OrsayScanSetVideoOffset, [c_void_p, c_int, c_double], None)
+#bool SCAN_EXPORT OrsayScanSetFieldSize(self.orsayscan, double field);
+_OrsayScanSetFieldSize = _buildFunction(_library.OrsayScanSetFieldSize, [c_void_p, c_double], c_bool)
 
 #void *(*LockScanDataPointer)(int gene, int *datatype, int *sx, int *sy, int *sz);
 LOCKERFUNC = WINFUNCTYPE(c_void_p, c_int, POINTER(c_int), POINTER(c_int), POINTER(c_int), POINTER(c_int))
@@ -135,31 +140,31 @@ _OrsayScanregisterLocker = _buildFunction(_library.OrsayScanRegisterDataLocker, 
 UNLOCKERFUNC = WINFUNCTYPE(None, c_int, c_bool)
 UNLOCKERFUNCA = WINFUNCTYPE(None, c_int, c_int, c_int, POINTER(c_int))
 
-#void SCAN_EXPORT OrsayScanRegisterDataUnlocker(self.orsayscan, void(*UnLockScanDataPointer)(int gene, bool newdata));
+#void SCAN_EXPORT OrsayScanRegisterDataUnlocker(void *o, void(*UnLockScanDataPointer)(int gene, bool newdata));
 _OrsayScanregisterUnlocker = _buildFunction(_library.OrsayScanRegisterDataUnlocker, [c_void_p, UNLOCKERFUNC], None)
 _OrsayScanregisterUnlockerA = _buildFunction(_library.OrsayScanRegisterDataUnlockerA, [c_void_p, UNLOCKERFUNCA], None)
 
-# ajout de fonctions VG.
 #bool SCAN_EXPORT OrsayScanSetProbeAt(self.orsayscan, int gene, int px, int py);
 _OrsayScanSetProbeAt = _buildFunction(_library.OrsayScanSetProbeAt, [c_void_p, c_int, c_int, c_int], c_bool)
 
 #void SCAN_EXPORT OrsayScanSetEHT(self.orsayscan, double val);
-_OrsayScanSetEHT = _buildFunction(_library.OrsayScanSetEHT, [c_void_p, c_double], None);
+_OrsayScanSetEHT = _buildFunction(_library.OrsayScanSetEHT, [c_void_p, c_double], None)
 
 #double SCAN_EXPORT OrsayScanGetEHT(self.orsayscan);
-_OrsayScanGetEHT = _buildFunction(_library.OrsayScanGetEHT, [c_void_p], c_double);
+_OrsayScanGetEHT = _buildFunction(_library.OrsayScanGetEHT, [c_void_p], c_double)
 
 #double SCAN_EXPORT OrsayScanGetMaxFieldSize(self.orsayscan);
 _OrsayScanGetMaxFieldSize = _buildFunction(_library.OrsayScanGetMaxFieldSize, [c_void_p], c_double)
 
 #double SCAN_EXPORT OrsayScanGetFieldSize(self.orsayscan);
-_OrsayScanGetFieldSize = _buildFunction(_library.OrsayScanGetFieldSize, [c_void_p], c_double);
+_OrsayScanGetFieldSize = _buildFunction(_library.OrsayScanGetFieldSize, [c_void_p], c_double)
 
 #double SCAN_EXPORT OrsayScanGetScanAngle(self.orsayscan, short *mirror);
 _OrsayScanGetScanAngle = _buildFunction(_library.OrsayScanGetScanAngle, [c_void_p, c_short], c_double)
 
+
 #bool SCAN_EXPORT OrsayScanSetFieldSize(self.orsayscan, double field);
-_OrsayScanSetFieldSize = _buildFunction(_library.OrsayScanSetFieldSize, [c_void_p, c_double], c_bool)
+_OrsayScanSetFieldSize = _buildFunction(_library.OrsayScanSetFieldSize, [c_void_p, c_double], c_bool);
 
 
 #bool SCAN_EXPORT OrsayScanSetBottomBlanking(self.orsayscan, short mode, short source, double beamontime, bool risingedge, unsigned int nbpulses, double delay);
@@ -206,9 +211,6 @@ _OrsayScanCancelLaser = _buildFunction(_library.OrsayScanCancelLaser, [c_void_p]
 #int SCAN_EXPORT OrsayScanGetLaserCount(self.orsayscan);
 _OrsayScanGetLaserCount = _buildFunction(_library.OrsayScanGetLaserCount, [c_void_p], c_int)
 
-#void SCAN_EXPORT SetClockSimulationTime(void *o, int gene, double dt);
-_OrsayScanSetClockSimulationTime = _buildFunction(_library.SetClockSimulationTime, [c_void_p, c_int, c_double], None)
-
 class orsayScan(object):
     """Class controlling orsay scan hardware
        Requires Scan.dll library to run.
@@ -233,6 +235,10 @@ class orsayScan(object):
         self._minor = cminor.value
         if self._major < 5:
             raise AttributeError("No device connected")
+
+    def close(self):
+        _OrsayScanClose(self.orsayscan)
+        self.orsaycamera = None
 
     def __verifyUnsigned32Bit(self, value):
         """
@@ -262,24 +268,24 @@ class orsayScan(object):
         if(value < 0 or value > 0x7fffffff):
             raise AttributeError("Argument out of range (must be positive 32bit signed).")
 
-    def getInputsCount(self):
+    def getInputsCount(self) -> int:
         """
         Donne le nombre d'entrées vidéo actives
         """
         return _OrsayScangetInputsCount(self.orsayscan)
 
-    def getInputProperties(self, input):
+    def getInputProperties(self, input : int) -> (int, float, str, int):
         """
         Lit les propriétés de l'entrée vidéo
-        Retourne 3 valeurs: bool vrai si unipolaire, double offset, string nom.
+        Retourne 3 valeurs: bool vrai si unipolaire, double offset, string nom, index de l'entrée.
         """
         unipolar = c_bool()
         offset = c_double()
         buffer = _createCharBuffer23(100)
         res = _OrsayScanGetInputProperties(self.orsayscan, input, byref(unipolar), byref(offset), buffer)
-        return unipolar.value, offset.value, _convertToString23(buffer.value)
+        return unipolar.value, offset.value, _convertToString23(buffer.value), input
 
-    def setInputProperties(self, input, unipolar, offet):
+    def setInputProperties(self, input : int, unipolar : bool, offset : float) -> bool:
         """
         change les propriétés de l'entrée vidéo
         Pour le moment, seul l'offset est utilisé.
@@ -289,13 +295,13 @@ class orsayScan(object):
             raise Exception("Failed to set orsayscan input properties")
         return res
 
-    def GetImageTime(self):
+    def GetImageTime(self) -> float:
         """
         Donne le temps effectif de la durée de balayage d'une image
         """
-        return _OrsayScanGetImageTime(self.orsayscan)
+        return _OrsayScanGetImageTime(self.orsayscan, self.gene)
 
-    def SetInputs(self, inputs):
+    def SetInputs(self, inputs : []) -> bool:
         """
         Choisit les entrées à lire.
         A cause d'une restriction hardware, les valeurs possibles sont 1, 2, 4, 6, 8
@@ -307,17 +313,18 @@ class orsayScan(object):
             k = k +1
         return _OrsayScanSetInputs(self.orsayscan, self.gene, len(inputarray), inputarray)
 
-    def GetInputs(self):
+    def GetInputs(self) ->(int, []):
         """
         Donne la liste des entrées utilisées
-        pas correcte, doit être corrigée
         """
         inputarray = (c_int * 20)()
         nbinputs = _OrsayScanGetInputs(self.orsayscan, self.gene, inputarray)
-        inputs = [inputarray[0], inputarray[1]]
+        inputs = []
+        for inp in range(0, nbinputs):
+            inputs.append(inputarray[inp])
         return nbinputs, inputs
 
-    def setImageSize(self, sizex, sizey):
+    def setImageSize(self, sizex : int, sizey : int) -> bool:
         """
         Définit la taille de l'image en pixels
         Les limites de dimension sont 1 et 8192
@@ -328,7 +335,7 @@ class orsayScan(object):
         if (not res):
             raise Exception("Failed to set orsayscan image size")
 
-    def getImageSize(self):
+    def getImageSize(self) -> (int, int):
         """
         Donne la taille de l'image
         *** il est impératif que le tableau passé à la callback ait cette taille
@@ -341,7 +348,7 @@ class orsayScan(object):
             raise Exception("Failed to get orsayscan image size")
         return int(sx.value), int(sy.value)
 
-    def setImageArea(self, sizex, sizey, startx, endx, starty, endy):
+    def setImageArea(self, sizex : int, sizey : int, startx : int, endx : int, starty : int, endy : int) -> bool:
         """
         Définit une aire pour le balayage.
         sizex, sizey taille de l'image complète
@@ -352,7 +359,7 @@ class orsayScan(object):
 #        self.__verifyStrictlyPositiveInt(sizey)
         return _OrsayScansetImageArea(self.orsayscan, self.gene, sizex, sizey, startx, endx, starty, endy)
 
-    def getImageArea(self):
+    def getImageArea(self) -> (bool, int, int, int, int, int, int):
         """
         Donne l'aire réduite utilisée,
         retourne les paramètres donnés à la fonction setImageArea ou ceux les plus proches valides.
@@ -362,31 +369,19 @@ class orsayScan(object):
         return res, int(sx.value), int(sy.value), int(stx.value), int(ex.value), int(sty.value), int(ey.value)
 
     @property
-    def pixelTime(self):
+    def pixelTime(self) -> float:
         """
         Donne le temps par pixel
         """
         return _OrsayScangetPose(self.orsayscan, self.gene)
 
     @pixelTime.setter
-    def pixelTime(self, value):
+    def pixelTime(self, value : float):
         """
         Définit le temps par pixel
         """
-        return _OrsayScansetPose(self.orsayscan, self.gene, value)
+        _OrsayScansetPose(self.orsayscan, self.gene, value)
 
-    #def getPixelTime(self):
-        """
-        Donne le temps par pixel
-        """
-    #    return _OrsayScangetPose(self.orsayscan, self.gene)
-
-    #def setPixelTime(self, dwell):
-        """
-        Définit le temps par pixel
-        """
-
-    #    return _OrsayScansetPose(self.orsayscan, self.gene, dwell)
 
     #
     #   Callback qui sera appelée lors d'arrivée de nouvelles données
@@ -417,7 +412,29 @@ class orsayScan(object):
         """
         _OrsayScanregisterUnlockerA(self.orsayscan, fn)
 
-    def startImaging(self, mode, linesaveraging):
+    def startSpim(self, mode : int, linesaveraging : int, Nspectra=1, save2D=False) -> bool:
+        """
+        Démarre l'acquitisition de l'image.
+        mode: --- expliqué plus tard ---
+        lineaveraging: nombre de lignes à faire avant de passer à la ligne suivante.
+        retourne vrai si l'acquisition a eu lieu.
+        """
+        return _OrsayScanStartSpim(self.orsayscan, self.gene, mode, linesaveraging,Nspectra,save2D)
+
+    def setScanClock(self,trigger_input=0) -> bool:
+        """
+        set the input line for starting the next pixel in the STEM imaging (pin 9 and 5 on subD9)
+        Parameters
+        ----------
+        trigger_input: 0 for pin 9, 1 for pin 5, 2 for CL ready, 3 for In3, 4 for EELS ready
+
+        Returns
+        -------
+
+        """
+        return _OrsayScanSetScanClock(self.orsayscan, self.gene, trigger_input)
+
+    def startImaging(self, mode : int, linesaveraging : int) -> bool:
         """
         Démarre l'acquitisition de l'image.
         mode: --- expliqué plus tard ---
@@ -426,93 +443,99 @@ class orsayScan(object):
         """
         return _OrsayScanStartImaging(self.orsayscan, self.gene, mode, linesaveraging)
 
-    def stopImaging(self, cancel):
+    def stopImaging(self, cancel : bool) -> bool:
         """
         Arrete l'acquisition d'images
         cancel vrai => immédiat,  faux => à la fin du scan de l'image en cours
         """
         return _OrsayScanStopImaging(self.orsayscan, self.gene, cancel)
 
-    def getScanCount(self):
+    def getScanCount(self) -> int:
         """
         Donne le nombe de balayages déjà faits
         """
         return _OrsayScanGetScansCount(self.orsayscan)
 
-    def setScanRotation(self, angle):
+    def setScanRotation(self, angle : float):
         """
         Définit l'angle de rotation du balayage de l'image
         """
         _OrsayScanSetRotation(self.orsayscan, angle)
 
-    def getScanRotation(self):
+    def getScanRotation(self) -> float:
         """
         Relit la valeur de l'angle de rotation du balayage de l'image
         """
         return _OrsayScanGetRotation(self.orsayscan)
 
-    def setScanScale(self, plug, xamp, yamp):
+    def setScanScale(self, plug, xamp : float, yamp : float):
         """
         Ajuste la taille des signaux analogiques de balayage valeur >0 et inf"rieure à 1.
         """
         _OrsayScanSetScale(self.orsayscan, plug, xamp, yamp)
 
-    def getImgagingKind(self):
-        return _OrsayScanGetImagingKind(self.orsayscan)
+    def getImagingKind(self) -> int:
+        kind = _OrsayScanGetImagingKind(self.orsayscan, self.gene)
+        return kind
 
-    def setVideoOffset(self, inp, offset):
+    def setVideoOffset(self, inp : int, offset : float):
         """
         Définit l'offset analogique à ajouter au signal d'entrée afin d'avoir une valeur 0 pour 0 volts
         En principe, c'est un réglage et pour une machine cela ne devrait pas bouger beaucoup
         """
         _OrsayScanSetVideoOffset(self.orsayscan, inp, offset)
 
-    def getVideoOffset(self, inp):
+    def getVideoOffset(self, inp : int) -> float:
         """
         Donne la valeur de l'offset vidéo
         """
         return _OrsayScanGetVideoOffset(self.orsayscan, inp)
 
-    def OrsayScanSetProbeAt(self,gene,px,py):
-   #bool SCAN_EXPORT OrsayScanSetProbeAt(self.orsayscan, int gene, int px, int py);
-       return _OrsayScanSetProbeAt(self.orsayscan,gene,px,py)
+    def SetProbeAt(self, px : int, py : int):
+    # bool SCAN_EXPORT OrsayScanSetProbeAt(self.orsayscan, int gene, int px, int py);
+       return _OrsayScanSetProbeAt(self.orsayscan, self.gene, px, py)
 
    #void SCAN_EXPORT OrsayScanSetEHT(self.orsayscan, double val);
-    def OrsayScanSetEHT(self,val):
+    def SetEHT(self, val):
         _OrsayScanSetEHT(self.orsayscan,val)
 
-    def OrsayScanGetEHT(self,val):
+    def GetEHT(self, val):
         return _OrsayScanGetEHT(self.orsayscan,val)
 
    #double SCAN_EXPORT OrsayScanGetMaxFieldSize(self.orsayscan);
-    def OrsayScanGetMaxFieldSize(self,val):
+    def GetMaxFieldSize(self):
         return _OrsayScanGetMaxFieldSize(self.orsayscan)
 
    #double SCAN_EXPORT OrsayScanGetFieldSize(self.orsayscan);
-    def OrsayScanGetFieldSize(self):
+    def GetFieldSize(self):
         return _OrsayScanGetFieldSize(self.orsayscan)
 
    #double SCAN_EXPORT OrsayScanGetScanAngle(self.orsayscan, short *mirror);
-    def OrsayScanGetScanAngle(self,mirror):
+    def GetScanAngle(self,mirror):
         return _OrsayScanGetScanAngle(self.orsayscan, mirror)
    #bool SCAN_EXPORT OrsayScanSetFieldSize(self.orsayscan, double field);
-    def OrsayScanSetFieldSize(self,field):
+    def SetFieldSize(self,field):
         return _OrsayScanSetFieldSize(self.orsayscan,  field)
 
    #bool SCAN_EXPORT OrsayScanSetBottomBlanking(self.orsayscan, short mode, short source, double beamontime, bool risingedge, unsigned int nbpulses, double delay);
-    def OrsayScanSetBottomBlanking(self,mode,source,beamontime = 0, risingedge = True, nbpulses = 0, delay = 0):
+    def SetBottomBlanking(self,mode,source,beamontime=0,risingedge=True,nbpulses=0,delay=0):
         """ Définit le blanker avant l'échantillon sur un VG/Nion
-            mode : 0 blanker off, 1 blanker On, 2 controlled by source, 3 controlled by source but with locally defined time (beamontime parametre)
-            source : to be choosen based on configuration file (eels camera readout, cl camera readout, laser pulse, ...)
-            beamontime : with of the Blanker on signal, for instance CCD vertical transfer time, laser pulse width, ...
+            mode : 0 blanker off, 1 blanker On, 2 controlled by source,
+            3 controlled by source but with locally defined time (beamontime parametre)
+            source : to be choosen based on configuration file (eels
+            camera readout, cl camera readout, laser pulse, ...)
+            beamontime : with of the Blanker on signal, for instance CCD
+            vertical transfer time, laser pulse width, ...
             risingedge : choose the edge that triggers the beamontime.
-            nbpulses : number of pulses required a signal is generated (used to sync slave cameras)
-            delay : delay used to generate the beamon signal after the trigger. if nbpulses != 0, this delay is incremented nbpulses times.
+            nbpulses : number of pulses required a signal is generated
+            (used to sync slave cameras)
+            delay : delay used to generate the beamon signal after the
+            trigger. if nbpulses != 0, this delay is incremented nbpulses times.
             (very specific application not tested yet).
         """
         return _OrsayScanSetBottomBlanking(self.orsayscan,mode, source,beamontime,risingedge,nbpulses,delay)
    #bool SCAN_EXPORT OrsayScanSetTopBlanking(self.orsayscan, short mode, short source, double beamontime, bool risingedge, unsigned int nbpulses, double delay);
-    def OrsayScanSetTopBlanking(self,mode, source,beamontime = 0, risingedge = True, nbpulses = 0, delay = 0):
+    def SetTopBlanking(self,mode, source,beamontime = 0, risingedge = True, nbpulses = 0, delay = 0):
         """ Définit le blanker après l'échantillon sur un VG/Nion
             mode : 0 blanker off, 1 blanker On, 2 controlled by source, 3 controlled by source but with locally defined time (beamontime parametre)
             source : to be choosen based on configuration file (eels camera readout, cl camera readout, laser pulse, ...)
@@ -526,7 +549,7 @@ class orsayScan(object):
 
 
    #bool SCAN_EXPORT OrsayScanSetCameraSync(self.orsayscan, bool eels, int divider, double width, bool risingedge);
-    def OrsayScanSetCameraSync(self,eels,divider,width,risingedge):
+    def SetCameraSync(self,eels,divider,width,risingedge):
         """ Définit le mode de travail de la camera, par défaut la camera eels est maître
             eels: True => master, False => Slave
             divider: si mode slave, nombre d'impulsions pour avoir un trigger
@@ -540,41 +563,42 @@ class orsayScan(object):
     #
 
    #void SCAN_EXPORT OrsayScanObjectiveStigmateur(self.orsayscan, double x, double y);
-    def OrsayScanObjectiveStigmateur(self,x,y):
+    def ObjectiveStigmateur(self,x,y):
         """ Définit le stigmateur objectif (électrostatique) """
         _OrsayScanObjectiveStigmateur(self.orsayscan,x,y)
 
    #void SCAN_EXPORT OrsayScanObjectiveStigmateurCentre(self.orsayscan, double xcx, double xcy, double ycx, double ycy);
-    def OrsayScanObjectiveStigmateurCentre(self,xcx,xcy,ycx,ycy):
+    def ObjectiveStigmateurCentre(self,xcx,xcy,ycx,ycy):
         """ Définit le centre du stigmateur objectif """
         _OrsayScanObjectiveStigmateurCentre(self.orsayscan,xcx,xcy,ycx,ycy)
 
    #void SCAN_EXPORT OrsayScanCondensorStigmateur(self.orsayscan, double x, double y);
-    def OrsayScanCondensorStigmateur(self,x,y):
+    def CondensorStigmateur(self,x,y):
         """ Définit le stigmateur condensuer (magnétique) """
         _OrsayScanCondensorStigmateur(self.orsayscan,x,y)
 
    #void SCAN_EXPORT OrsayScanGrigson(self.orsayscan, double x1, double x2, double y1, double y2);
-    def OrsayScanGrigson(self,x1,x2,y1,y2):
+    def Grigson(self,x1,x2,y1,y2):
         """ Définit le courant Grigson """
         _OrsayScanGrigson(self.orsayscan,x1,x2,y1,y2)
 
    #void SCAN_EXPORT OrsayScanAlObjective(self.orsayscan, double x1, double x2, double y1, double y2);
-    def OrsayScanAlObjective(self,x1,x2,y1,y2):
+    def AlObjective(self,x1,x2,y1,y2):
         """ Aligne l'objectif """
         _OrsayScanAlObjective(self.orsayscan,x1,x2,y1,y2)
+
    #void SCAN_EXPORT OrsayScanAlGun(self.orsayscan, double x1, double x2, double y1, double y2);
-    def OrsayScanAlGun(self,x1,x2,y1,y2):
+    def AlGun(self,x1,x2,y1,y2):
         """ Aligne le canon """
         _OrsayScanAlGun(self.orsayscan,x1,x2,y1,y2)
 
    #void SCAN_EXPORT OrsayScanAlStigObjective(self.orsayscan, double x1, double x2, double y1, double y2);
-    def OrsayScanAlStigObjective(self,x1,x2,y1,y2):
+    def AlStigObjective(self,x1,x2,y1,y2):
         """ Aligne le stigmateur canon(?) """
         _OrsayScanAlStigObjective(self.orsayscan,x1,x2,y1,y2)
 
    #void SCAN_EXPORT OrsayScanSetLaser(self.orsayscan, double frequency, int nbpulses, bool bottomblanking, short sync);
-    def OrsayScanSetLaser(self,frequency,nbpulses,bottomblanking,sync):
+    def SetLaser(self,frequency,nbpulses,bottomblanking,sync):
         """ définit le mode de travail du laser
             frquency: frequence des impulsions
             nbpulses: nombre total d'impulsions sur le prochain tir
@@ -584,24 +608,16 @@ class orsayScan(object):
         _OrsayScanSetLaser(self.orsayscan,frequency,nbpulses,bottomblanking,sync)
 
    #void SCAN_EXPORT OrsayScanStartLaser(self.orsayscan, int mode);
-    def OrsayScanStartLaser(self,mode):
+    def StartLaser(self,mode):
         """ Démarre le laser """
         _OrsayScanStartLaser(self.orsayscan,mode)
 
    #void SCAN_EXPORT OrsayScanCancelLaser(self.orsayscan);
-    def OrsayScanCancelLaser(self):
+    def CancelLaser(self):
         """ arrete le laser """
         _OrsayScanCancelLaser(self.orsayscan)
 
    #int SCAN_EXPORT OrsayScanGetLaserCount(self.orsayscan);
-    def OrsayScanGetLaserCount(self):
+    def GetLaserCount(self):
         """ donne le nombre d'impulsions déjà faites """
         return _OrsayScanGetLaserCount(self.orsayscan)
-   
-    #bool SCAN_EXPORT OrsayScanSetScanClock(void* o, int gene, int mode);
-    def OrsayScanSetClock(self, source):
-        return _OrsayScanSetScanClock(self.orsayscan, self.gene, source)
-
-    #void SCAN_EXPORT SetClockSimulationTime(void *o, int gene, double dt);
-    def OrsayScanSetClockSimulationTime(self, dt):
-        _OrsayScanSetClockSimulationTime(self.orsayscan, self.gene, dt)

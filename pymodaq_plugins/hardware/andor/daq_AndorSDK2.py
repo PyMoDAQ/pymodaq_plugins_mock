@@ -124,8 +124,6 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 {'title': 'Current value:', 'name': 'current_value', 'type': 'float', 'value': 0 , 'default':0, 'readonly': True},
                 {'title': 'Locked:', 'name': 'locked', 'type': 'led', 'value': False , 'default':False, 'readonly': True},
                 ]},
-            
-            
         ]},
         
         {'title': 'Spectro Settings:', 'name': 'spectro_settings', 'type': 'group', 'expanded': True, 'children': [
