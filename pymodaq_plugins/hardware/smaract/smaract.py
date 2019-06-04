@@ -33,10 +33,10 @@ class SmarAct(object):
     def __init__(self):
         super(SmarAct, self).__init__()
 
-        self.controller_locator = self._get_controller_locator()
-        self.system_index = self._init_communication(self.controller_locator)
+        self.controller_locator = self.get_controller_locator()
+        self.system_index = self.init_communication(self.controller_locator)
 
-    def _get_controller_locator(self):
+    def get_controller_locator(self):
         """ Get the locator (e.g. usb:id:3118167233) of the plugged MCS
         controller. We suppose that only one is connected to the machine.
         Returns
@@ -64,8 +64,8 @@ class SmarAct(object):
 
         return controller_locator[0]
 
-    def _init_communication(self, controller_locator):
-        """ Use the controller locator returned from _get_controller_locator
+    def init_communication(self, controller_locator):
+        """ Use the controller locator returned from get_controller_locator
         and return the system index used the refer to the controller
         Parameters
         -------
@@ -146,10 +146,10 @@ class SmarAct(object):
 
         # for now we considered only this particular channel
         channel_index = 0
-        # with direction = 0 search for reference starts in the forward 
+        # with direction = 0 search for reference starts in the forward
         # direction
         direction = 0
-        # hold time = 60,000 ms corresponds to infinite holding 
+        # hold time = 60,000 ms corresponds to infinite holding
         hold_time = 60000
         # auto zero = 1 will reset the position to zero after reaching
         # the reference mark
@@ -180,7 +180,7 @@ class SmarAct(object):
 
         # for now we considered only this particular channel
         channel_index = 0
-        # hold time = 60,000 ms corresponds to infinite holding 
+        # hold time = 60,000 ms corresponds to infinite holding
         hold_time = 60000
 
         status = SmaractDll.SA_GotoPositionRelative_S(
@@ -205,7 +205,7 @@ class SmarAct(object):
 
         # for now we considered only this particular channel
         channel_index = 0
-        # hold time = 60,000 ms corresponds to infinite holding 
+        # hold time = 60,000 ms corresponds to infinite holding
         hold_time = 60000
 
         status = SmaractDll.SA_GotoPositionAbsolute_S(
