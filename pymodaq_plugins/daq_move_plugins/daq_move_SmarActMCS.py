@@ -17,12 +17,14 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
 
     is_multiaxes=True
     stage_names=['channel 1','channel 2','channel 3']
+    min_bound = -1e6  # nm
+    max_bound = +1e6  # nm
 
     params = [
                  {'title': 'group parameter:', 'name': 'group_parameter', 'type': 'group', 'children': [
                      {'title': 'Controller Name:', 'name': 'SmarAct MCS', 'type': 'str',
                       'value': 'actuator controller', 'readonly': True},
-                     {'title': 'Controller locator', 'name': 'controller_locator', 'type': 'str',
+                     {'title': 'Controller locator', 'name': 'controller_locator', 'type': 'list',
                       'value': controller_locator},
                      {'title': 'Controller address:', 'name': 'controller_address', 'type': 'int', 'value': 1,
                       'default': 1, 'min': 1},
@@ -46,23 +48,77 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         self.controller=None
         self.settings.child(('epsilon')).setValue(1)
 
-        #wahtever has to be initialized here (not yet the controller but it could be the loaing of the dll, wrapper...
+    def ini_stage(self,controller=None):
+        """
+            Initialize the controller and stages (axes) with given parameters.
+
+            =============== ================================================ =========================================================================================
+            **Parameters**   **Type**                                         **Description**
+            *controller*     instance of the specific controller object       If defined this hardware will use it and will not initialize its own controller instance
+            =============== ================================================ =========================================================================================
+
+            Returns
+            -------
+            Easydict
+                dictionnary containing keys:
+                 * *info* : string displaying various info
+                 * *controller*: instance of the controller object in order to control other axes without the need to init the same controller twice
+                 * *stage*: instance of the stage (axis or whatever) object
+                 * *initialized*: boolean indicating if initialization has been done correctly
+
+            See Also
+            --------
+            DAQ_utils.ThreadCommand
+        """
         try:
-            #for instance from the conex plugin
-            sys.path.append(self.settings.child(('conex_lib')).value())
-            clr.AddReference("ConexAGAPCmdLib")
-            import Newport.ConexAGAPCmdLib as Conexcmd
-            self.controller=Conexcmd.ConexAGAPCmds()
+            # initialize the stage and its controller status
+            # controller is an object that may be passed to other instances of DAQ_Move_Actuator in case
+            # of one controller controlling multiaxes
+            self.status.update(edict(info="",controller=None,initialized=False))
 
+            #check whether this stage is controlled by a multiaxe controller (to be defined for each plugin)
+            # if mutliaxes then init the controller here if Master state otherwise use external controller
+            if self.settings.child('multiaxes','ismultiaxes').value() and self.settings.child('multiaxes','multi_status').value()=="Slave":
+                if controller is None:
+                    raise Exception('no controller has been defined externally while this axe is a slave one')
+                else:
+                    self.controller=controller
+            else: #Master stage
+                try:
+                    self.close()
+                except:
+                    pass
+                self.controller = SmarAct()
+                controller_index = self.controller.init_communication(self.settings.child(('controller_locator')).value())
+                self.settings.child(('controller_address')).setValue(controller_index)
 
-            #set the bound options to True (present in comon_parameters)
-            self.settings.child('bounds','is_bounds').setValue(True)
-            self.settings.child('bounds','min_bound').setValue(-0.02)
-            self.settings.child('bounds','max_bound').setValue(0.02)
+            #################################################################
+            # we may need to initialize the stages here with SA_SetSensorEnabled
+            # or SA_SensorType for example… ???
+            ##################################################################
+            self.settings.child('bounds', 'is_bounds').setValue(True)
+            self.settings.child('bounds', 'min_bound').setValue(self.min_bound)
+            self.settings.child('bounds', 'max_bound').setValue(self.max_bound)
+            self.settings.child('scaling', 'use_scaling').setValue(False)
+
+            self.status.info = self.settings.child('controller_address').value()
+            self.status.controller = self.controller
+            self.status.initialized = True
+            return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand("Update_Status",[str(e)]))
-            raise Exception(str(e))
+            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.status.info=str(e)
+            self.status.initialized=False
+            return self.status
+
+    def close(self):
+        """
+            close the current instance of Piezo instrument.
+        """
+
+        self.controller.close_communication()
+        self.controller = None
 
 if __name__ == "__main__":
     test = DAQ_Move_SmarActMCS()
