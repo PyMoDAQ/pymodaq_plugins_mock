@@ -37,8 +37,10 @@ class SmarAct(object):
         self.system_index = self.init_communication(self.controller_locator)
 
     def get_controller_locator(self):
-        """ Get the locator (e.g. usb:id:3118167233) of the plugged MCS
-        controller. We suppose that only one is connected to the machine.
+        """
+            Get the locator (e.g. usb:id:3118167233) of the plugged MCS
+            controller. We suppose that only one is connected to the machine.
+
         Returns
         -------
         controller_locator[0]: str
@@ -65,8 +67,10 @@ class SmarAct(object):
         return controller_locator[0]
 
     def init_communication(self, controller_locator):
-        """ Use the controller locator returned from get_controller_locator
-        and return the system index used the refer to the controller
+        """
+            Use the controller locator returned from get_controller_locator
+            and return the system index used the refer to the controller
+
         Parameters
         -------
         controller_locator: str
@@ -87,9 +91,11 @@ class SmarAct(object):
         return systemIndex.value
 
     def get_number_of_channels(self):
-        """ Return the number of channels of the controller. Note that the
-        number of channels does not represent the number positioners and/or
-        end effectors that are currently connected to the system.
+        """
+            Return the number of channels of the controller. Note that the
+            number of channels does not represent the number positioners and/or
+            end effectors that are currently connected to the system.
+
         Returns
         -------
         numberOfChannels.value: unsigned int
@@ -108,7 +114,8 @@ class SmarAct(object):
         return numberOfChannels.value
 
     def close_communication(self):
-        """ Close the communication with the controller.
+        """
+            Close the communication with the controller.
         """
         status = SmaractDll.SA_CloseSystem(
             ctypes.c_ulong(self.system_index)
@@ -118,7 +125,9 @@ class SmarAct(object):
             raise Exception('SmarAct SA_CloseSystem failed')
 
     def get_position(self):
-        """ Return the current position of the positioner in nanometers.
+        """
+            Return the current position of the positioner in nanometers.
+
         Returns
         -------
         position.value: signed int
@@ -140,8 +149,9 @@ class SmarAct(object):
         return position.value
 
     def find_reference(self):
-        """ Find the physical zero reference of the positioner (starting in the
-        forward direction) and reset the position to zero.
+        """
+            Find the physical zero reference of the positioner (starting in the
+            forward direction) and reset the position to zero.
         """
 
         # for now we considered only this particular channel
@@ -170,9 +180,11 @@ class SmarAct(object):
         print('The positionner is referenced !')
 
     def relative_move(self, relative_position):
-        """ Execute a relative move in nanometers
-        If a mechanical end stop is detected while the command is in execution,
-        the movement will be aborted (without notice).
+        """
+            Execute a relative move in nanometers
+            If a mechanical end stop is detected while the command is in execution,
+            the movement will be aborted (without notice).
+
         Parameters
         ----------
         relative_position: signed int
@@ -195,9 +207,11 @@ class SmarAct(object):
             raise Exception('SmarAct SA_GotoPositionRelative failed')
 
     def absolute_move(self, absolute_position):
-        """ Go to an absolute position in nanometers
-        If a mechanical end stop is detected while the command is in execution,
-        the movement will be aborted (without notice).
+        """
+            Go to an absolute position in nanometers
+            If a mechanical end stop is detected while the command is in execution,
+            the movement will be aborted (without notice).
+
         Parameters
         ----------
         absolute_position: signed int
@@ -218,3 +232,21 @@ class SmarAct(object):
         if status != 0:
             self.close_communication(self.system_index)
             raise Exception('SmarAct SA_GotoPositionAbsolute failed')
+
+    def stop(self):
+        """
+            Stop any ongoing movement of the positionner. This command also stops the hold position feature of
+            closed-loop commands.
+        """
+
+        # for now we considered only this particular channel
+        channel_index = 0
+
+        status = SmaractDll.SA_Stop_S(
+            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(channel_index)
+        )
+
+        if status != 0:
+            self.close_communication(self.system_index)
+            raise Exception('SmarAct SA_Stop failed')

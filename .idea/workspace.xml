@@ -16,67 +16,76 @@
     <session id="-1560061653">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="6" />
+          <entry key="project.closed" value="7" />
           <entry key="project.open.time.1" value="2" />
           <entry key="project.open.time.24" value="1" />
           <entry key="project.open.time.26" value="1" />
           <entry key="project.open.time.31" value="1" />
           <entry key="project.open.time.37" value="1" />
+          <entry key="project.open.time.56" value="1" />
           <entry key="project.open.time.86" value="1" />
-          <entry key="project.opened" value="7" />
+          <entry key="project.opened" value="8" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="12" />
+          <entry key="py" value="17" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="12" />
+          <entry key="Python" value="17" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="2202" />
-          <entry key="txt" value="62" />
+          <entry key="py" value="2791" />
+          <entry key="txt" value="211" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="62" />
-          <entry key="Python" value="2202" />
+          <entry key="PLAIN_TEXT" value="211" />
+          <entry key="Python" value="2791" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="775">
-              <caret line="220" lean-forward="true" selection-start-line="220" selection-end-line="220" />
-              <folding>
-                <element signature="e#25#38#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="900">
-              <caret line="50" column="40" selection-start-line="50" selection-start-column="40" selection-end-line="50" selection-end-column="40" />
-              <folding>
-                <element signature="e#0#58#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <splitter split-orientation="horizontal" split-proportion="0.5709933">
+      <split-first>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="341">
+                  <caret line="27" selection-start-line="27" selection-end-line="27" />
+                  <folding>
+                    <element signature="e#0#58#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="481">
+                  <caret line="238" column="12" selection-start-line="238" selection-start-column="12" selection-end-line="238" selection-end-column="12" />
+                  <folding>
+                    <element signature="e#25#38#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -99,8 +108,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py" />
         <option value="$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py" />
+        <option value="$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py" />
       </list>
     </option>
   </component>
@@ -115,7 +124,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -144,10 +152,11 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="G:/Travail/Projet/2019_pymodaq/daq_move_Template.py" />
+    <property name="last_opened_file_path" value="C:/WPy-3710/python-3.7.1.amd64/Lib/site-packages/pymodaq" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -239,7 +248,21 @@
       <option name="project" value="LOCAL" />
       <updated>1559135601082</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Tested wrapper with a single controller and a single channel">
+      <created>1559651969873</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1559651969873</updated>
+    </task>
+    <task id="LOCAL-00003" summary="get_controller_locator and init_communication not private">
+      <created>1559652654197</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1559652654197</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -270,7 +293,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="SmarAct().get_controller_locator() tested" />
-    <option name="LAST_COMMIT_MESSAGE" value="SmarAct().get_controller_locator() tested" />
+    <MESSAGE value="Tested wrapper with a single controller and a single channel" />
+    <MESSAGE value="get_controller_locator and init_communication not private" />
+    <option name="LAST_COMMIT_MESSAGE" value="get_controller_locator and init_communication not private" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/piezoconcept/piezoconcept.py">
@@ -289,17 +314,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://G:/Travail/Projet/2019_pymodaq/daq_move_Template.py" />
-    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
-          <caret line="50" column="40" selection-start-line="50" selection-start-column="40" selection-end-line="50" selection-end-column="40" />
-          <folding>
-            <element signature="e#0#58#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../ScanRABBIT_python_Nicolas/SmarActPyQt5.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="160">
@@ -307,10 +321,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://G:/Travail/Projet/2019_pymodaq/daq_move_Template.py" />
+    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="341">
+          <caret line="27" selection-start-line="27" selection-end-line="27" />
+          <folding>
+            <element signature="e#0#58#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="775">
-          <caret line="220" lean-forward="true" selection-start-line="220" selection-end-line="220" />
+        <state relative-caret-position="481">
+          <caret line="238" column="12" selection-start-line="238" selection-start-column="12" selection-end-line="238" selection-end-column="12" />
           <folding>
             <element signature="e#25#38#0" expanded="true" />
           </folding>
