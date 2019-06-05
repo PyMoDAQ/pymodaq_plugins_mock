@@ -7,8 +7,6 @@ import re
 """
 The documentation of the .dll is in SmarAct MCS Programmers Guide
 
-We suppose to work with Windows OS (tested with Windows 7)
-
 The support of multiple controllers connected to the machine is not implemented
 
 We suppose that the configuration of the controller (sensor type etc) has been
@@ -23,9 +21,8 @@ to a MCS-3D controller
 
 # We suppose the .dll library is in the same directory
 # The CDLL function asks for the full path
-# We suppose to work with Windows OS
 dir_path = os.path.dirname(os.path.realpath(__file__))
-SmaractDll = ctypes.CDLL(dir_path + "\MCSControl.dll")
+SmaractDll = ctypes.CDLL(os.path.join(dir_path,"MCSControl.dll"))
 
 
 class SmarAct(object):

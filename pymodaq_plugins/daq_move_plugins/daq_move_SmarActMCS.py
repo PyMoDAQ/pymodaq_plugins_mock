@@ -6,8 +6,6 @@ from easydict import EasyDict as edict
 from pymodaq_plugins.hardware.smaract.smaract import SmarAct
 
 """
-We suppose to work with Windows OS (tested with Windows 7)
-
 The support of multiple controllers connected to the machine is not implemented
 
 We suppose that the configuration of the controller (sensor type etc) has been
@@ -17,7 +15,7 @@ We suppose to have a linear positionner with an enabled sensor attached to it,
 connected to the channel 0 of the controller
 
 Tested with SLC-1740-S (closed loop with nanometer precision sensor) connected
-to a MCS-3D controller
+to a MCS-3D controller on Windows 7
 """
 
 class DAQ_Move_SmarActMCS(DAQ_Move_base):
@@ -28,7 +26,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
 
     params = [
                  {'title': 'group parameter:', 'name': 'group_parameter', 'type': 'group', 'children': [
-                     {'title': 'Controller Name:', 'name': 'SmarAct MCS', 'type': 'str',
+                     {'title': 'Controller Name:', 'name': 'smaract_mcs', 'type': 'str',
                       'value': 'actuator controller', 'readonly': True},
                  ]},
 
@@ -94,8 +92,8 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
 
             # The min and max bounds will depend on which positionner is plugged. Anyway the bounds are secured
             # by the library functions.
-            self.settings.child('bounds', 'is_bounds').setValue(False)
-            self.settings.child('scaling', 'use_scaling').setValue(False)
+            self.settings.child('bounds', 'is_bounds').setValue(True)
+            self.settings.child('scaling', 'use_scaling').setValue(True)
 
             self.status.controller = self.controller
             self.status.initialized = True
