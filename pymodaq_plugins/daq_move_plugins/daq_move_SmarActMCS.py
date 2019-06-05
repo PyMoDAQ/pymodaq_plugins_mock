@@ -19,15 +19,19 @@ to a MCS-3D controller on Windows 7
 """
 
 class DAQ_Move_SmarActMCS(DAQ_Move_base):
-    _controller_units = 'nm'
+    _controller_units = 'µm'
 
     is_multiaxes = False
     stage_names = ['channel 0']
+    # bounds corresponding to the SLC-24180
+    min_bound = -61500 # µm
+    max_bound = +61500 # µm
+    offset = 0 # µm
 
     params = [
                  {'title': 'group parameter:', 'name': 'group_parameter', 'type': 'group', 'children': [
                      {'title': 'Controller Name:', 'name': 'smaract_mcs', 'type': 'str',
-                      'value': 'actuator controller', 'readonly': True},
+                      'value': 'SmarAct MCS controller', 'readonly': True},
                  ]},
 
                  ##########################################################
@@ -46,7 +50,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         super(DAQ_Move_SmarActMCS, self).__init__(parent, params_state)
 
         self.controller = None
-        self.settings.child(('epsilon')).setValue(1)
+        self.settings.child(('epsilon')).setValue(0.001)
 
     def ini_stage(self, controller=None):
         """
@@ -93,7 +97,10 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
             # The min and max bounds will depend on which positionner is plugged. Anyway the bounds are secured
             # by the library functions.
             self.settings.child('bounds', 'is_bounds').setValue(True)
+            self.settings.child('bounds', 'min_bound').setValue(self.min_bound)
+            self.settings.child('bounds', 'max_bound').setValue(self.max_bound)
             self.settings.child('scaling', 'use_scaling').setValue(True)
+            self.settings.child('scaling', 'offset').setValue(self.offset)
 
             self.status.controller = self.controller
             self.status.initialized = True
@@ -122,6 +129,9 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
 
         position = self.controller.get_position()
 
+        # the position given by the controller is in nanometers
+        position = float(position)/1e3
+
         # convert pos if scaling options have been used, mandatory here
         position = self.get_position_with_scaling(position)
         self.current_position = position
@@ -132,6 +142,10 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
     def move_Abs(self, position):
         """
             Move to an absolute position
+
+        Parameters
+        ----------
+        position: float
         """
         #limit position if bounds options has been selected and if position is out of them
         position = self.check_bound(position)
@@ -139,7 +153,8 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         # convert the user set position to the controller position if scaling has been activated by user
         position = self.set_position_with_scaling(position)
 
-        self.controller.absolute_move(position)
+        # the SmarAct controller asks for nanometers
+        self.controller.absolute_move(int(position*1e3))
 
         # start polling the position until the actuator reach the target position within epsilon
         # defined as a parameter field (comon_parameters)
@@ -148,6 +163,10 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
     def move_Rel(self,position):
         """
             Move to a relative position
+
+        Parameters
+        ----------
+        position: float
         """
         # limit position if bounds options has been selected and if position is out of them
         position = self.check_bound(self.current_position + position) - self.current_position
@@ -155,7 +174,8 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         # convert the user set position to the controller position if scaling has been activated by user
         position = self.set_position_with_scaling(position)
 
-        self.controller.relative_move(position)
+        # the SmarAct controller asks for nanometers
+        self.controller.relative_move(int(position*1e3))
 
         self.poll_moving()
 
