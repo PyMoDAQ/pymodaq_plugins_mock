@@ -127,12 +127,12 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
             Get the current hardware position with scaling conversion given by get_position_with_scaling.
         """
 
-        position = self.controller.get_position()
+        position = self.controller.get_position(self.settings.child('multiaxes', 'axis').value())
 
-        # the position given by the controller is in nanometers
+        # the position given by the controller is in nanometers, we convert in micrometers
         position = float(position)/1e3
 
-        # convert pos if scaling options have been used, mandatory here
+        # convert position if scaling options have been used, mandatory here
         position = self.get_position_with_scaling(position)
         self.current_position = position
         self.emit_status(ThreadCommand('check_position', [position]))
@@ -153,8 +153,11 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         # convert the user set position to the controller position if scaling has been activated by user
         position = self.set_position_with_scaling(position)
 
+        # we convert position in nm
+        position = int(position*1e3)
+
         # the SmarAct controller asks for nanometers
-        self.controller.absolute_move(int(position*1e3))
+        self.controller.absolute_move(self.settings.child('multiaxes', 'axis').value(), position)
 
         # start polling the position until the actuator reach the target position within epsilon
         # defined as a parameter field (comon_parameters)
@@ -174,8 +177,11 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         # convert the user set position to the controller position if scaling has been activated by user
         position = self.set_position_with_scaling(position)
 
+        # we convert position in nm
+        position = int(position*1e3)
+
         # the SmarAct controller asks for nanometers
-        self.controller.relative_move(int(position*1e3))
+        self.controller.relative_move(self.settings.child('multiaxes', 'axis').value(), position)
 
         self.poll_moving()
 
@@ -184,7 +190,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
             Move to home and reset position to zero.
         """
 
-        self.controller.find_reference()
+        self.controller.find_reference(self.settings.child('multiaxes', 'axis').value())
 
     def stop_motion(self):
         """
@@ -193,7 +199,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
             DAQ_Move_base.move_done
         """
 
-        self.controller.stop()
+        self.controller.stop(self.settings.child('multiaxes', 'axis').value())
 
         self.move_done()
 
