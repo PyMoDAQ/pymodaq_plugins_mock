@@ -21,8 +21,8 @@ to a MCS-3D controller on Windows 7
 class DAQ_Move_SmarActMCS(DAQ_Move_base):
     _controller_units = 'µm'
 
-    is_multiaxes = False
-    stage_names = ['channel 0']
+    is_multiaxes = True
+    stage_names = [0, 1, 2]
     # bounds corresponding to the SLC-24180
     min_bound = -61500 # µm
     max_bound = +61500 # µm

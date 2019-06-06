@@ -22,7 +22,7 @@ to a MCS-3D controller
 # We suppose the .dll library is in the same directory
 # The CDLL function asks for the full path
 dir_path = os.path.dirname(os.path.realpath(__file__))
-SmaractDll = ctypes.CDLL(os.path.join(dir_path,"MCSControl.dll"))
+SmaractDll = ctypes.CDLL(os.path.join(dir_path, "MCSControl.dll"))
 
 
 class SmarAct(object):
@@ -121,16 +121,20 @@ class SmarAct(object):
         if status != 0:
             raise Exception('SmarAct SA_CloseSystem failed')
 
-    def get_position(self):
+    def get_position(self, channel_index):
         """
-            Return the current position of the positioner in nanometers.
+            Return the current position of the positioner connected to the channel indexed by channel_index
+            (starts at 0) in nanometers.
+
+        Parameters
+        ----------
+        channel_index: unsigned int
 
         Returns
         -------
         position.value: signed int
         """
-        # for now we considered only this particular channel
-        channel_index = 0
+
         position = ctypes.c_long()
 
         status = SmaractDll.SA_GetPosition_S(
@@ -140,19 +144,21 @@ class SmarAct(object):
         )
 
         if status != 0:
-            self.close_communication(self.system_index)
+            self.close_communication()
             raise Exception('SmarAct SA_GetPosition failed')
 
         return position.value
 
-    def find_reference(self):
+    def find_reference(self, channel_index):
         """
             Find the physical zero reference of the positioner (starting in the
             forward direction) and reset the position to zero.
+
+        Parameters
+        ----------
+        channel_index: unsigned int
         """
 
-        # for now we considered only this particular channel
-        channel_index = 0
         # with direction = 0 search for reference starts in the forward
         # direction
         direction = 0
@@ -171,12 +177,12 @@ class SmarAct(object):
         )
 
         if status != 0:
-            self.close_communication(self.system_index)
+            self.close_communication()
             raise Exception('SmarAct SA_FindReferenceMark failed')
 
         print('The positionner is referenced !')
 
-    def relative_move(self, relative_position):
+    def relative_move(self, channel_index, relative_position):
         """
             Execute a relative move in nanometers
             If a mechanical end stop is detected while the command is in execution,
@@ -184,11 +190,10 @@ class SmarAct(object):
 
         Parameters
         ----------
+        channel_index: unsigned int
         relative_position: signed int
         """
 
-        # for now we considered only this particular channel
-        channel_index = 0
         # hold time = 60,000 ms corresponds to infinite holding
         hold_time = 60000
 
@@ -200,10 +205,10 @@ class SmarAct(object):
         )
 
         if status != 0:
-            self.close_communication(self.system_index)
+            self.close_communication()
             raise Exception('SmarAct SA_GotoPositionRelative failed')
 
-    def absolute_move(self, absolute_position):
+    def absolute_move(self, channel_index, absolute_position):
         """
             Go to an absolute position in nanometers
             If a mechanical end stop is detected while the command is in execution,
@@ -211,11 +216,10 @@ class SmarAct(object):
 
         Parameters
         ----------
+        channel_index: unsigned int
         absolute_position: signed int
         """
 
-        # for now we considered only this particular channel
-        channel_index = 0
         # hold time = 60,000 ms corresponds to infinite holding
         hold_time = 60000
 
@@ -227,17 +231,18 @@ class SmarAct(object):
         )
 
         if status != 0:
-            self.close_communication(self.system_index)
+            self.close_communication()
             raise Exception('SmarAct SA_GotoPositionAbsolute failed')
 
-    def stop(self):
+    def stop(self, channel_index):
         """
             Stop any ongoing movement of the positionner. This command also stops the hold position feature of
             closed-loop commands.
-        """
 
-        # for now we considered only this particular channel
-        channel_index = 0
+        Parameters
+        ----------
+        channel_index: unsigned int
+        """
 
         status = SmaractDll.SA_Stop_S(
             ctypes.c_ulong(self.system_index),
@@ -245,5 +250,5 @@ class SmarAct(object):
         )
 
         if status != 0:
-            self.close_communication(self.system_index)
+            self.close_communication()
             raise Exception('SmarAct SA_Stop failed')

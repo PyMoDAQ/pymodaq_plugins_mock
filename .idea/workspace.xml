@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="a70194c0-c38a-4335-8f8a-4b874977981f" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py" beforeDir="false" afterPath="$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py" beforeDir="false" afterPath="$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,7 +16,7 @@
     <session id="-1560061653">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="8" />
+          <entry key="project.closed" value="9" />
           <entry key="project.open.time.1" value="2" />
           <entry key="project.open.time.24" value="1" />
           <entry key="project.open.time.25" value="1" />
@@ -22,8 +24,9 @@
           <entry key="project.open.time.31" value="1" />
           <entry key="project.open.time.37" value="1" />
           <entry key="project.open.time.56" value="1" />
+          <entry key="project.open.time.77" value="1" />
           <entry key="project.open.time.86" value="1" />
-          <entry key="project.opened" value="9" />
+          <entry key="project.opened" value="10" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -40,25 +43,25 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="3224" />
-          <entry key="txt" value="499" />
+          <entry key="py" value="3366" />
+          <entry key="txt" value="530" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="499" />
-          <entry key="Python" value="3224" />
+          <entry key="PLAIN_TEXT" value="530" />
+          <entry key="Python" value="3366" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="20">
-              <caret line="109" column="30" lean-forward="true" selection-start-line="109" selection-start-column="30" selection-end-line="109" selection-end-column="30" />
+            <state relative-caret-position="200">
+              <caret line="23" column="23" selection-start-line="23" selection-start-column="23" selection-end-line="23" selection-end-column="23" />
               <folding>
                 <element signature="e#0#58#0" expanded="true" />
               </folding>
@@ -66,11 +69,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3315">
-              <caret line="176" column="13" selection-start-line="176" selection-start-column="8" selection-end-line="176" selection-end-column="13" />
+            <state relative-caret-position="5060">
+              <caret line="253" column="53" selection-start-line="253" selection-start-column="53" selection-end-line="253" selection-end-column="53" />
               <folding>
                 <element signature="e#25#38#0" expanded="true" />
               </folding>
@@ -103,8 +106,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py" />
         <option value="$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py" />
+        <option value="$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py" />
       </list>
     </option>
   </component>
@@ -131,6 +134,19 @@
               <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
               <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="pymodaq_plugins" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="hardware" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pymodaq_plugins" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="pymodaq_plugins" type="462c0819:PsiDirectoryNode" />
+              <item name="hardware" type="462c0819:PsiDirectoryNode" />
+              <item name="smaract" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -140,7 +156,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="C:/WPy-3710/python-3.7.1.amd64/Lib/site-packages/pymodaq" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Python" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -266,7 +282,14 @@
       <option name="project" value="LOCAL" />
       <updated>1559743452807</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Add SmarAct programmers guide">
+      <created>1559743677996</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1559743677996</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -302,7 +325,8 @@
     <MESSAGE value="Working with DAQ_Move ! Still a bit buggy…" />
     <MESSAGE value="Path to get the .dll independant of the OS" />
     <MESSAGE value="Work with microns. Fix bugs with unit conversion. Everything tested." />
-    <option name="LAST_COMMIT_MESSAGE" value="Work with microns. Fix bugs with unit conversion. Everything tested." />
+    <MESSAGE value="Add SmarAct programmers guide" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add SmarAct programmers guide" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/piezoconcept/piezoconcept.py">
@@ -332,22 +356,22 @@
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
+    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3315">
-          <caret line="176" column="13" selection-start-line="176" selection-start-column="8" selection-end-line="176" selection-end-column="13" />
+        <state relative-caret-position="200">
+          <caret line="23" column="23" selection-start-line="23" selection-start-column="23" selection-end-line="23" selection-end-column="23" />
           <folding>
-            <element signature="e#25#38#0" expanded="true" />
+            <element signature="e#0#58#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/daq_move_plugins/daq_move_SmarActMCS.py">
+    <entry file="file://$PROJECT_DIR$/pymodaq_plugins/hardware/smaract/smaract.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20">
-          <caret line="109" column="30" lean-forward="true" selection-start-line="109" selection-start-column="30" selection-end-line="109" selection-end-column="30" />
+        <state relative-caret-position="5060">
+          <caret line="253" column="53" selection-start-line="253" selection-start-column="53" selection-end-line="253" selection-end-column="53" />
           <folding>
-            <element signature="e#0#58#0" expanded="true" />
+            <element signature="e#25#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
