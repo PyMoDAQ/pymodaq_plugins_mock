@@ -6,22 +6,24 @@ from easydict import EasyDict as edict
 from pymodaq_plugins.hardware.smaract.smaract import SmarAct
 
 """
-The support of multiple controllers connected to the machine is not implemented
+The support of multiple controllers connected to the machine is not implemented.
 
-We suppose that the configuration of the controller (sensor type etc) has been
-done via the SmarAct MCS Configuration software
+This plugin supports only SmarAct LINEAR positionners (SLC type), with an enabled sensor attached to it.
 
-We suppose to have a linear positionner with an enabled sensor attached to it,
-connected to the channel 0 of the controller
+We suppose a MCS controller with 3 axes.
 
-Tested with SLC-1740-S (closed loop with nanometer precision sensor) connected
-to a MCS-3D controller on Windows 7
+We suppose that the configuration of the controller (sensor type etc) has been done via the SmarAct MCS Configuration
+software.
+
+Tested with one SLC-1740-S (closed loop with nanometer precision sensor) connected via a MCS-3S-EP-SDS15-TAB
+(sensor module) to a MCS-3D controller on Windows 7.
 """
 
 class DAQ_Move_SmarActMCS(DAQ_Move_base):
     _controller_units = 'µm'
 
     is_multiaxes = True
+    # we suppose to have a MCS controller with 3 channels (like the MCS-3D).
     stage_names = [0, 1, 2]
     # bounds corresponding to the SLC-24180
     min_bound = -61500 # µm

@@ -5,18 +5,17 @@ import os
 import re
 
 """
-The documentation of the .dll is in SmarAct MCS Programmers Guide
+The support of multiple controllers connected to the machine is not implemented.
 
-The support of multiple controllers connected to the machine is not implemented
+This wrapper supports only SmarAct LINEAR positionners (SLC type), with an enabled sensor attached to it.
 
-We suppose that the configuration of the controller (sensor type etc) has been
-done via the SmarAct MCS Configuration software
+We suppose that the configuration of the controller (sensor type etc) has been done via the SmarAct MCS Configuration
+software.
 
-We suppose to have a linear positionner with an enabled sensor attached to it,
-connected to the channel 0 of the controller
+Tested with one SLC-1740-S (closed loop with nanometer precision sensor) connected via a MCS-3S-EP-SDS15-TAB
+(sensor module) to a MCS-3D controller on Windows 7.
 
-Tested with SLC-1740-S (closed loop with nanometer precision sensor) connected
-to a MCS-3D controller
+The documentation of the .dll is in SmarAct MCS Programmers Guide.
 """
 
 # We suppose the .dll library is in the same directory
