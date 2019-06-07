@@ -4,23 +4,22 @@ from pymodaq.daq_utils.daq_utils import ThreadCommand
 from pymodaq.daq_utils.custom_parameter_tree import iter_children
 from easydict import EasyDict as edict
 from pymodaq_plugins.hardware.smaract.smaract import SmarAct
-
-"""
-The support of multiple controllers connected to the machine is not implemented.
-
-This plugin supports only SmarAct LINEAR positionners (SLC type), with an enabled sensor attached to it.
-
-We suppose a MCS controller with 3 axes.
-
-We suppose that the configuration of the controller (sensor type etc) has been done via the SmarAct MCS Configuration
-software.
-
-Tested with one SLC-1740-S (closed loop with nanometer precision sensor) connected via a MCS-3S-EP-SDS15-TAB
-(sensor module) to a MCS-3D controller on Windows 7.
-"""
+from pymodaq_plugins.hardware.smaract.smaract import get_controller_locators
 
 class DAQ_Move_SmarActMCS(DAQ_Move_base):
+    """
+    This plugin supports only SmarAct LINEAR positionners (SLC type), with enabled sensors attached to them.
+    We suppose to have one (or multiple) MCS controllers connected. With 3 channels (each).
+    We suppose that the configuration of the controllers (sensor type etc) has been done via the SmarAct MCS
+    Configuration software.
+    Tested with one SLC-1740-S (closed loop with nanometer precision sensor) connected via a MCS-3S-EP-SDS15-TAB
+    (sensor module) to a MCS-3D (or MCS-3C) controller on Windows 7.
+    """
+
     _controller_units = 'µm'
+
+    # find controller locators
+    controller_locators = get_controller_locators()
 
     is_multiaxes = True
     # we suppose to have a MCS controller with 3 channels (like the MCS-3D).
@@ -34,6 +33,8 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
                  {'title': 'group parameter:', 'name': 'group_parameter', 'type': 'group', 'children': [
                      {'title': 'Controller Name:', 'name': 'smaract_mcs', 'type': 'str',
                       'value': 'SmarAct MCS controller', 'readonly': True},
+                     {'title': 'Controller locator', 'name': 'controller_locator', 'type': 'list',
+                      'values': controller_locators},
                  ]},
 
                  ##########################################################
@@ -95,6 +96,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
                 except:
                     pass
                 self.controller = SmarAct()
+                self.controller.init_communication(self.settings.child('group_parameter', 'controller_locator').value())
 
             # The min and max bounds will depend on which positionner is plugged. Anyway the bounds are secured
             # by the library functions.

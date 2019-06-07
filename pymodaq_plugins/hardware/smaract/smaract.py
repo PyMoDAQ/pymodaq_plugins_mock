@@ -5,17 +5,12 @@ import os
 import re
 
 """
-The support of multiple controllers connected to the machine is not implemented.
-
-This wrapper supports only SmarAct LINEAR positionners (SLC type), with an enabled sensor attached to it.
-
-We suppose that the configuration of the controller (sensor type etc) has been done via the SmarAct MCS Configuration
-software.
-
-Tested with one SLC-1740-S (closed loop with nanometer precision sensor) connected via a MCS-3S-EP-SDS15-TAB
-(sensor module) to a MCS-3D controller on Windows 7.
-
 The documentation of the .dll is in SmarAct MCS Programmers Guide.
+We suppose that the configuration of the controllers (sensor type etc) has been done via the SmarAct MCS Configuration
+software.
+We suppose to have some linear positionners (SLC type) with enabled sensors attached to them, connected to the channel 0
+of the controller.
+Tested with SLC-1740-S (closed loop with nanometer precision sensor) connected to a MCS-3D or MCS-3C controller.
 """
 
 # We suppose the .dll library is in the same directory
@@ -24,59 +19,58 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 SmaractDll = ctypes.CDLL(os.path.join(dir_path, "MCSControl.dll"))
 
 
+def get_controller_locators():
+    """
+        Get the locators (e.g. usb:id:3118167233) of the plugged MCS controllers.
+
+    Returns
+    -------
+    controller_locators : list of str
+    """
+    ioListSize = 4096
+    options = ctypes.c_char()
+    outList = (' ' * ioListSize).encode()
+    ioListSize = ctypes.c_ulong(ioListSize)
+
+    status = SmaractDll.SA_FindSystems(
+        ctypes.byref(options),
+        outList,
+        ctypes.byref(ioListSize)
+    )
+
+    if status != 0:
+        raise Exception('SmarAct SA_FindSystems error')
+
+    controller_locators = re.findall("usb:id:[0-9]{10}", outList.decode())
+
+    if not controller_locators:
+        raise Exception('No controller found')
+
+    return controller_locators
+
+
 class SmarAct(object):
 
     def __init__(self):
         super(SmarAct, self).__init__()
 
-        self.controller_locator = self.get_controller_locator()
-        self.system_index = self.init_communication(self.controller_locator)
-
-    def get_controller_locator(self):
-        """
-            Get the locator (e.g. usb:id:3118167233) of the plugged MCS
-            controller. We suppose that only one is connected to the machine.
-
-        Returns
-        -------
-        controller_locator[0]: str
-        """
-        ioListSize = 4096
-        options = ctypes.c_char()
-        outList = (' ' * ioListSize).encode()
-        ioListSize = ctypes.c_ulong(ioListSize)
-
-        status = SmaractDll.SA_FindSystems(
-            ctypes.byref(options),
-            outList,
-            ctypes.byref(ioListSize)
-        )
-
-        if status != 0:
-            raise Exception('SmarAct SA_FindSystems error')
-
-        controller_locator = re.findall("usb:id:[0-9]{10}", outList.decode())
-
-        if not controller_locator:
-            raise Exception('No controller found')
-
-        return controller_locator[0]
+        self.controller_index = ''
 
     def init_communication(self, controller_locator):
         """
-            Use the controller locator returned from get_controller_locator
-            and return the system index used the refer to the controller
+            Use the controller locator returned from get_controller_locator and return the system index attributed by
+            the dll to refer to the controller.
 
         Parameters
         -------
         controller_locator: str
         """
-        systemIndex = ctypes.c_ulong()
+        controller_index = ctypes.c_ulong()
         # we choose the synchronous communication mode
         options = 'sync'.encode('ascii')
 
         status = SmaractDll.SA_OpenSystem(
-            ctypes.byref(systemIndex),
+            ctypes.byref(controller_index),
             controller_locator.encode('ascii'),
             options
         )
@@ -84,13 +78,17 @@ class SmarAct(object):
         if status != 0:
             raise Exception('SmarAct SA_OpenSystem failed')
 
-        return systemIndex.value
+        # return controller_index.value
+        self.controller_index = controller_index.value
 
     def get_number_of_channels(self):
         """
-            Return the number of channels of the controller. Note that the
-            number of channels does not represent the number positioners and/or
-            end effectors that are currently connected to the system.
+            Return the number of channels of the controller. Note that the number of channels does not represent the
+            number positioners and/or end effectors that are currently connected to the system.
+
+        Parameters
+        -------
+        controller_index: str
 
         Returns
         -------
@@ -99,7 +97,7 @@ class SmarAct(object):
         numberOfChannels = ctypes.c_ulong()
 
         status = SmaractDll.SA_GetNumberOfChannels(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.byref(numberOfChannels)
         )
 
@@ -114,7 +112,7 @@ class SmarAct(object):
             Close the communication with the controller.
         """
         status = SmaractDll.SA_CloseSystem(
-            ctypes.c_ulong(self.system_index)
+            ctypes.c_ulong(self.controller_index)
         )
 
         if status != 0:
@@ -137,7 +135,7 @@ class SmarAct(object):
         position = ctypes.c_long()
 
         status = SmaractDll.SA_GetPosition_S(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.c_ulong(channel_index),
             ctypes.byref(position)
         )
@@ -168,7 +166,7 @@ class SmarAct(object):
         auto_zero = 1
 
         status = SmaractDll.SA_FindReferenceMark_S(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.c_ulong(channel_index),
             ctypes.c_ulong(direction),
             ctypes.c_ulong(hold_time),
@@ -197,7 +195,7 @@ class SmarAct(object):
         hold_time = 60000
 
         status = SmaractDll.SA_GotoPositionRelative_S(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.c_ulong(channel_index),
             ctypes.c_long(relative_position),
             ctypes.c_ulong(hold_time)
@@ -223,7 +221,7 @@ class SmarAct(object):
         hold_time = 60000
 
         status = SmaractDll.SA_GotoPositionAbsolute_S(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.c_ulong(channel_index),
             ctypes.c_long(absolute_position),
             ctypes.c_ulong(hold_time)
@@ -244,7 +242,7 @@ class SmarAct(object):
         """
 
         status = SmaractDll.SA_Stop_S(
-            ctypes.c_ulong(self.system_index),
+            ctypes.c_ulong(self.controller_index),
             ctypes.c_ulong(channel_index)
         )
 
