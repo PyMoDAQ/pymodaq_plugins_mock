@@ -93,7 +93,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             self.controller="Mock controller"
         self.set_Mock_data()
         #initialize viewers with the future type of data
-        self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1',data=[0], type='Data0D', labels=['Mock1', 'label2'])])
+        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=[0], type='Data0D', labels=['Mock1', 'label2'])])
 
         self.status.initialized=True
         self.status.controller=self.controller

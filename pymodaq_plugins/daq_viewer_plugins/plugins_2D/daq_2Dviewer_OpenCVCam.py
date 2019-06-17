@@ -338,6 +338,8 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
 
 
 
+
+
     def commit_settings(self,param):
         """
             Activate parameters changes on the hardware.

@@ -91,7 +91,7 @@ class PiezoConcept(object):
 
     
     def _get_read(self):
-        self._piezo.timeout = 100
+        self._piezo.timeout = 50
         info = ''
         try:
             while True:
@@ -199,6 +199,7 @@ class PiezoConcept(object):
         """
 
         Npoints = len(positions)
+        self._get_read()
         ret = self._query('ARB3D {:d}'.format(Npoints))
         if ret != 'Ok':
             raise IOError('{:}: ARB3D not set'.format(ret))
@@ -251,22 +252,25 @@ class PiezoConcept(object):
         axes = ['X', 'Y', 'Z']
         ind_axis = axes.index(axis) + 1
         if IO == 'disabled':
-            ret = self._query('CHAIO {:d}{:s}'.format(port, IO[0]))
+            ret = self._write_command('CHAIO {:d}{:s}'.format(port, IO[0]))
         elif IO == 'input':
-            ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, IO[0], ind_axis, ttl_options['slope'][0]))
+            ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port, IO[0], ind_axis, ttl_options['slope'][0]))
         elif IO == 'output':
             if ttl_options['type'] == 'start':
-                ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 's'))
+                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 's'))
             elif ttl_options['type'] == 'end':
-                ret = self._query('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 'e'))
+                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 'e'))
             elif ttl_options['type'] == 'given_step':
-                ret = self._query('CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port, 'o', ind_axis, 'n', ttl_options['ind_start']))
+                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port, 'o', ind_axis, 'n', ttl_options['ind_start']))
             elif ttl_options['type'] == 'gate_step':
-                ret = self._query('CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port, 'o', ind_axis, 'g', ttl_options['ind_start'],
+                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port, 'o', ind_axis, 'g', ttl_options['ind_start'],
                                                              ttl_options['ind_stop']))
 
         else:
             raise Exception('Not valid IO type for TTL')
 
-        if ret != 'Ok':
+        info = self._get_read()
+        info = info.split('\n')
+
+        if info[-2] != 'Ok':
             raise IOError('{:}: set_TTL_state wrong return'.format(ret))

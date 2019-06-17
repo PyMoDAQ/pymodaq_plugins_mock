@@ -26,7 +26,7 @@ stage_params = [{'title': 'Stage Settings:', 'name': 'stage_settings', 'type': '
                     {'title': 'Stage Type:', 'name': 'stage_type', 'type': 'list', 'value': 'PiezoConcept', 'values': ['PiezoConcept']},
                     {'title': 'Controller Info:', 'name': 'controller_id', 'type': 'text', 'value': '', 'readonly': True},
                     {'title': 'COM Port:', 'name': 'com_port', 'type': 'list', 'values': ports, 'value': port},
-                    {'title': 'Time interval (ms):', 'name': 'time_interval', 'type': 'int', 'value': 50},
+                    {'title': 'Time interval (ms):', 'name': 'time_interval', 'type': 'int', 'value': 20},
                     {'title': 'Stage X:', 'name': 'stage_x', 'type': 'group', 'expanded': True, 'children': [
                         {'title': 'Axis:', 'name': 'stage_x_axis', 'type': 'list', 'value': 'Y', 'values': ['X', 'Y']},
                         {'title': 'Direction:', 'name': 'stage_x_direction', 'type': 'list', 'value': 'Inverted', 'values': ['Normal', 'Inverted']},
@@ -81,7 +81,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         else:
             if param.name() == 'time_interval':
                 self.stage._get_read()
-                self.stage.set_time_interval(Time(self.settings.child('stage_settings', 'time_interval').value(),
+                self.stage.set_time_interval(Time(param.value(),
                                                   unit='m'))  # set time interval between pixels
 
             elif param.name() == 'show_navigator':
@@ -102,6 +102,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                                                           nav_x_axis=self.get_nav_xaxis(),
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis())])
+                self.stop()
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
@@ -199,6 +200,9 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
             controller_id = self.stage.get_controller_infos()
             self.settings.child('stage_settings', 'controller_id').setValue(controller_id)
             self.stage.set_time_interval(Time(self.settings.child('stage_settings', 'time_interval').value(), unit='m'))  #set time interval between pixels
+            #set the TTL outputs for each displacement of first axis
+            self.stage.set_TTL_state(1, self.settings.child('stage_settings', 'stage_x', 'stage_x_axis').value(),
+                                     'output', dict(type='start'))
 
             self.move_abs(0, 'X')
             self.move_abs(0, 'Y')
@@ -258,6 +262,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                 self.emit_status(ThreadCommand('show_navigator'))
 
                 self.controller.TH260_Initialize(self.device, mode=3)  # mode T3
+                self.controller.TH260_SetMarkerEnable(self.device, 1)
                 self.datas = np.zeros((10, 10, 1024))
                 self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, nav_axes=[0, 1], type='DataND')])
 
@@ -370,6 +375,15 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         self.y_axis = self.scan_parameters.axis_2D_2
         self.Ny = self.y_axis.size
         positions_real = self.transform_scan_coord(self.scan_parameters.positions)
+        # interval_time = self.settings.child('stage_settings', 'time_interval').value()/1000
+        # total_time = self.settings.child('acquisition', 'acq_time').value()
+        # Ncycles = int(total_time/(interval_time*len(positions_real)))
+        # total_time = Ncycles * interval_time*len(positions_real)
+        # self.settings.child('acquisition', 'acq_time').setValue(total_time)
+        # positions = []
+        # for ind in range(Ncycles):
+        #     positions.extend(positions_real)
+
         self.stage.set_positions_arbitrary(positions_real)
 
         self.move_at_navigator(*self.scan_parameters.positions[0][0:2])
@@ -407,7 +421,10 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
     def stop(self):
         super(DAQ_2DViewer_FLIM, self).stop()
         self.stop_scanner.emit()
-
+        try:
+            self.move_at_navigator(*self.scan_parameters.positions[0][0:2])
+        except:
+            pass
 
 class T3Reader_scan(T3Reader):
 

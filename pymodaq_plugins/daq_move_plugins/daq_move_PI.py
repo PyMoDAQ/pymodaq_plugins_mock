@@ -33,7 +33,7 @@ class DAQ_Move_PI(DAQ_Move_base):
     _controller_units = 'mm'  # dependent on the stage type so to be updated accordingly using self.controller_units = new_unit
 
     GCS_path = ""
-    GCS_paths = ["C:\\ProgramData\\PI\\GCSTranslator","C:\\Program Files (x86)\\PI\\GCSTranslator"]
+    GCS_paths = ["C:\\ProgramData\\PI\\GCSTranslator"]
     devices = []
     #GCS_path = "C:\\Program Files (x86)\\PI\\GCSTranslator"
 
@@ -94,6 +94,7 @@ class DAQ_Move_PI(DAQ_Move_base):
         super(DAQ_Move_PI,self).__init__(parent,params_state)
         self.settings.child(('epsilon')).setValue(0.01)
 
+        self.is_referencing_function = True
 
 
     def commit_settings(self,param):
@@ -341,9 +342,12 @@ class DAQ_Move_PI(DAQ_Move_base):
 
         """
         try:
-            return self.controller.qFRF(axe)
+            if self.controller.HasqFRF():
+                return self.controller.qFRF(axe)[axe]
+            else:
+                return False
         except:
-            return True
+            return False
 
     def set_referencing(self,axes):
         """
@@ -360,8 +364,9 @@ class DAQ_Move_PI(DAQ_Move_base):
             for axe in axes:
                 #set referencing mode
                 if type(axe) is str:
-                    if not self.is_referenced(axe)[axe]:
-                        self.controller.RON(axe,True)
+                    if self.is_referenced(axe):
+                        if self.controller.HasRON():
+                            self.controller.RON(axe,True)
                         self.controller.FRF(axe)
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e)+" / Referencing not enabled with this dll",'log']))
@@ -461,7 +466,9 @@ class DAQ_Move_PI(DAQ_Move_base):
         self.set_referencing(self.settings.child(('axis_address')).value())
         if self.controller.HasGOH():
             self.controller.GOH(self.settings.child(('axis_address')).value())
-        else:
+        elif self.controller.HasFRF():
             self.controller.FRF(self.settings.child(('axis_address')).value())
+        else:
+            self.move_Abs(0)
         self.poll_moving()
 

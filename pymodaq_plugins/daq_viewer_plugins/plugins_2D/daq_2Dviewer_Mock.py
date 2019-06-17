@@ -60,12 +60,6 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         """
         self.set_Mock_data()
 
-        self.settings.child(('cam_settings')).addChild(
-        {'title': 'stuff{:03d}'.format(self.ind_commit),
-         'name': 'stuff{:03d}'.format(self.ind_commit), 'type': 'int', 'value': 0}, True)
-        self.ind_commit += 1
-        QtWidgets.QApplication.processEvents()
-        print(len(self.settings.child(('cam_settings')).children()))
     def set_Mock_data(self):
         """
             | Set the x_axis and y_axis with a linspace distribution from settings parameters.

@@ -3,7 +3,12 @@
 =========
 Changelog
 =========
-* :feature:`0` DAQ_Move_plugins: added the method *set_position_relative_with_scaling* to have correct steps in relative motion
+* :release:`1.1.1 <2019-05-13>`
+* :bug:`0` Fixed package dependencies for the The Imaging source plugin
+* :release:`1.1.0 <2019-05-07>`
+* :feature:`0` DAQ_2DViewer plugins: new plugins for The imaging source camera's and GeniCAm compliant cameras
+* :feature:`0` DAQ_Move_plugins: added the method *set_position_relative_with_scaling* to have correct steps in
+  relative motion
   when scaling options are set
 * :release:`1.0.4 <2019-04-01>`
 * :feature:`0` Added a plugin for Stanford research SR830 lockin amplifier

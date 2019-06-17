@@ -1,3 +1,11 @@
+"""
+Plugin for the USb The Imaging Source cameras
+Using the python wrapper pyicic
+https://github.com/morefigs/py-ic-imaging-control
+py-ic-imaging-control provides control of The Imaging Source (TIS) cameras using only Python. It is a Python wrapper for the IC Imaging Control SDK and wraps the tisgrabber.dll file included in the IC Imaging Control C SDK installer using ctypes. The code currently supports most of the functionality exposed by the DLL file, including frame ready callbacks.
+This module only works on Windows due to wrapping a DLL. Tested on Windows 7 with GigE and USB The Imaging Source cameras.
+"""
+
 import os
 from PyQt5.QtCore import QThread
 from PyQt5 import QtWidgets
@@ -13,10 +21,6 @@ import pymodaq_plugins.hardware.TIS as TIS
 libpath = os.path.split(TIS.__file__)[0]
 if libpath not in os.environ['path']:
     os.environ['path'] += ';'+libpath
-
-
-
-
 
 class DAQ_2DViewer_TIS(DAQ_Viewer_base):
     """
