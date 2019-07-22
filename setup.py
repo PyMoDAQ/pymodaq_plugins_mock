@@ -89,6 +89,9 @@ setup(
         'opencv-python',
         'clr',
         'harvesters',
+        'phconvert',
+        'pillow',
+        'serial',
 
         ],
     **setupOpts

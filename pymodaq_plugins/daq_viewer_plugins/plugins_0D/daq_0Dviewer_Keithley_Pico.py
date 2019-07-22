@@ -64,7 +64,7 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
         super(DAQ_0DViewer_Keithley_Pico,self).__init__(parent,params_state)
         from visa import ResourceManager
         self.VISA_rm=ResourceManager()
-        self.keithley=None
+        self.controller=None
 
     def ini_detector(self, controller=None):
         """
@@ -86,25 +86,25 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
                 if controller is None: 
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
-                    self.keithley=controller
+                    self.controller=controller
             else:
-                self.keithley=self.VISA_rm.open_resource(self.settings.child(('VISA_ressources')).value(), read_termination='\r')
+                self.controller=self.VISA_rm.open_resource(self.settings.child(('VISA_ressources')).value(), read_termination='\r')
 
-            self.keithley.timeout=self.settings.child(('timeout')).value()
+            self.controller.timeout=self.settings.child(('timeout')).value()
 
-            self.keithley.write("*rst; status:preset; *cls;")
-            txt=self.keithley.query('*IDN?')
+            self.controller.write("*rst; status:preset; *cls;")
+            txt=self.controller.query('*IDN?')
             self.settings.child(('id')).setValue(txt)
-            self.keithley.write('CONF:'+self.settings.child('config','meas_type').value())
-            self.keithley.write(':FORM:ELEM READ;DATA ASC;')
-            self.keithley.write('ARM:SOUR IMM;')
-            self.keithley.write('ARM:COUNt 1;')
-            self.keithley.write('TRIG:SOUR IMM;')
+            self.controller.write('CONF:'+self.settings.child('config','meas_type').value())
+            self.controller.write(':FORM:ELEM READ;DATA ASC;')
+            self.controller.write('ARM:SOUR IMM;')
+            self.controller.write('ARM:COUNt 1;')
+            self.controller.write('TRIG:SOUR IMM;')
             #%%
-            data=self.keithley.query_ascii_values('READ?')
+            data=self.controller.query_ascii_values('READ?')
 
             self.status.initialized=True
-            self.status.controller=self.keithley
+            self.status.controller=self.controller
             return self.status
 
         except Exception as e:
@@ -129,9 +129,9 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
         """
         try:
             if param.name()=='timeout':
-                self.keithley.timeout=self.settings.child(('timeout')).value()
+                self.controller.timeout=self.settings.child(('timeout')).value()
             elif param.name()=='meas_type':
-                self.keithley.write('CONF:'+param.value())
+                self.controller.write('CONF:'+param.value())
 
 
         except Exception as e:
@@ -141,7 +141,7 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
         """
             close the current instance of Keithley viewer.
         """
-        self.keithley.close()
+        self.controller.close()
 
     def grab_data(self, Naverage=1, **kwargs):
         """
@@ -155,13 +155,13 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
             =============== ======== ===============================================
         """
         data_tot=[]
-        self.keithley.write('ARM:SOUR IMM;')
-        self.keithley.write('ARM:COUNt 1;')
-        self.keithley.write('TRIG:SOUR IMM;')
-        self.keithley.write('TRIG:COUN {:};'.format(Naverage))
-        data_tot=self.keithley.query_ascii_values('READ?')
+        self.controller.write('ARM:SOUR IMM;')
+        self.controller.write('ARM:COUNt 1;')
+        self.controller.write('TRIG:SOUR IMM;')
+        self.controller.write('TRIG:COUN {:};'.format(Naverage))
+        data_tot=self.controller.query_ascii_values('READ?')
         #for ind in range(Naverage):
-        #    data_tot.append(self.keithley.query_ascii_values('READ?')[0])
+        #    data_tot.append(self.controller.query_ascii_values('READ?')[0])
         data_tot=[np.array([np.mean(np.array(data_tot))])]
         self.data_grabed_signal.emit([OrderedDict(name='Keithley',data=data_tot, type='Data0D')])
 

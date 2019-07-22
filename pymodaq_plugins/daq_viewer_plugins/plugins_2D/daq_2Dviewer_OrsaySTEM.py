@@ -24,9 +24,9 @@ except:
     is_Orsay_camera=False
     params_camera=[]
 
-
-
-
+#
+# is_Orsay_camera=False
+# params_camera=[]
 
 
 class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
@@ -88,8 +88,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
                     {'title': 'Input 2:', 'name': 'input2', 'type': 'list', 'values': []}, 
                     ]},
                 {'title': 'Times:', 'name': 'times', 'type': 'group', 'children':[
-                    {'title': 'Live Time (µs):', 'name': 'pixel_time_live', 'type': 'slide', 'value': 10},
-                    {'title': 'Capture Time (µs):', 'name': 'pixel_time_capture', 'type': 'slide', 'value': 10},
+                    {'title': 'Live Time (µs):', 'name': 'pixel_time_live', 'type': 'slide', 'value': 10, 'subtype':'log', 'limits': [1, 1e6]},
+                    {'title': 'Capture Time (µs):', 'name': 'pixel_time_capture', 'type': 'slide', 'value': 10, 'subtype': 'log', 'limits': [1, 1e6]},
                     ]},
                  ]},
              ]

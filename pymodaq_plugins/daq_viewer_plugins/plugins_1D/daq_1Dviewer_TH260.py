@@ -60,9 +60,9 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                  {'title': 'Base path:', 'name': 'base_path', 'type': 'browsepath', 'value': 'E:\Data',
                  'filetype': False, 'readonly': True, 'visible': False },
                  {'title': 'Temp. File:', 'name': 'temp_file', 'type': 'str', 'value': '', 'visible': False},
-                 {'title': 'Acq. time (s):', 'name': 'acq_time', 'type': 'int', 'value': 1, 'min': 0.1,
+                 {'title': 'Acq. time (s):', 'name': 'acq_time', 'type': 'float', 'value': 1, 'min': 0.1,
                                     'max': 360000},
-                 {'title': 'Elapsed time (s):', 'name': 'elapsed_time', 'type': 'int', 'value': 0, 'min': 0,
+                 {'title': 'Elapsed time (s):', 'name': 'elapsed_time', 'type': 'float', 'value': 0, 'min': 0,
                                     'readonly': True},
 
                  {'title': 'Timings:', 'name': 'timings', 'type': 'group', 'expanded': True, 'children': [
