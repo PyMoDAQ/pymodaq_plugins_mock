@@ -87,7 +87,7 @@ setup(
         'pyvisa',
         'pyDAQmx',
         'opencv-python',
-        'clr',
+        'pythonnet',
         'harvesters',
         'phconvert',
         'pillow',
