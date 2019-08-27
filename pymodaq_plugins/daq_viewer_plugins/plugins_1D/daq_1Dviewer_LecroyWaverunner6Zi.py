@@ -17,6 +17,13 @@ import win32com.client
 active_dso = win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
 
 """
+Documentation
+-------------
+
+The Lecroy documentation can be found at
+
+    pymodaq_plugins/hardware/lecroy_waverunner6Zi
+
 Prerequisite
 ------------
 
