@@ -4,16 +4,51 @@ from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 import numpy as np
-# imports the pywin32 library, this library allow the control of other applications (used here for LeCroy.ActiveDSOCtrl.1)
-import win32com.client
-
-# it seems important to do this command outside the class. Not in ini_detector… (???)
-dso = win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
-
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
+from visa import ResourceManager
+# Import the pywin32 library, this library allow the control of other applications.
+# Used here for LeCroy.ActiveDSOCtrl.1
+# The methods of ActiveDSO are described in the documentation Lecroy ActiveDSO Developers Guide
+import win32com.client
 
+# It seems important to initialize active_dso outside the class (???)
+# If not pymodaq will not allow the initialization of the detector.
+active_dso = win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
 
+"""
+Prerequisite
+------------
+
+This plugin has been designed for Lecroy waverunner 6Zi oscilloscopes (tested with waverunner 610Zi).
+
+This plugin necessarily needs a Windows operating system (tested with Windows 7).
+You would need to install (at least):
+
+    - Lecroy ActiveDSO : https://teledynelecroy.com/support/softwaredownload/activedso.aspx?capid=106&mid=533&smid=
+    - NI-VISA : https://www.ni.com/fr-fr/support/downloads/drivers/download.ni-visa.html#305862
+    - pyvisa : https://pyvisa.readthedocs.io/en/latest/index.html
+
+How to use / bugs
+-----------------
+
+The user should be aware that the program will probably freeze (and the scope will have to be restarted) in the
+following cases :
+
+    - If the user selects in pymodaq a channel that is not activated on the scope
+    - If the user change some parameters of the scope (like the horizontal scale) while pymodaq acquisition is running.
+        To prevent from this error the user should stop the pymodaq acquisition (STOP button in the GUI interface),
+        then change the oscilloscope parameter of his choice, then rerun the acquisition. See also the comments in the
+        grab_data function below.
+
+Issues
+------
+
+If you see any misbehavior you can raise an issue on the github repository :
+
+    https://github.com/CEMES-CNRS/pymodaq_plugins/issues
+
+"""
 
 class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
     """
@@ -30,26 +65,25 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
     data_grabed_signal = pyqtSignal(list)
 
     ##checking VISA ressources
-    from visa import ResourceManager
     VISA_rm = ResourceManager()
     resources = list(VISA_rm.list_resources())
 
     params = comon_parameters + [
-            {'title': 'VISA:','name': 'VISA_ressources', 'type': 'list', 'values': resources},
+            {'title': 'VISA:',
+             'name': 'VISA_ressources',
+             'type': 'list',
+             'values': resources},
             {'title': 'Channels:',
              'name': 'channels',
              'type': 'itemselect',
-             'value': dict(all_items=['CH1', 'CH2', 'CH3', 'CH4'], selected=['CH1']
-            )},
+             'value': dict(all_items=["C1", "C2", "C3", "C4"], selected=["C1"])},
         ]
 
-    def __init__(self,parent=None,params_state=None):
-        super(DAQ_1DViewer_LecroyWaverunner6Zi,self).__init__(parent,params_state)
-        from visa import ResourceManager
-        self.VISA_rm = ResourceManager()
+    def __init__(self, parent = None, params_state = None):
+        super(DAQ_1DViewer_LecroyWaverunner6Zi, self).__init__(parent, params_state)
         self.controller = None
 
-    def ini_detector(self, controller=None):
+    def ini_detector(self, controller = None):
         """
             Initialisation procedure of the detector.
 
@@ -62,7 +96,7 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
             --------
             daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
+        self.status.update(edict(initialized = False, info = "", x_axis = None, y_axis = None, controller = None))
         try:
             if self.settings.child(('controller_status')).value() == "Slave":
                 if controller is None:
@@ -70,47 +104,21 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
                 else:
                     self.controller = controller
             else:
-                self.controller = dso
+                self.controller = active_dso
                 usb_address = "USBTMC:" + self.settings.child(('VISA_ressources')).value()
                 self.controller.MakeConnection(usb_address)
-
-                try:
-                    self.controller.WriteString("VBS? 'return = app.Acquisition.C2.VerScale'", 1)
-                except Exception as e:
-                    print(e)
+                # set the timeout of the scope to 10 seconds
+                # may be not needed
+                self.controller.setTimeout(10)
 
             self.status.initialized = True
             self.status.controller = self.controller
             return self.status
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo() + str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
             self.status.info = getLineInfo() + str(e)
             self.status.initialized = False
             return self.status
-
-    def number_of_channel(self):
-        """Return the number of available channel on the scope (4 or 2)"""
-        if ':CH4:SCA' in self.get_setup_dict().keys():
-            return 4
-        else:
-            return 2
-
-    def load_setup(self):
-        l = self.controller.query('SET?')
-        dico = dict([e.split(' ') for e in l.split(';')[1:]])
-        self.dico = dico
-
-    def get_setup_dict(self, force_load=False):
-        """
-        Return the dictionnary of the setup
-
-        By default, the method does not load the setup from the instrument
-        unless it has not been loaded before or force_load is set to true.
-        """
-        if not hasattr(self, 'dico') or force_load:
-            self.load_setup()
-
-        return self.dico
 
     def commit_settings(self, param):
         """
@@ -127,20 +135,13 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         """
         try:
             pass
-
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
-
-    def close(self):
-        """
-            close the current instance.
-        """
-        self.controller._inst.close() #the close method has not been written in tektronix object
+            self.emit_status(ThreadCommand('Update_Status',[getLineInfo() + str(e),'log']))
 
     def grab_data(self, Naverage=1, **kwargs):
         """
             | Start new acquisition.
-            | grab the current values with keithley profile procedure.
+            | Grab the current values.
             | Send the data_grabed_signal once done.
 
             =============== ======== ===============================================
@@ -148,72 +149,47 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
             *Naverage*      int       Number of values to average
             =============== ======== ===============================================
         """
-        data_tot=[]
-        x_axis = None
-        for ind, channel in enumerate(self.settings.child(('channels')).value()['selected']):
-            if ind == 0:
-                x_axis, data_tmp = self.read_channel_data(channel,x_axis_out= True)
-            else:
-                data_tmp = self.read_channel_data(channel,x_axis_out= False)
-            data_tot.append(data_tmp)
+        channel = self.settings.child(('channels')).value()['selected']
 
-        self.data_grabed_signal.emit([OrderedDict(name='Tektronix',data=data_tot, type='Data1D', x_axis= dict(data= x_axis ,label= 'Time', units= 's'))])
+        # The WaitForOPC method is used to wait for previous commands to be interpreted before continuing
+        # It may be not needed here
+        if not self.controller.WaitForOPC():
+            raise Exception("Wait for OPC error")
 
+        waveform = self.controller.GetScaledWaveformWithTimes(channel[0], 1e8, 0)
 
-    def get_out_waveform_horizontal_sampling_interval(self):
-        return float(self.controller.query('WFMO:XIN?'))
+        # The ErrorFlag property checks that there is no error concerning ActiveDSO.
+        # If the user changes some parameters on the oscilloscope (for example the horizontal scale) while pymodaq
+        # acquisition is running, it will raise this error. We do not know how to deal with this problem.
+        # If the error is raised you will probably have to restart the oscilloscope to get the communication back.
+        # Restarting can be done with a little script using the DeviceClear(True) method of ActiveDSO. It is much
+        # faster than doing it manually.
+        #
+        # To prevent the error, the user should use the STOP button on pymodaq GUI, then change the parameter of his
+        # choice on the oscilloscope and then RUN pymodaq acquisition.
+        if self.controller.ErrorFlag:
+            raise Exception(self.controller.ErrorString)
 
-    def get_out_waveform_horizontal_zero(self):
-        return float(self.controller.query('WFMO:XZERO?'))
+        x_axis = np.array(waveform[0])
+        data = [np.array(waveform[1])]
 
-    def get_out_waveform_vertical_scale_factor(self):
-        return float(self.controller.query('WFMO:YMUlt?'))
-
-    def get_out_waveform_vertical_position(self):
-        return float(self.controller.query('WFMO:YOFf?'))
-
-    def get_data_start(self):
-        return int(self.controller.query('DATA:START?'))
-
-    def get_horizontal_record_length(self):
-        return int(self.controller.query("horizontal:recordlength?"))
-
-    def get_data_stop(self):
-        return int(self.controller.query('DATA:STOP?'))
-
-    def set_data_source(self, name):
-        self.controller.write('DAT:SOUR '+str(name))
-
-    def read_channel_data(self,channel,x_axis_out= False):
-        self.controller.write("DATA:ENCDG ASCII")
-        self.controller.write("DATA:WIDTH 2")
-        if channel is not None:
-            self.set_data_source(channel)
-        self.offset = self.get_out_waveform_vertical_position()
-        self.scale = self.get_out_waveform_vertical_scale_factor()
-        if x_axis_out:
-            self.data_start = self.get_data_start()
-            self.data_stop = self.get_data_stop()
-            self.x_0 = self.get_out_waveform_horizontal_zero()
-            self.delta_x = self.get_out_waveform_horizontal_sampling_interval()
-
-            X_axis = self.x_0 + np.arange(0, self.get_horizontal_record_length()) * self.delta_x
-
-        res = np.array(self.controller.query_ascii_values('CURVE?'))
-        #res = np.frombuffer(buffer, dtype=np.dtype('int16').newbyteorder('<'),
-        #                    offset=0)
-
-        # The output of CURVE? is scaled to the display of the scope
-        # The following converts the data to the right scale
-        Y_axis = (res - self.offset)*self.scale
-
-        if x_axis_out:
-            return X_axis, Y_axis
-        else:
-            return Y_axis
+        self.data_grabed_signal.emit([OrderedDict(
+            name = 'Lecroy Waverunner 6Zi',
+            data = data,
+            type = 'Data1D',
+            x_axis = dict(data=x_axis, label='Time', units='s')
+        )])
 
     def stop(self):
         """
             not implemented?
         """
         return ""
+
+    def close(self):
+        """
+            close the current instance.
+        """
+
+        # disconnect the interface with the scope
+        self.controller.Disconnect()
