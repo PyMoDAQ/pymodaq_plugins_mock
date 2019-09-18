@@ -41,7 +41,7 @@ def get_controller_locators():
     if status != 0:
         raise Exception('SmarAct SA_FindSystems error')
 
-    controller_locators = re.findall("usb:id:[0-9]{10}", outList.decode())
+    controller_locators = re.findall("usb:id:[0-9]*", outList.decode())
 
     if not controller_locators:
         raise Exception('No controller found')

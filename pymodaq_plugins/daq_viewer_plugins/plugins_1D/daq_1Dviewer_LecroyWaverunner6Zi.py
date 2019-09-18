@@ -83,7 +83,7 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
             {'title': 'Channels:',
              'name': 'channels',
              'type': 'itemselect',
-             'value': dict(all_items=["C1", "C2", "C3", "C4"], selected=["C1"])},
+             'value': dict(all_items=["C1", "C2", "C3", "C4", "F1", "F2", "F3", "F4"], selected=["C1"])},
         ]
 
     def __init__(self, parent = None, params_state = None):
