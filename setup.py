@@ -91,7 +91,7 @@ setup(
         'harvesters',
         'phconvert',
         'pillow',
-        'serial',
+        'pyserial',
 
         ],
     **setupOpts

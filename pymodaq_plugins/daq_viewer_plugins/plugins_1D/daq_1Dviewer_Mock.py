@@ -6,91 +6,19 @@ from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_utils.daq_utils import gauss1D
 from pymodaq.daq_viewer.utility_classes import comon_parameters
+from pymodaq_plugins.daq_viewer_plugins.plugins_1D.daq_1Dviewer_Mock_spectro import DAQ_1DViewer_Mock_spectro
 
-class DAQ_1DViewer_Mock(DAQ_Viewer_base):
+class DAQ_1DViewer_Mock(DAQ_1DViewer_Mock_spectro):
     """
-        ==================== ==================
-        **Atrributes**        **Type**
-        *params*              dictionnary list
-        *hardware_averaging*  boolean
-        *x_axis*              1D numpy array      
-        *ind_data*            int
-        ==================== ==================
+    Derived class from DAQ_1DViewer_Mock_spectro
+    Simulates a pixaleted spectrometer detector without builtin calibration of its energy axis
+    """
 
-        See Also
-        --------
-        utility_classes.DAQ_Viewer_base
-    """
-    params= comon_parameters+[
-             {'name': 'rolling', 'type': 'int', 'value': 0, 'min':0},
-             {'name': 'Mock1', 'type': 'group', 'children':[
-                {'name': 'Npts', 'type': 'int', 'value': 200 , 'default':200, 'min':10},
-                {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
-                {'name': 'x0', 'type': 'float', 'value': 50 , 'default':50, 'min':0},
-                {'name': 'dx', 'type': 'float', 'value': 20 , 'default':20, 'min':1},
-                {'name': 'n', 'type': 'float', 'value': 1 , 'default':1, 'min':1},
-                {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
-                ]},
-             {'name': 'Mock2', 'type': 'group', 'children':[
-                    {'name': 'Npts', 'type': 'int', 'value': 200 , 'default':200, 'min':10},
-                    {'name': 'Amp', 'type': 'int', 'value': 10 , 'default':10, 'min':1},
-                    {'name': 'x0', 'type': 'float', 'value': 100 , 'default':100, 'min':0},
-                    {'name': 'dx', 'type': 'float', 'value': 30 , 'default':30, 'min':1},
-                    {'name': 'n', 'type': 'float', 'value': 2 , 'default':2, 'min':1},
-                    {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
-                ]}]
-    hardware_averaging=False
 
     def __init__(self,parent=None,params_state=None): #init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super(DAQ_1DViewer_Mock,self).__init__(parent,params_state)
+        super().__init__(parent,params_state)
 
 
-        self.x_axis=None
-        self.ind_data=0
-
-
-    def commit_settings(self,param):
-        """
-            Setting the mock data
-
-            ============== ========= =================
-            **Parameters**  **Type**  **Description**
-            *param*         none      not used
-            ============== ========= =================
-
-            See Also
-            --------
-            set_Mock_data
-        """
-        self.set_Mock_data()    
-               
-                
-    def set_Mock_data(self):
-        """
-            For each parameter of the settings tree :
-                * compute linspace numpy distribution with local parameters values
-                * shift right the current data of ind_data position
-                * add computed results to the data_mock list 
-
-            Returns
-            -------
-            list
-                The computed data_mock list.
-        """
-        ind = -1
-        self.data_mock=[]
-        for param in self.settings.children():#the first one is ROIselect only valid in the 2D case
-            if param.name()!='ROIselect' and param.name()!='controller_status' and param.name()!='rolling':
-                ind+=1
-                self.x_axis=np.linspace(0,param.children()[0].value()-1,param.children()[0].value())
-                data_tmp=param.children()[1].value()*gauss1D(self.x_axis,param.children()[2].value(),param.children()[3].value(),param.children()[4].value())
-                if ind == 0:
-                    data_tmp = data_tmp * np.sin(self.x_axis / 4) ** 2
-                data_tmp+=param.children()[5].value()*np.random.rand((param.children()[0].value()))
-                data_tmp=np.roll(data_tmp,self.ind_data*self.settings.child(('rolling')).value())
-                self.data_mock.append(data_tmp)
-        self.ind_data+=1
-        return self.data_mock
 
     def ini_detector(self, controller=None):
         """
@@ -100,82 +28,25 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
             --------
             set_Mock_data, daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
-        try:
+        super().ini_detector(controller)
 
-            if self.settings.child(('controller_status')).value()=="Slave":
-                if controller is None: 
-                    raise Exception('no controller has been defined externally while this detector is a slave one')
-                else:
-                    self.controller=controller
-            else:
-                self.controller="Mock controller"
+        self.settings.child('x_axis', 'Npts').setValue(512)
+        self.settings.child('x_axis', 'x0').setValue(256)
+        self.settings.child('x_axis', 'dx').setValue(1)
 
-            self.set_Mock_data()
+        self.set_x_axis()
 
-            # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', data=self.data_mock, type='Data1D',
-                x_axis= dict(data= self.x_axis ,label= 'Mock', units= ''), labels=['Mock1', 'label2']),])
+        self.settings.child('Mock1', 'x0').setValue(125)
+        self.settings.child('Mock1', 'dx').setValue(20)
 
-            self.status.initialized=True
-            self.status.controller=self.controller
-            self.status.x_axis = self.x_axis
-            return self.status
+        self.settings.child('Mock2', 'x0').setValue(325)
+        self.settings.child('Mock2', 'dx').setValue(20)
 
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
-            self.status.info=getLineInfo()+ str(e)
-            self.status.initialized=False
-            return self.status
+        self.settings.child(('multi')).setValue(True)
+        self.settings.child(('rolling')).setValue(True)
 
-    def close(self):
-        """
-            Not implemented.
-        """
-        pass
+        self.settings.child(("laser_wl")).hide()
+        self.settings.child(('exposure_ms')).hide()
 
-
-
-
-    def grab_data(self, Naverage=1, **kwargs):
-        """
-            | Start new acquisition
-            | 
-
-            For each integer step of naverage range:
-                * set mock data
-                * wait 100 ms
-                * update the data_tot array
-
-            | 
-            | Send the data_grabed_signal once done.
-
-            =============== ======== ===============================================
-            **Parameters**  **Type**  **Description**
-            *Naverage*      int       Number of spectrum to average.
-                                      Specify the threshold of the mean calculation
-            =============== ======== ===============================================
-
-            See Also
-            --------
-            set_Mock_data
-        """
-        Naverage=1
-        data_tot=self.set_Mock_data()
-        for ind in range(Naverage-1):
-            data_tmp=self.set_Mock_data()
-            QThread.msleep(100)
-
-            for ind,data in enumerate(data_tmp):
-                data_tot[ind]+=data
-
-        data_tot=[data/Naverage for data in data_tot]
-
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data1D')])
-
-    def stop(self):
-        """
-            not implemented.
-        """
-        
-        return ""
+        self.settings.child('x_axis', 'x0').setValue(256)
+        return self.status

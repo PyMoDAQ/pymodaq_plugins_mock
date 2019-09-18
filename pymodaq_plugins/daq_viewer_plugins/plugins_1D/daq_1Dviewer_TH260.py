@@ -173,8 +173,8 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         try:
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
-                rates = self.get_rates()
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=rates[1:], type='Data0D')])
+                rates = [np.array(rate) for rate in self.get_rates()[1:]]
+                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=rates, type='Data0D')])
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
@@ -199,8 +199,8 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         try:
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
-                rates = self.get_rates()
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=rates[1:], type='Data0D')])
+                rates = [np.array(rate) for rate in self.get_rates()[1:]]
+                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=rates, type='Data0D')])
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
