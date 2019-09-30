@@ -82,18 +82,7 @@ setup(
     #           'style': helpers.StyleCommand},
     packages=find_packages(),
     package_data={'': ['*.dll']},
-    install_requires = [
-        #'pymodaq>=1.1.1',
-        'pyvisa',
-        'pyDAQmx',
-        'opencv-python',
-        'pythonnet',
-        'harvesters',
-        'phconvert',
-        'pillow',
-        'pyserial',
-
-        ],
+    install_requires = [],
     **setupOpts
 )
 

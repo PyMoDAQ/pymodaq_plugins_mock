@@ -3,6 +3,8 @@
 =========
 Changelog
 =========
+* :release:`1.2.1 <2019-05-13>` Removed requirements in installation: user has to install needed packages manually
+* :release:`1.2.0 <2019-05-13>`
 * :release:`1.1.1 <2019-05-13>`
 * :bug:`0` Fixed package dependencies for the The Imaging source plugin
 * :release:`1.1.0 <2019-05-07>`

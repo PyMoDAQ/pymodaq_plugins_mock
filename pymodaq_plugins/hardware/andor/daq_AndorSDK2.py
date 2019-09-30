@@ -109,7 +109,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                     {'title': 'Start x:', 'name': 'im_startx', 'type': 'int', 'value': 1 , 'default':1, 'min':0},
                     {'title': 'End x:', 'name': 'im_endx', 'type': 'int', 'value': 1024 , 'default':1024, 'min':0},
                     {'title': 'Start y:', 'name': 'im_starty', 'type': 'int', 'value': 1 , 'default':1, 'min':1},
-                    {'title': 'End y:', 'name': 'im_endy', 'type': 'int', 'value': 127 , 'default':127, 'min':1,},
+                    {'title': 'End y:', 'name': 'im_endy', 'type': 'int', 'value': 256, 'default':256, 'min':1,},
                     ]},   
             ]},            
             {'title': 'Exposure (ms):', 'name': 'exposure', 'type': 'float', 'value': 0.01 , 'default':0.01, 'min': 0},
@@ -119,11 +119,19 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 {'title': 'Ny:', 'name': 'Ny', 'type': 'int', 'value': 0 , 'default':0 , 'readonly': True},
                 ]},
             
-            {'title': 'Temperature Settings:', 'name': 'temperature_settings', 'type': 'group', 'children':[
-                {'title': 'Set Point:', 'name': 'set_point', 'type': 'float', 'value': -20, 'default':-20},
-                {'title': 'Current value:', 'name': 'current_value', 'type': 'float', 'value': 0 , 'default':0, 'readonly': True},
-                {'title': 'Locked:', 'name': 'locked', 'type': 'led', 'value': False , 'default':False, 'readonly': True},
+            {'title': 'Shutter Settings:', 'name': 'shutter', 'type': 'group', 'children':[
+                {'title': 'Open Shutter on:', 'name': 'shutter_type', 'type': 'list', 'value': 'low', 'values': ['low', 'high']},
+                {'title': 'Shutter mode:', 'name': 'shutter_mode', 'type': 'list', 'value': 'Auto', 'values': ['Auto', 'Always Opened' 'Always Closed']},
+                {'title': 'Closing time (ms):', 'name': 'shutter_closing_time', 'type': 'int', 'value': 0, 'tip': 'millisecs it takes to close'},
+                {'title': 'Opening time (ms):', 'name': 'shutter_opening_time', 'type': 'int', 'value': 10, 'tip': 'millisecs it takes to open'},
                 ]},
+            {'title': 'Temperature Settings:', 'name': 'temperature_settings', 'type': 'group', 'children': [
+                {'title': 'Set Point:', 'name': 'set_point', 'type': 'float', 'value': -60, 'default': -60},
+                {'title': 'Current value:', 'name': 'current_value', 'type': 'float', 'value': 0, 'default': 0,
+                 'readonly': True},
+                {'title': 'Locked:', 'name': 'locked', 'type': 'led', 'value': False, 'default': False,
+                 'readonly': True},
+            ]},
         ]},
         
         {'title': 'Spectro Settings:', 'name': 'spectro_settings', 'type': 'group', 'expanded': True, 'children': [
@@ -183,7 +191,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             elif param.name() == 'readout' or param.name() in custom_parameter_tree.iter_children(self.settings.child('camera_settings', 'readout_settings')):
                 self.update_read_mode()
                 
-            elif param.name()=='exposure':
+            elif param.name() == 'exposure':
                 self.controller.SetExposureTime(self.settings.child('camera_settings','exposure').value()/1000) #temp should be in s
                 (err, timings) = self.controller.GetAcquisitionTimings()
                 self.settings.child('camera_settings','exposure').setValue(timings['exposure']*1000)
@@ -209,6 +217,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                     if err != 'SHAMROCK_SUCCESS':
                         raise Exception(err)
 
+            elif param.name() in custom_parameter_tree.iter_children(self.settings.child('camera_settings', 'shutter'), []):
+                self.set_shutter()
+
             pass
 
 
@@ -229,8 +240,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             sizey = self.settings.child('camera_settings','image_size','Ny').value()
             sizex = self.settings.child('camera_settings','image_size','Nx').value()
             self.controller.GetAcquiredDataNumpy(self.data_pointer, sizex*sizey)
-            self.data_grabed_signal.emit([OrderedDict(name='Camera',data=[np.squeeze(self.data.reshape((sizey, sizex)).astype(np.float))], type=self.data_shape)])
-            
+            self.data_grabed_signal.emit([OrderedDict(name='Camera', data=[np.squeeze(self.data.reshape((sizey, sizex)).astype(np.float))], type=self.data_shape)])
+            QtWidgets.QApplication.processEvents() #here to be sure the timeevents are executed even if in continuous grab mode
+
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
 
@@ -458,6 +470,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             self.settings.child('camera_settings', 'temperature_settings', 'set_point').setLimits(
                 (temp_range[0], temp_range[1]))
 
+
+        self.set_shutter()
+
         if not self.controller.IsCoolerOn():  # gets 0 or 1
             self.controller.CoolerON()
 
@@ -480,16 +495,18 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         self.callback_thread.start()
 
 
+    def set_shutter(self):
+        typ = self.settings.child('camera_settings', 'shutter', 'shutter_type').opts['limits'].index(
+                                        self.settings.child('camera_settings', 'shutter', 'shutter_type').value())
+        mode = self.settings.child('camera_settings', 'shutter', 'shutter_mode').opts['limits'].index(
+                                        self.settings.child('camera_settings', 'shutter', 'shutter_mode').value())
+
+        self.controller.SetShutter(typ, mode, self.settings.child('camera_settings', 'shutter', 'shutter_closing_time').value(),
+                                   self.settings.child('camera_settings', 'shutter', 'shutter_opening_time').value())
+
     def timerEvent(self, event):
         """
-            | Called by set timers (only one for this self).
-            | Used here to update temperature status0.
 
-            =============== ==================== ==============================================
-            **Parameters**    **Type**             **Description**
-
-            *event*           QTimerEvent object   Containing id from timer issuing this event
-            =============== ==================== ==============================================
         """
         locked_status, temp=self.controller.GetTemperature()
         self.settings.child('camera_settings','temperature_settings','current_value').setValue(temp)
@@ -606,7 +623,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             else:
                 self.controller.SetAcquisitionMode(2)
                 self.controller.SetNumberAccumulations(Naverage)
-                
+
             self.controller.SetExposureTime(self.settings.child('camera_settings','exposure').value()/1000) #temp should be in s
             (err, timings) = self.controller.GetAcquisitionTimings()
             self.settings.child('camera_settings','exposure').setValue(timings['exposure']*1000)

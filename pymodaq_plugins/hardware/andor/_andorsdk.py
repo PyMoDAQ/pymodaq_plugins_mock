@@ -1153,7 +1153,7 @@ class AndorSDK():
 ###### Misc functions ######
 
 
-    def SetShutter(self, typ, mode, closingtime, openingtime):
+    def SetShutter(self, typ, mode, closingtime=0, openingtime=10):
         '''
         Set the configuration for the shutter
 

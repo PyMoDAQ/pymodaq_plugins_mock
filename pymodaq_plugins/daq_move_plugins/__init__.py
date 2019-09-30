@@ -16,6 +16,6 @@ for mod in __all__:
     try:
         importlib.import_module('.' + mod, 'pymodaq_plugins.daq_move_plugins')
     except Exception as e:
-        print("error while trying to import module {:}:{:}".format(mod,str(e)))
+        print("{:} plugin couldn't be loaded due to some missing packages or errors: {:}".format(mod,str(e)))
         pass
 #from PyMoDAQ.plugins.DAQ_Move_plugins import *
