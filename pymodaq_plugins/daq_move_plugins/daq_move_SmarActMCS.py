@@ -52,7 +52,7 @@ class DAQ_Move_SmarActMCS(DAQ_Move_base):
         super(DAQ_Move_SmarActMCS, self).__init__(parent, params_state)
 
         self.controller = None
-        self.settings.child(('epsilon')).setValue(0.001)
+        self.settings.child(('epsilon')).setValue(0.002)
 
     def ini_stage(self, controller=None):
         """
