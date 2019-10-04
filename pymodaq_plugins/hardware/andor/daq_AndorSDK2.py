@@ -120,8 +120,8 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 ]},
             
             {'title': 'Shutter Settings:', 'name': 'shutter', 'type': 'group', 'children':[
-                {'title': 'Open Shutter on:', 'name': 'shutter_type', 'type': 'list', 'value': 'low', 'values': ['low', 'high']},
-                {'title': 'Shutter mode:', 'name': 'shutter_mode', 'type': 'list', 'value': 'Auto', 'values': ['Auto', 'Always Opened' 'Always Closed']},
+                {'title': 'Open Shutter on:', 'name': 'shutter_type', 'type': 'list', 'value': 'high', 'values': ['low', 'high']},
+                {'title': 'Shutter mode:', 'name': 'shutter_mode', 'type': 'list', 'value': 'Auto', 'values': ['Auto', 'Always Opened', 'Always Closed', ]},
                 {'title': 'Closing time (ms):', 'name': 'shutter_closing_time', 'type': 'int', 'value': 0, 'tip': 'millisecs it takes to close'},
                 {'title': 'Opening time (ms):', 'name': 'shutter_opening_time', 'type': 'int', 'value': 10, 'tip': 'millisecs it takes to open'},
                 ]},
@@ -520,16 +520,8 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         
         err, temp = self.controller.GetTemperature()
         if temp < -20:
-            msgBox=QtWidgets.QMessageBox()
-            msgBox.setText("Camera temperature is still at {:d}°C. Closing now may damage it!");
-            msgBox.setInformativeText("The cooling will be maintained while shutting down camera. Keep it power plugged!!!");
-            msgBox.show()
-
-            QtWidgets.QApplication.processEvents()
-            msgBox.exec()
+            print("Camera temperature is still at {:d}°C. Closing it now may damage it! The cooling will be maintained while shutting down camera. Keep it power plugged!!!".format(temp))
             self.controller.SetCoolerMode(1)
-
-
         self.controller.close()
 
     def get_xaxis(self):
