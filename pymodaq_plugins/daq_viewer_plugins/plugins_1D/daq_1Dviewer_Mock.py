@@ -43,7 +43,7 @@ class DAQ_1DViewer_Mock(DAQ_1DViewer_Mock_spectro):
         self.settings.child('Mock2', 'dx').setValue(20)
 
         self.settings.child(('multi')).setValue(True)
-        self.settings.child(('rolling')).setValue(True)
+        self.settings.child(('rolling')).setValue(1)
 
         self.settings.child(("laser_wl")).hide()
         self.settings.child(('exposure_ms')).hide()
