@@ -13,7 +13,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
         =============== ==============
     """
     _controller_units = 'whatever'
-    is_multiaxes=False
+    is_multiaxes=True
     stage_names=[]
 
 
