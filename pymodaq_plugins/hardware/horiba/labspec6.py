@@ -37,6 +37,8 @@ class Labspec6Client:
         self.commandID = -1 #a unique identifier to match sent command and received answer from server
         self.lasers = []
         self.gratings = []
+        self._exposure = 1
+        self._accumulations = 1
 
     @property
     def timeout(self):
@@ -69,41 +71,48 @@ class Labspec6Client:
         if ret != 'OK':
             raise IOError('Wrong return from Server')
 
+
     @property
     def exposure(self):
-        ret, data, extra = self.send_command('GetRamanParam', 'Exposure')
-        if ret == 'OK':
-            return data
+       return self._exposure
 
     @exposure.setter
     def exposure(self, value):
         ret, data, extra = self.send_command('SetRamanParameter', 'Exposure', value)
         if ret != 'OK':
             raise IOError('Wrong return from Server')
+        else:
+            self._exposure = value
 
     @property
     def accumulations(self):
-        ret, data, extra = self.send_command('GetRamanParam', 'Accumulations')
-        if ret == 'OK':
-            return data
+        return self._accumulations
 
     @accumulations.setter
     def accumulations(self, value):
         ret, data, extra = self.send_command('SetRamanParameter', 'Accumulations', value)
         if ret != 'OK':
             raise IOError('Wrong return from Server')
+        else:
+            self._accumulations = value
 
     @property
     def binning(self):
         ret, data, extra = self.send_command('GetRamanParam', 'Binning')
         if ret == 'OK':
-            return data
+            return int(data)
 
     @binning.setter
     def binning(self, value):
-        ret, data, extra = self.send_command('SetRamanParameter', 'Binning', value)
-        if ret != 'OK':
+        """
+        issue with the server, it says it doesnt recognise the binning command but set its value nevertheless
+        """
+        ret, data, extra = self.send_command('SetRamanParameter', 'Binning', int(value))
+        # if ret != 'OK':
+        #         #     raise IOError('Wrong return from Server')
+        if self.binning != value:
             raise IOError('Wrong return from Server')
+
 
     @property
     def slit(self):
@@ -195,7 +204,13 @@ class Labspec6Client:
         self.socket.connect((IP, port))
         self.socket.settimeout(20) #set Timeout to 10s (by default) but should later be optimised given the exposure and accumulation number
         command_id, ret, data, extra = self.receive_data()
+        if ret == 'OK':
+            self.init_mandatory_settings()
         return ret, data, extra
+
+    def init_mandatory_settings(self):
+        self.exposure = self._exposure
+        self.accumulations = self._accumulations
 
     def close(self):
         ret, data, extra = self.send_command('Logout')

@@ -51,6 +51,7 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
         super().__init__(parent, params_state)
         self.x_axis = dict(label='photon wavelength', unit='nm')
         self.sock = None
+        self.controller_ready = False
 
     def commit_settings(self, param):
         """
@@ -65,8 +66,22 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        if param.name() == 'spectro_wl':
+        if param.name() == 'wavelength':
             self.controller.wavelength = param.value()
+        elif param.name() == 'exposure':
+            self.controller.exposure = param.value()
+        elif param.name() == 'accumulations':
+            self.controller.accumulations = param.value()
+        elif param.name() == 'binning':
+            self.controller.binning = param.value()
+        elif param.name() == 'grating':
+            self.controller.grating = param.value()
+        elif param.name() == 'laser':
+            self.controller.laser = param.value()
+        elif param.name() == 'hole':
+            self.controller.hole = param.value()
+        elif param.name() == 'slit':
+            self.controller.slit = param.value()
 
     def set_spectro_wl(self, spectro_wl):
         """
@@ -138,8 +153,8 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
             # initialize viewers with the future type of data
             self.x_axis = self.controller.get_x_axis()
 
-            self.data_grabed_signal_temp.emit([OrderedDict(name='LabSpec6', data=self.x_axis*0, type='Data1D',
-                x_axis=self.x_axis, labels=['Spectrum']),])
+            self.data_grabed_signal_temp.emit([OrderedDict(name='LabSpec6', data=[self.x_axis*0], type='Data1D',
+                x_axis=dict(data=self.x_axis, units='nm', label='Wavelength'), labels=['Spectrum']),])
 
             self.status.initialized = True
             self.status.controller = self.controller
@@ -198,39 +213,23 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
 
     def grab_data(self, Naverage=1, **kwargs):
         """
-            | Start new acquisition
-            | 
-
-            For each integer step of naverage range:
-                * set mock data
-                * wait 100 ms
-                * update the data_tot array
-
-            | 
-            | Send the data_grabed_signal once done.
-
-            =============== ======== ===============================================
-            **Parameters**  **Type**  **Description**
-            *Naverage*      int       Number of spectrum to average.
-                                      Specify the threshold of the mean calculation
-            =============== ======== ===============================================
-
-            See Also
-            --------
-            set_Mock_data
         """
-        Naverage=1
-        data_tot=self.set_Mock_data()
-        for ind in range(Naverage-1):
-            data_tmp=self.set_Mock_data()
-            QThread.msleep(100)
-
-            for ind,data in enumerate(data_tmp):
-                data_tot[ind]+=data
-
-        data_tot=[data/Naverage for data in data_tot]
-
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data1D')])
+        Naverage = 1
+        if not self.controller_ready:
+            ret = self.controller.prepare_one_acquisition()
+            if ret == 'ready':
+                self.controller_ready = True
+            else:
+                self.emit_status(ThreadCommand('Update_Status', ['Spectrometer not ready to grab data...', 'log']))
+        if self.controller_ready:
+            data = self.controller.grab_spectrum()
+        else:
+            data = self.controller.wavelength_axis * 0
+        if data is None:
+            self.emit_status(ThreadCommand('Update_Status', ['No data from spectrometer', 'log']))
+            data = self.controller.wavelength_axis * 0
+        self.data_grabed_signal.emit([OrderedDict(name='LabSpec6', data=[data], type='Data1D',
+                            x_axis=dict(data=self.controller.wavelength_axis, units='nm', label='Wavelength'))])
 
     def stop(self):
         """
