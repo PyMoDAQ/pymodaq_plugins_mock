@@ -223,7 +223,7 @@ class DAQ_Move_PI(DAQ_Move_base):
             #dll_path_tot = get_dll_path(dll_name)
             #self.settings.child(('gcs_lib')).setValue(dll_path_tot)
             dll_path_tot = self.settings.child(('gcs_lib')).value()
-        self.controller=GCSDevice(gcsdll=dll_path_tot)
+        self.controller = GCSDevice(gcsdll=dll_path_tot)
 
     def check_dll_exist(self, dll_name):
         files=os.listdir(os.path.split(self.settings.child(('gcs_lib')).value())[0])
@@ -276,7 +276,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                 if controller is None: 
                     raise Exception('no controller has been defined externally while this axe is a slave one')
                 else:
-                    self.controller=controller
+                    self.controller = controller
             else: #Master stage
                 self.ini_device()#create a fresh and new instance of GCS device (in case multiple instances of DAQ_MOVE_PI are opened)
 

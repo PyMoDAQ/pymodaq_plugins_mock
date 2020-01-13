@@ -25,7 +25,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
                         
                         ]}]+comon_parameters
 
-    def __init__(self,parent=None,params_state=None):
+    def __init__(self, parent=None, params_state=None):
         """
             Initialize the the class
 
