@@ -4,6 +4,7 @@ from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 import numpy as np
+import time
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 from visa import ResourceManager
@@ -57,7 +58,7 @@ If you see any misbehavior you can raise an issue on the github repository :
 
 """
 
-class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
+class DAQ_1DViewer_LecroyWaverunner6ZiDom(DAQ_Viewer_base):
     """
         ==================== ========================
         **Attributes**        **Type**
@@ -87,7 +88,7 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         ]
 
     def __init__(self, parent = None, params_state = None):
-        super(DAQ_1DViewer_LecroyWaverunner6Zi, self).__init__(parent, params_state)
+        super(DAQ_1DViewer_LecroyWaverunner6ZiDom, self).__init__(parent, params_state)
         self.controller = None
 
     def ini_detector(self, controller = None):
@@ -120,6 +121,7 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
 
             self.status.initialized = True
             self.status.controller = self.controller
+            # self.controller.WriteString(r"""vbs 'app.acquisition.triggermode = "stopped" ' """, 1)
             return self.status
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
@@ -158,12 +160,31 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         """
         channel = self.settings.child(('channels')).value()['selected']
 
+        self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.numsegments' """, 1)
+        numSegments = self.controller.ReadString(8)
+
+        self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.samplemode' """, 1)
+        sampleMode = self.controller.ReadString(8)
+
         # The WaitForOPC method is used to wait for previous commands to be interpreted before continuing
         # It may be not needed here
         if not self.controller.WaitForOPC():
             raise Exception("Wait for OPC error")
 
         waveform = self.controller.GetScaledWaveformWithTimes(channel[0], 1e8, 0)
+
+        if sampleMode == "Sequence":
+            while True:
+                self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.acquiredsegments' """, 1)
+                acquiredSegments = self.controller.ReadString(8)
+                # print(acquiredSegments)
+                if acquiredSegments == numSegments:
+                    break
+
+                time.sleep(0.1)
+        else:
+            pass
+
 
         # The ErrorFlag property checks that there is no error concerning ActiveDSO.
         # If the user changes some parameters on the oscilloscope (for example the horizontal scale) while pymodaq
