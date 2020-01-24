@@ -54,7 +54,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                 if flag:
                     break
 
-            gcs_device = GCSDevice(gcsdll=os.path.join(GCS_path_tmp,dll_name))
+            gcs_device = GCSDevice(gcsdll=os.path.join(GCS_path_tmp, dll_name))
             devices = gcs_device.EnumerateUSB()
             GCS_path = GCS_path_tmp
         except Exception as e:
@@ -62,7 +62,7 @@ class DAQ_Move_PI(DAQ_Move_base):
 
     import serial.tools.list_ports as list_ports
     devices.extend([str(port) for port in list(list_ports.comports())])
-    is_multiaxes=False
+    is_multiaxes=True
     stage_names=[]
 
     params= [{'title': 'GCS2 library:', 'name': 'gcs_lib', 'type': 'browsepath', 'value': os.path.join(GCS_path_tmp,dll_name), 'filetype': True},
@@ -224,6 +224,7 @@ class DAQ_Move_PI(DAQ_Move_base):
             #self.settings.child(('gcs_lib')).setValue(dll_path_tot)
             dll_path_tot = self.settings.child(('gcs_lib')).value()
         self.controller = GCSDevice(gcsdll=dll_path_tot)
+        self.enumerate_devices()
 
     def check_dll_exist(self, dll_name):
         files=os.listdir(os.path.split(self.settings.child(('gcs_lib')).value())[0])
@@ -359,14 +360,14 @@ class DAQ_Move_PI(DAQ_Move_base):
             ============== ============== ===========================================
         """
         try:
-            if type(axes) is not list:
-                axes=[axes]
+            if not isinstance(axes, list):
+                axes = [axes]
             for axe in axes:
                 #set referencing mode
-                if type(axe) is str:
+                if isinstance(axe, str):
                     if self.is_referenced(axe):
                         if self.controller.HasRON():
-                            self.controller.RON(axe,True)
+                            self.controller.RON(axe, True)
                         self.controller.FRF(axe)
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e)+" / Referencing not enabled with this dll",'log']))
@@ -397,12 +398,12 @@ class DAQ_Move_PI(DAQ_Move_base):
             --------
             DAQ_Move_base.get_position_with_scaling, daq_utils.ThreadCommand
         """
-        self.set_referencing(self.settings.child(('axis_address')).value())
-        pos_dict=self.controller.qPOS(self.settings.child(('axis_address')).value())
-        pos=pos_dict[self.settings.child(('axis_address')).value()]
-        pos=self.get_position_with_scaling(pos)
-        self.current_position=pos
-        self.emit_status(ThreadCommand('check_position',[pos]))
+        #self.set_referencing(self.settings.child(('axis_address')).value())
+        pos_dict = self.controller.qPOS(self.settings.child(('axis_address')).value())
+        pos = pos_dict[self.settings.child(('axis_address')).value()]
+        pos = self.get_position_with_scaling(pos)
+        self.current_position = pos
+        self.emit_status(ThreadCommand('check_position', [pos]))
         return pos
 
     def move_Abs(self,position):
@@ -445,13 +446,13 @@ class DAQ_Move_PI(DAQ_Move_base):
             DAQ_Move_base.set_position_with_scaling, DAQ_Move_PI.set_referencing, DAQ_Move_base.poll_moving
 
         """
-        position=self.check_bound(self.current_position+position)-self.current_position
-        self.target_position=position+self.current_position
+        position = self.check_bound(self.current_position+position)-self.current_position
+        self.target_position = position+self.current_position
 
         position = self.set_position_relative_with_scaling(position)
 
         if self.controller.HasMVR():
-            out=self.controller.MVR(self.settings.child(('axis_address')).value(),position)
+            out = self.controller.MVR(self.settings.child(('axis_address')).value(),position)
         else:
             self.move_Abs(self.target_position)
         self.poll_moving()
