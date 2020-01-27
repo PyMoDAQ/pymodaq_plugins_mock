@@ -86,6 +86,7 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
             set_Mock_data
         """
         if param.name() == 'wavelength':
+            self.controller.timeout = 100 # so that the wavelentgh has time to settle
             self.controller.wavelength = param.value()
             self.controller_ready = False
         elif param.name() == 'exposure':
@@ -96,6 +97,7 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
             self.controller.binning = param.value()
             self.controller_ready = False
         elif param.name() == 'grating':
+            self.controller.timeout = 100 # so that the wavelentgh has time to settle
             self.controller.grating = param.value()
             self.controller_ready = False
         elif param.name() == 'laser':
