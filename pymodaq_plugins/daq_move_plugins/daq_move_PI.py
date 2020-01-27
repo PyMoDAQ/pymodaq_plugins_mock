@@ -62,10 +62,10 @@ class DAQ_Move_PI(DAQ_Move_base):
 
     import serial.tools.list_ports as list_ports
     devices.extend([str(port) for port in list(list_ports.comports())])
-    is_multiaxes=True
-    stage_names=[]
+    is_multiaxes = True
+    stage_names = []
 
-    params= [{'title': 'GCS2 library:', 'name': 'gcs_lib', 'type': 'browsepath', 'value': os.path.join(GCS_path_tmp,dll_name), 'filetype': True},
+    params = [{'title': 'GCS2 library:', 'name': 'gcs_lib', 'type': 'browsepath', 'value': os.path.join(GCS_path_tmp,dll_name), 'filetype': True},
            {'title': 'Connection_type:', 'name': 'connect_type', 'type': 'list', 'value':'USB', 'values': ['USB', 'TCP/IP' , 'RS232']},
            {'title': 'Devices:', 'name': 'devices', 'type': 'list', 'values': devices},
            {'title': 'Daisy Chain Options:', 'name': 'dc_options', 'type': 'group', 'children': [
@@ -279,9 +279,9 @@ class DAQ_Move_PI(DAQ_Move_base):
                 else:
                     self.controller = controller
             else: #Master stage
-                self.ini_device()#create a fresh and new instance of GCS device (in case multiple instances of DAQ_MOVE_PI are opened)
+                self.ini_device() #create a fresh and new instance of GCS device (in case multiple instances of DAQ_MOVE_PI are opened)
 
-                device=self.settings.child(('devices')).value()
+                device = self.settings.child(('devices')).value()
                 if not self.settings.child('dc_options','is_daisy').value(): #simple connection
                     if self.settings.child(('connect_type')).value()=='USB':
                         self.controller.ConnectUSB(device)
