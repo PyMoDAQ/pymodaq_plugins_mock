@@ -398,7 +398,6 @@ class DAQ_Move_PI(DAQ_Move_base):
             --------
             DAQ_Move_base.get_position_with_scaling, daq_utils.ThreadCommand
         """
-        #self.set_referencing(self.settings.child(('axis_address')).value())
         pos_dict = self.controller.qPOS(self.settings.child(('axis_address')).value())
         pos = pos_dict[self.settings.child(('axis_address')).value()]
         pos = self.get_position_with_scaling(pos)
