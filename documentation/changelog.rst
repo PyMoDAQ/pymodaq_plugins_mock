@@ -3,6 +3,11 @@
 =========
 Changelog
 =========
+* :release:`1.3.0 <2020-01-27>`
+* :feature:`0` Added new DAQ_Viewer1D plugin to control Horiba spectrometer using Labspec6 AFM server protocol
+* :feature:`0` Added new DAQ_Move plugin to control Newport ESP100 motion controllers
+* :feature:`0` Added new DAQ_Viewer0D plugin for keithley 2110 using visa
+* :feature:`0` Added new DAQ_Move plugin for smaract MCS controller
 * :release:`1.2.2 <2019-09-30>`
 * :feature:`0` Added shutter options for the Andor Camera
 * :release:`1.2.1 <2019-09-29>`
