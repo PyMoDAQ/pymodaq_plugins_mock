@@ -171,9 +171,9 @@ class DAQ_0DViewer_LockInSR830(DAQ_Viewer_base):
         data = self.controller.query_ascii_values('SNAP ? 1,2,3,4,5,6')
         data.extend(self.controller.query_ascii_values('SNAP ? 7,8,9,10,11'))
         selected_channels = self.settings.child('config','channels').value()['selected']
-        data_to_export = [[data[ind]] for ind in [self.channels.index(sel) for sel in selected_channels]]
+        data_to_export = [[np.array(data[ind])] for ind in [self.channels.index(sel) for sel in selected_channels]]
 
-        if self.settings.child('config','separate_viewers').value():
+        if self.settings.child('config', 'separate_viewers').value():
             for ind_channel, dat in enumerate(data_to_export):
                 data_tot.append(OrderedDict(name=selected_channels[ind_channel],data=[dat], type='Data0D'))
             self.data_grabed_signal.emit(data_tot)
