@@ -58,7 +58,7 @@ If you see any misbehavior you can raise an issue on the github repository :
 
 """
 
-class DAQ_1DViewer_LecroyWaverunner6ZiDom(DAQ_Viewer_base):
+class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
     """
         ==================== ========================
         **Attributes**        **Type**
@@ -88,7 +88,7 @@ class DAQ_1DViewer_LecroyWaverunner6ZiDom(DAQ_Viewer_base):
         ]
 
     def __init__(self, parent = None, params_state = None):
-        super(DAQ_1DViewer_LecroyWaverunner6ZiDom, self).__init__(parent, params_state)
+        super(DAQ_1DViewer_LecroyWaverunner6Zi, self).__init__(parent, params_state)
         self.controller = None
 
     def ini_detector(self, controller = None):
