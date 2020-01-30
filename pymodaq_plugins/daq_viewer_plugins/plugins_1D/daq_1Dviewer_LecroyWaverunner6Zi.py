@@ -121,7 +121,6 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
 
             self.status.initialized = True
             self.status.controller = self.controller
-            # self.controller.WriteString(r"""vbs 'app.acquisition.triggermode = "stopped" ' """, 1)
             return self.status
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
@@ -160,9 +159,6 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         """
         channel = self.settings.child(('channels')).value()['selected']
 
-        self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.numsegments' """, 1)
-        numSegments = self.controller.ReadString(8)
-
         self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.samplemode' """, 1)
         sampleMode = self.controller.ReadString(8)
 
@@ -171,20 +167,22 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         if not self.controller.WaitForOPC():
             raise Exception("Wait for OPC error")
 
-        waveform = self.controller.GetScaledWaveformWithTimes(channel[0], 1e8, 0)
-
         if sampleMode == "Sequence":
+            self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.numsegments' """, 1)
+            numberOfSegments = self.controller.ReadString(8)
+
             while True:
                 self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.acquiredsegments' """, 1)
                 acquiredSegments = self.controller.ReadString(8)
                 # print(acquiredSegments)
-                if acquiredSegments == numSegments:
+                if acquiredSegments == numberOfSegments:
                     break
 
                 time.sleep(0.1)
         else:
             pass
 
+        waveform = self.controller.GetScaledWaveformWithTimes(channel[0], 1e8, 0)
 
         # The ErrorFlag property checks that there is no error concerning ActiveDSO.
         # If the user changes some parameters on the oscilloscope (for example the horizontal scale) while pymodaq
