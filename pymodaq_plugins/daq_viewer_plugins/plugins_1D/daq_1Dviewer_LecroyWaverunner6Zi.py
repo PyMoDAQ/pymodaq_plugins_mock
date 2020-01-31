@@ -4,6 +4,7 @@ from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 import numpy as np
+import time
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 from visa import ResourceManager
@@ -158,10 +159,28 @@ class DAQ_1DViewer_LecroyWaverunner6Zi(DAQ_Viewer_base):
         """
         channel = self.settings.child(('channels')).value()['selected']
 
+        self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.samplemode' """, 1)
+        sampleMode = self.controller.ReadString(8)
+
         # The WaitForOPC method is used to wait for previous commands to be interpreted before continuing
         # It may be not needed here
         if not self.controller.WaitForOPC():
             raise Exception("Wait for OPC error")
+
+        if sampleMode == "Sequence":
+            self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.numsegments' """, 1)
+            numberOfSegments = self.controller.ReadString(8)
+
+            while True:
+                self.controller.WriteString(r"""vbs? 'return=app.acquisition.horizontal.acquiredsegments' """, 1)
+                acquiredSegments = self.controller.ReadString(8)
+                # print(acquiredSegments)
+                if acquiredSegments == numberOfSegments:
+                    break
+
+                time.sleep(0.1)
+        else:
+            pass
 
         waveform = self.controller.GetScaledWaveformWithTimes(channel[0], 1e8, 0)
 
