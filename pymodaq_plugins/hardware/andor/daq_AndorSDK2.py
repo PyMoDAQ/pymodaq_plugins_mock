@@ -89,7 +89,8 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             {'title': 'Camera SN:', 'name': 'camera_serialnumber', 'type': 'int', 'value': 0, 'readonly': True},
             {'title': 'Camera Model:', 'name': 'camera_model', 'type': 'str', 'value': '', 'readonly': True},
 
-            {'title': 'Readout Modes:', 'name': 'readout', 'type': 'list', 'values': Orsay_Camera_ReadOut.names(), 'value': 'FullVertBinning'},
+            {'title': 'Readout Modes:', 'name': 'readout', 'type': 'list', 'values': Orsay_Camera_ReadOut.names()[0:-1],
+                                            'value': 'FullVertBinning'},
             {'title': 'Readout Settings:', 'name': 'readout_settings', 'type': 'group', 'children':[
 
                 {'title': 'single Track Settings:', 'name': 'st_settings', 'type': 'group', 'visible': False, 'children':[
@@ -142,6 +143,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 {'title': 'Lines (/mm):', 'name': 'lines', 'type': 'int', 'readonly': True},
                 {'title': 'Blaze WL (nm):', 'name': 'blaze', 'type': 'str', 'readonly': True},
             ]},
+            {'title': 'Flip wavelength axis:', 'name': 'flip_wavelength', 'type': 'bool', 'value': False},
             {'title': 'Go to zero order:', 'name': 'zero_order', 'type': 'bool'},
         ]},
         ]
@@ -185,7 +187,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
 
         """
         try:
-            if param.name()=='set_point':
+            if param.name() == 'set_point':
                 self.controller.SetTemperature(param.value())
 
             elif param.name() == 'readout' or param.name() in custom_parameter_tree.iter_children(self.settings.child('camera_settings', 'readout_settings')):
@@ -195,6 +197,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 self.controller.SetExposureTime(self.settings.child('camera_settings','exposure').value()/1000) #temp should be in s
                 (err, timings) = self.controller.GetAcquisitionTimings()
                 self.settings.child('camera_settings','exposure').setValue(timings['exposure']*1000)
+
             elif param.name() == 'grating':
                 index_grating = self.grating_list.index(param.value())
                 self.get_set_grating(index_grating)
@@ -208,8 +211,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                 self.emit_status(ThreadCommand('close_splash'))
 
                 if err != 'SHAMROCK_SUCCESS':
-                    raise Exception(err)
+                    raise IOError(err)
                 self.x_axis = self.get_xaxis()
+
             elif param.name() == 'zero_order':
                 if param.value():
                     param.setValue(False)
@@ -219,6 +223,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
 
             elif param.name() in custom_parameter_tree.iter_children(self.settings.child('camera_settings', 'shutter'), []):
                 self.set_shutter()
+
+            elif param.name() == 'flip_wavelength':
+                self.get_xaxis()
 
             pass
 
@@ -248,7 +255,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
 
 
     def update_read_mode(self):
-        read_mode=Orsay_Camera_ReadOut[self.settings.child('camera_settings','readout').value()].value
+        read_mode = Orsay_Camera_ReadOut[self.settings.child('camera_settings','readout').value()].value
         err = self.controller.SetReadMode(read_mode)
         if err != 'DRV_SUCCESS':
             self.emit_status(ThreadCommand('Update_Status',[err,'log']))
@@ -454,6 +461,12 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                             'st_settings', 'st_center').setLimits((1, self.CCDSIZEY))
         self.settings.child('camera_settings', 'readout_settings',
                             'st_settings', 'st_height').setLimits((1, self.CCDSIZEY))
+        self.settings.child('camera_settings', 'readout_settings', 'image_settings', 'im_endy').setValue(self.CCDSIZEY)
+        self.settings.child('camera_settings', 'readout_settings', 'image_settings',
+                            'im_endy').setOpts(max=self.CCDSIZEY, default=self.CCDSIZEY)
+        self.settings.child('camera_settings', 'readout_settings', 'image_settings', 'im_endx').setValue(self.CCDSIZEX)
+        self.settings.child('camera_settings', 'readout_settings', 'image_settings',
+                            'im_endx').setOpts(max=self.CCDSIZEX, default=self.CCDSIZEX)
 
         # get max exposure range
         err, maxexpo = self.controller.GetMaximumExposure()
@@ -548,6 +561,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                     calib = calib[startx:endx+1:binx]
 
                 if (calib.astype('int') != 0).all(): # check if calib values are equal to zero
+                    if self.settings.child('spectro_settings', 'flip_wavelength').value():
+                        calib = calib[::-1]
+
                     self.x_axis = dict(data=calib, label='Wavelength (nm)')
 
             self.emit_x_axis()
@@ -566,7 +582,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         """
         if self.controller is not None:
 
-            Ny=self.settings.child('camera_settings','image_size','Ny').value()
+            Ny = self.settings.child('camera_settings', 'image_size', 'Ny').value()
             self.y_axis = dict(data=np.linspace(0, Ny-1, Ny, dtype=np.int), label='Pixels')
             self.emit_y_axis()
         else: raise(Exception('Camera not defined'))
@@ -607,7 +623,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             self.camera_done = False
 
             self.ind_grabbed=0 #to keep track of the current image in the average
-            self.Naverage = Naverage #
+            self.Naverage = Naverage  #
 
             self.prepare_data()
             if Naverage == 1:
@@ -618,7 +634,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
 
             self.controller.SetExposureTime(self.settings.child('camera_settings','exposure').value()/1000) #temp should be in s
             (err, timings) = self.controller.GetAcquisitionTimings()
-            self.settings.child('camera_settings','exposure').setValue(timings['exposure']*1000)
+            self.settings.child('camera_settings', 'exposure').setValue(timings['exposure']*1000)
             #%%%%% Start acquisition with the given exposure in ms, in "1d" or "2d" mode
             self.controller.StartAcquisition()
             self.callback_signal.emit()  #will trigger the waitfor acquisition
