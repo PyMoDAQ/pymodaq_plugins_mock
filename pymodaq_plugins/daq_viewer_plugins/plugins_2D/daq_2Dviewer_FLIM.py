@@ -28,6 +28,10 @@ stage_params = [{'title': 'Stage Settings:', 'name': 'stage_settings', 'type': '
                     {'title': 'Controller Info:', 'name': 'controller_id', 'type': 'text', 'value': '', 'readonly': True},
                     {'title': 'COM Port:', 'name': 'com_port', 'type': 'list', 'values': ports, 'value': port},
                     {'title': 'Time interval (ms):', 'name': 'time_interval', 'type': 'int', 'value': 20},
+                    {'title': 'Move at:', 'name': 'move_at', 'type': 'group', 'expanded': True, 'children': [
+                        {'title': 'X pos (µm):', 'name': 'move_at_x', 'type': 'float', 'value': 0},
+                        {'title': 'Y pos (µm):', 'name': 'move_at_y', 'type': 'float', 'value': 0},
+                        ]},
                     {'title': 'Stage X:', 'name': 'stage_x', 'type': 'group', 'expanded': True, 'children': [
                         {'title': 'Axis:', 'name': 'stage_x_axis', 'type': 'list', 'value': 'Y', 'values': ['X', 'Y']},
                         {'title': 'Direction:', 'name': 'stage_x_direction', 'type': 'list', 'value': 'Inverted', 'values': ['Normal', 'Inverted']},
@@ -88,7 +92,13 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             elif param.name() == 'show_navigator':
                 self.emit_status(ThreadCommand('show_navigator'))
+                self.emit_status(ThreadCommand('show_scanner'))
                 param.setValue(False)
+
+            elif param.name() in custom_tree.iter_children(self.settings.child('stage_settings', 'move_at'), []):
+                pos_x = self.settings.child('stage_settings', 'move_at', 'move_at_x').value()
+                pos_y = self.settings.child('stage_settings', 'move_at', 'move_at_y').value()
+                self.move_at_navigator(pos_x, pos_y)
 
     def emit_data(self):
         """
@@ -281,15 +291,18 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         self.move_abs(posy, 'Y')
 
     def move_abs(self, position, axis='X'):
-        offset = self.settings.child('stage_settings', 'stage_x', 'offset_x').value()
-        if self.settings.child('stage_settings', 'stage_x', 'stage_x_direction').value() == 'Normal':
+        stage = f'stage_{axis}'.lower()
+        stage_axis = f'stage_{axis}_axis'.lower()
+        offset_stage = f'offset_{axis}'.lower()
+        stage_dir = f'stage_{axis}_direction'.lower()
+
+        offset = self.settings.child('stage_settings', stage, offset_stage).value()
+        if self.settings.child('stage_settings', stage, stage_dir).value() == 'Normal':
             posi = position + offset
         else:
             posi = -position + offset
-        if axis == 'X':
-            ax = self.settings.child('stage_settings', 'stage_x', 'stage_x_axis').value()
-        else:
-            ax = self.settings.child('stage_settings', 'stage_y', 'stage_y_axis').value()
+
+        ax = self.settings.child('stage_settings', stage, stage_axis).value()
         pos = Position(ax, int(posi * 1000), unit='n')
         out = self.stage.move_axis('ABS', pos)
 
@@ -461,14 +474,14 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
         offset = self.settings.child('stage_settings', 'stage_x', 'offset_x').value()
         if self.settings.child('stage_settings', 'stage_x', 'stage_x_direction').value() == 'Normal':
-            scaling_x = 1
-        else:
             scaling_x = -1
+        else:
+            scaling_x = 1
 
         if self.settings.child('stage_settings', 'stage_y', 'stage_y_direction').value() == 'Normal':
-            scaling_y = 1
-        else:
             scaling_y = -1
+        else:
+            scaling_y = +1
         if self.settings.child('stage_settings', 'stage_x', 'stage_x_axis').value() == 'X':
             ind_x = 0
         else:
@@ -491,7 +504,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         super(DAQ_2DViewer_FLIM, self).stop()
         self.stop_scanner.emit()
         try:
-            self.move_at_navigator(*self.scan_parameters.positions[0][0:2])
+            self.move_at_navigator(0, 0)
         except:
             pass
 
