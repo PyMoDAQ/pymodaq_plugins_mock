@@ -5,7 +5,7 @@ import os
 from easydict import EasyDict as edict
 import ctypes
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, zeros_aligned, extract_TTTR_histo_every_pixels
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, zeros_aligned
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
@@ -17,6 +17,7 @@ import time
 
 # find available COM ports
 import serial.tools.list_ports
+from skimage.feature import register_translation
 
 ports = [str(port)[0:4] for port in list(serial.tools.list_ports.comports())]
 port = 'COM6' if 'COM6' in ports else ports[0] if len(ports) > 0 else ''
@@ -39,6 +40,7 @@ stage_params = [{'title': 'Stage Settings:', 'name': 'stage_settings', 'type': '
                         ]},
 
                     ]}]
+
 
 class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
     """
@@ -98,7 +100,8 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             elif mode == 'FLIM':
                 self.stop_scanner.emit()
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=self.datas, type='DataND', nav_axes=(0, 1),
+                datas = self.process_histo_from_h5_and_correct_shifts(self.Nx, self.Ny, channel=0, marker=65)
+                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=datas, type='DataND', nav_axes=(0, 1),
                                                           nav_x_axis=self.get_nav_xaxis(),
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis())])
@@ -126,26 +129,91 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
 
 
+    def process_histo_from_h5_and_correct_shifts(self, Nx=1, Ny=1, channel=0, marker=65):
+        """
+        Specific method to correct for drifts between various scans performed using the quick scans feature
+        Parameters
+        ----------
+        Nx
+        Ny
+        channel
+        marker
+
+        Returns
+        -------
+
+        """
+        Nbins = self.settings.child('acquisition', 'flim_histo', 'nbins_flim').value()
+        time_window = int(self.settings.child('acquisition', 'flim_histo', 'time_window_flim').value() /
+                          self.settings.child('acquisition', 'timings', 'resolution').value())
+
+        markers_array = self.h5file.get_node('/markers')
+        nanotime_array = self.h5file.get_node('/nanotimes')
+        datas = np.zeros((Nx, Ny, Nbins), dtype=np.int64)
+        intensity_map_ref = np.zeros((Nx, Ny), dtype=np.int64)
+        ind_lines = np.where(markers_array.read() == marker)[0]
+        indexes_reading = ind_lines[::Nx * Ny][1:]
+        Nreadings = len(indexes_reading)
+
+        ind_reading = 0
+        ind_offset = 0
+
+        for ind in range(Nreadings):
+
+            if len(ind_lines) > 2:
+                ind_last_line = ind_lines[-1]
+                markers_tmp = markers_array[ind_reading:ind_reading + ind_last_line]
+                nanotimes_tmp = nanotime_array[ind_reading:ind_reading + ind_last_line]
+
+                # datas array is updated within this method
+                datas_tmp = self.extract_TTTR_histo_every_pixels(nanotimes_tmp, markers_tmp,
+                                                     marker=marker, Nx=Nx, Ny=Ny, Ntime=Nbins,
+                                                     ind_line_offset=self.ind_offset, channel=channel,
+                                                     time_window=time_window)
+                intensity_map = np.squeeze(np.sum(datas_tmp, axis=2))
+                if ind == 0:
+                    intensity_map_ref = intensity_map
+                ind_offset += len(ind_lines) - 2
+                ind_reading += ind_lines[-2]
+
+            #correct for shifts in x or y during collections and multiple scans of the same area
+            shift, error, diffphase = register_translation(intensity_map_ref, intensity_map, 1)
+            datas += np.roll(intensity_map, [int(s) for s in shift], (0, 1))
+
+
+        return datas
+
+
+
     def process_histo_from_h5(self, Nx=1, Ny=1, channel=0, marker=65):
         mode = self.settings.child('acquisition', 'acq_type').value()
         if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
             datas = super(DAQ_2DViewer_FLIM, self).process_histo_from_h5(Nx, Ny, channel)
             return datas
         else:
-            markers_array = self.h5file.get_node('/markers')
-            ind_lines = np.squeeze(np.where(self.h5file.get_node('/markers')[self.ind_reading:] == marker))
-            if ind_lines.size == 0:
-                return np.zeros_like(self.datas)  # basically do nothing
-            else:
-                ind_last_line = ind_lines[-1]
-            print(self.ind_reading, ind_last_line)
-            markers = markers_array[self.ind_reading:self.ind_reading+ind_last_line]
-            nanotimes = self.h5file.get_node('/nanotimes')[self.ind_reading:self.ind_reading+ind_last_line]
 
-            nbins = self.settings.child('acquisition', 'timings', 'nbins').value()
-            datas = extract_TTTR_histo_every_pixels(nanotimes, markers, marker=marker, Nx=Nx, Ny=Ny,
-                                            Ntime=nbins, ind_line_offset=self.ind_reading, channel=channel)
-            self.ind_reading = ind_last_line
+            Nbins = self.settings.child('acquisition', 'flim_histo', 'nbins_flim').value()
+            time_window = int(self.settings.child('acquisition', 'flim_histo', 'time_window_flim').value() /
+                              self.settings.child('acquisition', 'timings', 'resolution').value())
+
+            markers_array = self.h5file.get_node('/markers')
+            nanotime_array = self.h5file.get_node('/nanotimes')
+            ind_lines = np.where(markers_array[self.ind_reading:] == marker)[0]
+            datas = np.zeros((Nx, Ny, Nbins), dtype=np.int64)
+
+            if len(ind_lines) > 2:
+                ind_last_line = ind_lines[-1]
+                markers_tmp = markers_array[self.ind_reading:self.ind_reading + ind_last_line]
+                nanotimes_tmp = nanotime_array[self.ind_reading:self.ind_reading + ind_last_line]
+
+                #datas array is updated within this method
+                datas = self.extract_TTTR_histo_every_pixels(nanotimes_tmp, markers_tmp,
+                                            marker=marker, Nx=Nx, Ny=Ny, Ntime=Nbins,
+                                            ind_line_offset=self.ind_offset, channel=channel,
+                                            time_window=time_window)
+
+                self.ind_reading = ind_lines[-2]
+                self.ind_offset += len(ind_lines) - 2
             return datas
 
     def ini_detector(self, controller=None):
@@ -294,6 +362,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             elif mode == 'FLIM':
                 self.ind_reading = 0
+                self.ind_offset = 0
                 self.do_process_tttr = False
 
                 self.init_h5file()

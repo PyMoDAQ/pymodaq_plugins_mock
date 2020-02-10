@@ -5,7 +5,8 @@ import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, extract_TTTR_histo_every_pixels
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned
+
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import pymodaq.daq_utils.custom_parameter_tree as customparameter
@@ -20,6 +21,8 @@ import tables
 from phconvert import pqreader
 import time
 import datetime
+from fast_histogram import histogram1d
+
 
 class DAQ_1DViewer_TH260(DAQ_Viewer_base):
     """
@@ -66,14 +69,22 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                                     'readonly': True},
 
                  {'title': 'Timings:', 'name': 'timings', 'type': 'group', 'expanded': True, 'children': [
-                     {'title': 'Mode:', 'name': 'timing_mode', 'type': 'list', 'value': 'Hires', 'values': ['Hires', 'Lowres']},
-                     {'title': 'Base Resolution (ps):', 'name': 'base_resolution', 'type': 'float', 'value': 25, 'min': 0, 'readonly': True},
+                     {'title': 'Mode:', 'name': 'timing_mode', 'type': 'list', 'value': 'Hires',
+                                'values': ['Hires', 'Lowres']},
+                     {'title': 'Base Resolution (ps):', 'name': 'base_resolution', 'type': 'float', 'value': 25,
+                                'min': 0, 'readonly': True},
                      {'title': 'Resolution (ns):', 'name': 'resolution', 'type': 'float', 'value': 0.2, 'min': 0},
-                     {'title': 'Time window (s):', 'name': 'window', 'type': 'float', 'value': 100, 'min': 0, 'readonly': True, 'enabled': False, 'siPrefix': True},
-                     {'title': 'Nbins:', 'name': 'nbins', 'type': 'list', 'value': 1024, 'values': [1024*(2**lencode) for lencode in range(6)]},
+                     {'title': 'Time window (s):', 'name': 'window', 'type': 'float', 'value': 100, 'min': 0,
+                                    'readonly': True, 'enabled': False, 'siPrefix': True},
+                     {'title': 'Nbins:', 'name': 'nbins', 'type': 'list', 'value': 1024,
+                                'values': [1024*(2**lencode) for lencode in range(6)]},
                      {'title': 'Offset (ns):', 'name': 'offset', 'type': 'int', 'value': 0, 'max': 100000000, 'min': 0},
                  ]},
-
+                {'title': 'FLIM histograms:', 'name': 'flim_histo', 'type': 'group', 'expanded': True, 'children': [
+                    {'title': 'FLIM Nbins:', 'name': 'nbins_flim', 'type': 'list', 'value': 512,
+                     'values': [256 * (2 ** lencode) for lencode in range(6)]},
+                    {'title': 'FLIM Time Window (ns):', 'name': 'time_window_flim', 'type': 'float', 'value': 200,}
+                ]},
                  {'title': 'Rates:', 'name': 'rates', 'type': 'group', 'expanded': True, 'children': [
                      {'title': 'Show large display?', 'name': 'large_display', 'type': 'bool', 'value': True},
                      {'title': 'Sync rate (cts/s):', 'name': 'syncrate', 'type': 'int', 'value': 0, 'min': 0, 'readonly': True, 'siPrefix': True},
@@ -107,9 +118,61 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         self.time_t3 = 0
         self.time_t3_rate = 0
         self.ind_reading = 0
+        self.ind_offset = 0
         self.histo_array = None
 
-    def emit_log(self,string):
+    def extract_TTTR_histo_every_pixels(self, nanotimes, markers, marker=65, Nx=1, Ny=1, Ntime=512, time_window=None,
+                                        ind_line_offset=0,
+                                        channel=0):
+        """
+        Extract histograms from photon tags and attributes them in the given pixel of the FLIM
+        The marker is used to check where a new line within the image starts
+        Parameters
+        ----------
+        nanotimes: (ndarray of uint16) photon arrival times (in timeharp units)
+        markers: (ndarray of uint8) markers: 0 means the corresponding nanotime is a photon on detector 0,
+                                             1 means the corresponding nanotime is a photon on detector 1,
+                                             65 => Marker 1 event
+                                             66 => Marker 2 event
+                                             ...
+                                             79 => Marker 15 event
+                                             127 =>overflow
+        marker: (int) the marker value corresponding to a new Y line within the image (for instance 65)
+        Nx: (int) the number of pixels along the xaxis
+        Ny: (int) the number of pixels along the yaxis
+        Ntime: (int) the number of pixels along the time axis
+        time_window: (int) the maximum time value (in units of the TTTR resolution)
+        ind_line_offset: (int) the offset of previously read lines
+        channel: (int) marker of the specific channel (0 or 1) for channel 1 or 2
+
+        Returns
+        -------
+        ndarray: FLIM hypertemporal image in the order (X, Y, time)
+        """
+
+        if time_window is None:
+            time_window = Ntime
+        ind_lines = np.where(markers == marker)[0]
+
+        # nanotimes = nanotimes[np.logical_or(markers == marker, markers == channel)]
+        # markers = markers[np.logical_or(markers == marker, markers == channel)]
+        # indexes_new_line = np.squeeze(np.argwhere(markers == marker)).astype(np.uint64)
+
+        if ind_lines.size == 0:
+            ind_lines = np.array([0, nanotimes.size], dtype=np.uint64)
+        # print(indexes_new_line)
+        datas = np.zeros((Nx, Ny, Ntime), dtype=np.int64)
+        for ind_line in range(ind_lines.size - 1):
+            # print(ind_line)
+            ix = ((ind_line + ind_line_offset) // Ny) % Nx
+            iy = (ind_line + ind_line_offset) % Ny
+            is_nanotime = markers[ind_lines[ind_line]:ind_lines[ind_line + 1]] == channel
+            datas[ix, iy, :] += histogram1d(nanotimes[ind_lines[ind_line]:ind_lines[ind_line+1]][is_nanotime], Ntime,
+                                            range=(0, time_window-1))
+
+        return datas
+
+    def emit_log(self, string):
         self.emit_status(ThreadCommand('Update_Status', [string, 'log']))
 
     def commit_settings(self, param):
@@ -135,9 +198,13 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                 if param.value() == 'Counting' or param.value() == 'Histo':
                     self.settings.child('acquisition', 'temp_file').hide()
                     self.settings.child('acquisition', 'base_path').hide()
+                    self.settings.child('acquisition', 'flim_histo').hide()
+
                 else:
                     self.settings.child('acquisition', 'temp_file').show()
                     self.settings.child('acquisition', 'base_path').show()
+                    self.settings.child('acquisition', 'flim_histo').show()
+
                 #     self.settings.child('acquisition', 'timings', 'nbins').setOpts(
                 #         limits=[128 * (2 ** lencode) for lencode in range(6)])
                 #     self.settings.child('acquisition', 'timings', 'nbins').setValue(128)
@@ -216,14 +283,22 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo()+ str(e), 'log']))
 
     def process_histo_from_h5(self, Nx=1, Ny=1, channel=0, marker=65):
-        marker = 65
-        markers = self.h5file.get_node('/markers')[self.ind_reading:]
-        nanotimes = self.h5file.get_node('/nanotimes')[self.ind_reading:]
+        markers_array = self.h5file.get_node('/markers')
+        nanotimes_array = self.h5file.get_node('/nanotimes')
 
-        nbins = self.settings.child('acquisition', 'timings', 'nbins').value()
-        datas = extract_TTTR_histo_every_pixels(nanotimes, markers, marker=marker, Nx=Nx, Ny=Ny,
-                                        Ntime=nbins, ind_line_offset=self.ind_reading, channel=channel)
-        self.ind_reading += nanotimes.size
+        Nbins = self.settings.child('acquisition', 'flim_histo', 'nbins_flim').value()
+        time_window = int(self.settings.child('acquisition', 'flim_histo', 'time_window_flim').value() /
+                          self.settings.child('acquisition', 'timings', 'resolution').value())
+        ind_lines = np.where(markers_array[self.ind_reading:] == marker)[0]
+        if len(ind_lines) > 2:
+            ind_last_line = ind_lines[-1]
+            markers_tmp = markers_array[self.ind_reading:self.ind_reading + ind_last_line]
+            nanotimes_tmp = nanotimes_array[self.ind_reading:self.ind_reading + ind_last_line]
+
+            datas = self.extract_TTTR_histo_every_pixels(nanotimes_tmp, markers_tmp, marker=marker, Nx=Nx, Ny=Ny,
+                                Ntime=Nbins, ind_line_offset=self.ind_offset, channel=channel, time_window=time_window)
+            self.ind_reading += ind_lines[-2]
+            self.ind_offset += len(ind_lines)-2
         return datas
 
     def set_acq_mode(self, mode, update=False):
@@ -618,6 +693,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
 
             elif mode == 'T3':
                 self.ind_reading = 0
+                self.ind_offset = 0
                 self.Nx = 1
                 self.Ny = 1
                 self.init_h5file()
