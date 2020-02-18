@@ -17,8 +17,9 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         *ind_data*      int
         =============== =================
     """
-    params= comon_parameters+[
-             {'name': 'Mock1', 'type': 'group', 'children':[
+    params = comon_parameters+[
+             {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
+             {'name': 'Mock1', 'type': 'group', 'children': [
                 {'name': 'Npts', 'type': 'int', 'value': 200 , 'default':200, 'min':10},
                 {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
                 {'name': 'x0', 'type': 'float', 'value': 50 , 'default':50, 'min':0},
@@ -55,6 +56,8 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             set_Mock_data
         """
         self.set_Mock_data()
+        if param.name() == 'wait_time':
+            self.emit_status(ThreadCommand('update_main_settings', [['wait_time'], param.value(), 'value']))
 
     def set_Mock_data(self):
         """
@@ -62,11 +65,12 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             and add computed results to the data_mock list.
         """
         self.data_mock=[]
-        for param in self.settings.children():#the first one is ROIselect only valid in the 2D case
-            if param.name()!='ROIselect' and param.name()!='controller_status':
-                x=np.linspace(0,param.children()[0].value()-1,param.children()[0].value())
-                self.data_mock.append(param.children()[1].value()*gauss1D(x,param.children()[2].value(),param.children()[3].value(),param.children()[4].value())
-                                      +param.children()[5].value()*np.random.rand((param.children()[0].value())))
+        for param in self.settings.children():  # the first one is ROIselect only valid in the 2D case
+            if 'Mock' in param.name():
+                x = np.linspace(0,param.children()[0].value()-1, param.children()[0].value())
+                self.data_mock.append(param.children()[1].value()*gauss1D(x, param.children()[2].value(),
+                                            param.children()[3].value(), param.children()[4].value())
+                                            +param.children()[5].value()*np.random.rand((param.children()[0].value())))
 
     def ini_detector(self, controller=None):
         """
@@ -84,19 +88,22 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
 
 
         self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
-        if self.settings.child(('controller_status')).value()=="Slave":
+        if self.settings.child(('controller_status')).value() == "Slave":
             if controller is None: 
                 raise Exception('no controller has been defined externally while this detector is a slave one')
             else:
-                self.controller=controller
+                self.controller = controller
         else:
-            self.controller="Mock controller"
+            self.controller = "Mock controller"
         self.set_Mock_data()
-        #initialize viewers with the future type of data
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=[0], type='Data0D', labels=['Mock1', 'label2'])])
+        self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
+                                                                self.settings.child(('wait_time')).value(), 'value']))
 
-        self.status.initialized=True
-        self.status.controller=self.controller
+        #initialize viewers with the future type of data
+        self.data_grabed_signal.emit([OrderedDict(name='Mock1', data=[0], type='Data0D', labels=['Mock1', 'label2'])])
+
+        self.status.initialized = True
+        self.status.controller = self.controller
         return self.status
 
     def close(self):

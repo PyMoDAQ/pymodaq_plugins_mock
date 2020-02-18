@@ -11,7 +11,7 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
 
         =============== ==================
         **Attributes**   **Type**
-        *Kinesis_path*   string
+        *kinesis_path*   string
         *serialnumbers*  int list
         *params*         dictionnary list
         =============== ==================
@@ -23,12 +23,12 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
     """
     _controller_units = 'degrees'
 
-    Kinesis_path='C:\\Program Files\\Thorlabs\\Kinesis'
+    kinesis_path='C:\\Program Files\\Thorlabs\\Kinesis'
     try:
         from System import Decimal
         from System import Action
         from System import UInt64
-        sys.path.append(Kinesis_path)
+        sys.path.append(kinesis_path)
         clr.AddReference("Thorlabs.MotionControl.DeviceManagerCLI")
         clr.AddReference("Thorlabs.MotionControl.IntegratedStepperMotorsCLI")
         clr.AddReference("Thorlabs.MotionControl.GenericMotorCLI")
@@ -44,7 +44,7 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
 
     stage_names=[]
 
-    params= [{'title': 'Kinesis library:', 'name': 'kinesis_lib', 'type': 'browsepath', 'value': Kinesis_path},
+    params= [{'title': 'Kinesis library:', 'name': 'kinesis_lib', 'type': 'browsepath', 'value': kinesis_path},
              {'title': 'Controller ID:', 'name': 'controller_id', 'type': 'str', 'value': '', 'readonly': True},
              {'title': 'Serial number:', 'name': 'serial_number', 'type': 'list', 'values': serialnumbers},
               {'title': 'MultiAxes:', 'name': 'multiaxes', 'type': 'group','visible':is_multiaxes, 'children':[
@@ -64,7 +64,7 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
         self.settings.child(('epsilon')).setValue(0.01)
 
         try:
-            #Kinesis_path=os.environ['Kinesis'] #environement variable pointing to 'C:\\Program Files\\Thorlabs\\Kinesis'
+            #kinesis_path=os.environ['Kinesis'] #environement variable pointing to 'C:\\Program Files\\Thorlabs\\Kinesis'
             #to be adjusted on the different computers
 
             self.move_done_action=self.Action[self.UInt64](self.move_done)
@@ -84,10 +84,9 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
             *param*         instance of pyqtgraph parameter  The parameter to update
             =============== ================================ ========================
         """
-        if param.name()=='kinesis_lib':
-            self.Kinesis_path=param.value()
+        if param.name() == 'kinesis_lib':
             try:
-                sys.path.append(Kinesis_path)
+                sys.path.append(param.value())
                 clr.AddReference("Thorlabs.MotionControl.DeviceManagerCLI")
                 clr.AddReference("Thorlabs.MotionControl.IntegratedStepperMotorsCLI")
                 clr.AddReference("Thorlabs.MotionControl.GenericMotorCLI")
