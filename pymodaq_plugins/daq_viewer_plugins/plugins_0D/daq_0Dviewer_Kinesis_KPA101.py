@@ -66,7 +66,7 @@ class DAQ_0DViewer_Kinesis_KPA101(DAQ_Viewer_base):
             --------
             daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
+        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
 
             if self.settings.child(('controller_status')).value() == "Slave":
@@ -85,6 +85,8 @@ class DAQ_0DViewer_Kinesis_KPA101(DAQ_Viewer_base):
                     if not self.controller.IsSettingsInitialized():
                         self.controller.WaitForSettingsInitialized(5000)
                     self.controller.StartPolling(self.settings.child(('polling_time')).value())
+                    self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
+                                                            self.settings.child(('polling_time')).value(), 'value']))
                     QThread.msleep(500)
                     self.controller.EnableDevice()
                     QThread.msleep(500)
@@ -135,17 +137,17 @@ class DAQ_0DViewer_Kinesis_KPA101(DAQ_Viewer_base):
                 except:
                     serialnumbers = []
                 self.settings.child(('serial_number')).setOpts(limits=serialnumbers)
-            #TODO update main settings accordingly
+
             elif param.name() == 'polling_time':
                 self.controller.StopPolling()
                 QThread.msleep(500)
                 self.controller.StartPolling(self.settings.child(('polling_time')).value())
                 QThread.msleep(500)
-            #     self.emit_status(ThreadCommand('update_settings', ['']))
+                self.emit_status(ThreadCommand('update_main_settings', [['wait_time'], param.value(), 'value']))
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
 
     def close(self):
         """
