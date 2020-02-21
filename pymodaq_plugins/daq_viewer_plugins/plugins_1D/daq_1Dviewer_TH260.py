@@ -1,3 +1,11 @@
+"""
+requires:
+fast-histogram : to process histograms in TTTR mode
+"""
+
+
+
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 import os
@@ -38,7 +46,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                 {'title': 'Sync Settings:', 'name': 'sync_settings', 'type': 'group', 'expanded': True, 'children': [
                     {'title': 'ZeroX (mV):', 'name': 'zerox', 'type': 'int', 'value': -10, 'max': 0, 'min': -40},
                     {'title': 'Level (mV):', 'name': 'level', 'type': 'int', 'value': -50, 'max': 0, 'min': -1200},
-                    {'title': 'Offset (ps):', 'name': 'offset', 'type': 'int', 'value': 0, 'max': 99999, 'min': -99999},
+                    {'title': 'Offset (ps):', 'name': 'offset', 'type': 'int', 'value': 30000, 'max': 99999, 'min': -99999},
                     {'title': 'Divider:', 'name': 'divider', 'type': 'list', 'value': 1, 'values': [1, 2, 4, 8]},
                 ]},
                 {'title': 'CH1 Settings:', 'name': 'ch1_settings', 'type': 'group', 'expanded': True, 'children': [
@@ -161,14 +169,14 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         if ind_lines.size == 0:
             ind_lines = np.array([0, nanotimes.size], dtype=np.uint64)
         # print(indexes_new_line)
-        datas = np.zeros((Nx, Ny, Ntime), dtype=np.int64)
+        datas = np.zeros((Nx, Ny, Ntime))
         for ind_line in range(ind_lines.size - 1):
             # print(ind_line)
             ix = ((ind_line + ind_line_offset) // Ny) % Nx
             iy = (ind_line + ind_line_offset) % Ny
             is_nanotime = markers[ind_lines[ind_line]:ind_lines[ind_line + 1]] == channel
             datas[ix, iy, :] += histogram1d(nanotimes[ind_lines[ind_line]:ind_lines[ind_line+1]][is_nanotime], Ntime,
-                                            range=(0, time_window-1))
+                                            (0, int(time_window)-1))
 
         return datas
 
@@ -254,6 +262,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             elif mode == 'T3':
                 self.data_grabed_signal.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D')])
                 self.general_timer.start()
+                self.h5file.flush()
 
 
 

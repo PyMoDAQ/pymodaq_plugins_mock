@@ -83,7 +83,7 @@ setup(
     packages=find_packages(),
     package_data={'': ['*.dll']},
     install_requires=[
-        'fast-histogram',
+
         ],
     **setupOpts
 )

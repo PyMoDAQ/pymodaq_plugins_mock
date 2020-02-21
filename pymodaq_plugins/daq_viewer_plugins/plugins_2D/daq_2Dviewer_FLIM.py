@@ -1,3 +1,11 @@
+"""
+requires:
+fast-histogram : to process histograms in TTTR mode
+scikit-image : to correct for scanner drifts in quick FLIM acquisition
+"""
+
+
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QThread, pyqtSlot, QObject, pyqtSignal
 import numpy as np
@@ -116,6 +124,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis())])
                 self.stop()
+                self.h5file.flush()
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
@@ -159,7 +168,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
         markers_array = self.h5file.get_node('/markers')
         nanotime_array = self.h5file.get_node('/nanotimes')
-        datas = np.zeros((Nx, Ny, Nbins), dtype=np.int64)
+        datas = np.zeros((Nx, Ny, Nbins))
         intensity_map_ref = np.zeros((Nx, Ny), dtype=np.int64)
         ind_lines = np.where(markers_array.read() == marker)[0]
         indexes_reading = ind_lines[::Nx * Ny][1:]
