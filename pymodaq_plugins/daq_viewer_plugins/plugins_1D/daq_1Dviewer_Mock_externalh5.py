@@ -1,17 +1,18 @@
 from PyQt5.QtCore import QThread
 from PyQt5 import QtWidgets
+import os
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, get_new_file_name
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import pymodaq.daq_utils.custom_parameter_tree as custom_tree
+from pymodaq.daq_utils.h5saver import H5Saver
 
-
-class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
+class DAQ_1DViewer_Mock_externalh5(DAQ_Viewer_base):
     """
     1D viewer plugin simulating a photon spectrometer controlling the laser source, the exposure and the calibration axis
     Produces one data signal with two hypergaussians whose parameters are fully controllable or
@@ -20,6 +21,11 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     params= comon_parameters+[
              {'name': 'rolling', 'type': 'int', 'value': 0, 'min':0},
              {'name': 'multi', 'type': 'bool', 'value': False, 'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
+            {'title': 'Acquisition:', 'name': 'acquisition', 'type': 'group', 'expanded': True, 'children': [
+                {'title': 'Base path:', 'name': 'base_path', 'type': 'browsepath', 'value': 'C:\Data',
+                 'filetype': False, 'readonly': True, 'visible': False},
+                {'title': 'Temp. File:', 'name': 'temp_file', 'type': 'str', 'value': '', 'visible': False},
+            ]},
              {'name': 'Mock1', 'type': 'group', 'children':[
                 {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20},
                 {'name': 'x0', 'type': 'float', 'value': 500 , 'default':50},
@@ -48,8 +54,19 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         super().__init__(parent,params_state)
 
 
-        self.x_axis=dict(label='photon wavelength', unit='nm')
-        self.ind_data=0
+        self.x_axis = dict(label='photon wavelength', unit='nm')
+        self.ind_data = 0
+
+    def init_h5file(self):
+
+        file, curr_dir = get_new_file_name(self.settings.child('acquisition','base_path').value(), 'tttr_data')
+
+        self.h5saver = H5Saver(save_type='custom')
+        self.h5saver.init_file(update_h5=False, custom_naming=True,
+                               addhoc_file_path=os.path.join(curr_dir, f'{file}.h5'),
+                               metadata=dict(settings=custom_tree.parameter_to_xml_string(self.settings),
+                                             format_name='timestamps'))
+        self.settings.child('acquisition', 'temp_file').setValue(f'{file}.h5')
 
 
     def commit_settings(self,param):
@@ -74,7 +91,6 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         else:
             self.set_Mock_data()
-
 
 
     def set_Mock_data(self):
@@ -200,7 +216,11 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         """
             Not implemented.
         """
-        pass
+        if self.h5saver is not None:
+            if self.h5saver.h5_file is not None:
+                if self.self.h5saver.h5_file.isopen:
+                    self.self.h5saver.h5_file.flush()
+                    self.self.h5saver.h5_file.close()
 
 
 
@@ -228,18 +248,25 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        Naverage=1
-        data_tot=self.set_Mock_data()
-        for ind in range(Naverage-1):
-            data_tmp=self.set_Mock_data()
+        Naverage = 1
+        data_tot = self.set_Mock_data()
+        self.init_h5file()
+
+        for ind in range(Naverage - 1):
+            data_tmp = self.set_Mock_data()
             QThread.msleep(100)
 
-            for ind,data in enumerate(data_tmp):
-                data_tot[ind]+=data
+            for ind, data in enumerate(data_tmp):
+                data_tot[ind] += data
 
-        data_tot=[data/Naverage for data in data_tot]
+        data_tot = [data / Naverage for data in data_tot]
 
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data1D')])
+        self.h5saver.add_array(self.h5saver.current_group, 'h5data', 'external_h5', array_to_save=data_tot[0],
+                               data_dimension='1D')
+
+        self.data_grabed_signal.emit([OrderedDict(name='Mock1', data=data_tot, type='Data1D',
+                                                  external_h5=self.h5saver.h5_file)])
+
 
     def stop(self):
         """

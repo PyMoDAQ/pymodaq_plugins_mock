@@ -118,13 +118,15 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             elif mode == 'FLIM':
                 self.stop_scanner.emit()
+                self.h5saver.h5_file.flush()
                 datas = self.process_histo_from_h5_and_correct_shifts(self.Nx, self.Ny, channel=0, marker=65)
                 self.data_grabed_signal.emit([OrderedDict(name='TH260', data=datas, type='DataND', nav_axes=(0, 1),
                                                           nav_x_axis=self.get_nav_xaxis(),
                                                           nav_y_axis=self.get_nav_yaxis(),
-                                                          xaxis=self.get_xaxis())])
+                                                          xaxis=self.get_xaxis(),
+                                                          external_h5=self.h5saver.h5_file)])
                 self.stop()
-                self.h5saver.h5_file.flush()
+
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))

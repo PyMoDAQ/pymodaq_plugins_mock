@@ -10,7 +10,7 @@ import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, get_new_file_name
 from pymodaq.daq_utils.h5saver import H5Saver
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
@@ -264,9 +264,11 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
                 self.general_timer.start()
 
             elif mode == 'T3':
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D')])
-                self.general_timer.start()
                 self.h5saver.h5_file.flush()
+                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D',
+                                                          external_h5=self.h5saver.h5_file)])
+                self.general_timer.start()
+
 
 
 
@@ -735,39 +737,17 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), "log"]))
 
-    def get_new_file_name(self):
-        today = datetime.datetime.now()
-
-        date = today.strftime('%Y%m%d')
-        year = today.strftime('%Y')
-        curr_dir = os.path.join(self.settings.child('acquisition', 'base_path').value(), year, date)
-        if not os.path.isdir(curr_dir):
-            os.mkdir(curr_dir)
-
-        with os.scandir(curr_dir) as it:
-            files = []
-            for entry in it:
-                if entry.name.startswith('tttr_data') and entry.is_file():
-                    files.append(entry.name)
-            files.sort()
-            if files == []:
-                index = 0
-            else:
-                index = int(os.path.splitext(files[-1])[0][-3:])+1
-
-            file = 'tttr_data_{:03d}'.format(index)
-        return file, curr_dir
 
     def init_h5file(self):
 
-        file, curr_dir = self.get_new_file_name()
+        file, curr_dir = get_new_file_name(self.settings.child('acquisition','base_path').value(), 'tttr_data')
 
         self.h5saver = H5Saver(save_type='custom')
         self.h5saver.init_file(update_h5=False, custom_naming=True,
-                               addhoc_file_path=os.path.join(curr_dir, 'tttr_tmp.h5'),
+                               addhoc_file_path=os.path.join(curr_dir, f'{file}.h5'),
                                metadata=dict(settings=customparameter.parameter_to_xml_string(self.settings),
                                              format_name='timestamps'))
-        self.settings.child('acquisition', 'temp_file').setValue('tttr_tmp.h5')
+        self.settings.child('acquisition', 'temp_file').setValue(f'{file}.h5')
         self.marker_array = self.h5saver.add_array(self.h5saver.raw_group, 'markers', 'data', data_dimension='1D',
                                                    array_type=np.int, enlargeable=True)
         self.nanotimes_array = self.h5saver.add_array(self.h5saver.raw_group, 'nanotimes', 'data', data_dimension='1D',
