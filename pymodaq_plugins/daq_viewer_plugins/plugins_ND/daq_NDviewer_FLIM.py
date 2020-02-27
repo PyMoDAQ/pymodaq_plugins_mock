@@ -124,7 +124,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis())])
                 self.stop()
-                self.h5file.flush()
+                self.h5saver.h5_file.flush()
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
@@ -162,12 +162,11 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         -------
 
         """
-        Nbins = self.settings.child('acquisition', 'flim_histo', 'nbins_flim').value()
-        time_window = int(self.settings.child('acquisition', 'flim_histo', 'time_window_flim').value() /
-                          self.settings.child('acquisition', 'timings', 'resolution').value())
+        Nbins = self.settings.child('acquisition', 'timings', 'nbins').value()
+        time_window = Nbins
 
-        markers_array = self.h5file.get_node('/markers')
-        nanotime_array = self.h5file.get_node('/nanotimes')
+        markers_array = self.h5saver.h5_file.get_node('/markers')
+        nanotime_array = self.h5saver.h5_file.get_node('/nanotimes')
         datas = np.zeros((Nx, Ny, Nbins))
         intensity_map_ref = np.zeros((Nx, Ny), dtype=np.int64)
         ind_lines = np.where(markers_array.read() == marker)[0]
@@ -187,7 +186,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                 # datas array is updated within this method
                 datas_tmp = self.extract_TTTR_histo_every_pixels(nanotimes_tmp, markers_tmp,
                                                      marker=marker, Nx=Nx, Ny=Ny, Ntime=Nbins,
-                                                     ind_line_offset=self.ind_offset, channel=channel,
+                                                     ind_line_offset=ind_offset, channel=channel,
                                                      time_window=time_window)
                 intensity_map = np.squeeze(np.sum(datas_tmp, axis=2))
                 if ind == 0:
@@ -197,43 +196,9 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             #correct for shifts in x or y during collections and multiple scans of the same area
             shift, error, diffphase = register_translation(intensity_map_ref, intensity_map, 1)
-            datas += np.roll(intensity_map, [int(s) for s in shift], (0, 1))
-
+            datas += np.roll(datas_tmp, [int(s) for s in shift], (0, 1))
 
         return datas
-
-
-
-    def process_histo_from_h5(self, Nx=1, Ny=1, channel=0, marker=65):
-        mode = self.settings.child('acquisition', 'acq_type').value()
-        if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-            datas = super(DAQ_2DViewer_FLIM, self).process_histo_from_h5(Nx, Ny, channel)
-            return datas
-        else:
-
-            Nbins = self.settings.child('acquisition', 'flim_histo', 'nbins_flim').value()
-            time_window = int(self.settings.child('acquisition', 'flim_histo', 'time_window_flim').value() /
-                              self.settings.child('acquisition', 'timings', 'resolution').value())
-
-            markers_array = self.h5file.get_node('/markers')
-            nanotime_array = self.h5file.get_node('/nanotimes')
-            ind_lines = np.where(markers_array[self.ind_reading:] == marker)[0]
-            datas = np.zeros((Nx, Ny, Nbins), dtype=np.int64)
-
-            if len(ind_lines) > 2:
-                ind_last_line = ind_lines[-1]
-                markers_tmp = markers_array[self.ind_reading:self.ind_reading + ind_last_line]
-                nanotimes_tmp = nanotime_array[self.ind_reading:self.ind_reading + ind_last_line]
-
-                #datas array is updated within this method
-                datas = self.extract_TTTR_histo_every_pixels(nanotimes_tmp, markers_tmp,
-                                            marker=marker, Nx=Nx, Ny=Ny, Ntime=Nbins,
-                                            ind_line_offset=self.ind_offset, channel=channel,
-                                            time_window=time_window)
-
-                self.ind_reading = ind_lines[-2]
-                self.ind_offset += len(ind_lines) - 2
-            return datas
 
     def ini_detector(self, controller=None):
         """
@@ -390,7 +355,6 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                 self.init_h5file()
                 self.datas = np.zeros((self.Nx, self.Ny, self.settings.child('acquisition', 'timings', 'nbins').value(),),
                                        dtype=np.float64)
-                self.init_histo_group()
 
                 time_acq = int(self.settings.child('acquisition', 'acq_time').value() * 1000)  # in ms
                 self.general_timer.stop()
@@ -421,38 +385,6 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), "log"]))
 
-    def init_histo_group(self):
-
-        mode = self.settings.child('acquisition', 'acq_type').value()
-        if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-            super(DAQ_2DViewer_FLIM, self).init_histo_group()
-        else:
-
-            histo_group = self.h5file.create_group(self.h5file.root, 'histograms')
-            self.histo_array = self.h5file.create_carray(histo_group, 'histogram', obj=self.datas,
-                                                         title='histogram')
-            x_axis = self.get_xaxis()
-            xarray = self.h5file.create_carray(histo_group, "x_axis", obj=x_axis['data'], title='x_axis')
-            xarray.attrs['shape'] = xarray.shape
-            xarray.attrs['type'] = 'signal_axis'
-            xarray.attrs['data_type'] = '1D'
-
-            navxarray = self.h5file.create_carray(self.h5file.root, 'scan_x_axis_unique', obj=self.get_nav_xaxis(),
-                                                  title='data')
-            navxarray.set_attr('shape', navxarray.shape)
-            navxarray.attrs['type'] = 'navigation_axis'
-            navxarray.attrs['data_type'] = '1D'
-
-            navyarray = self.h5file.create_carray(self.h5file.root, 'scan_y_axis_unique', obj=self.get_nav_yaxis(),
-                                                  title='data')
-            navyarray.set_attr('shape', navyarray.shape)
-            navyarray.attrs['type'] = 'navigation_axis'
-            navyarray.attrs['data_type'] = '1D'
-
-            self.histo_array._v_attrs['data_type'] = '1D'
-            self.histo_array._v_attrs['type'] = 'histo_data'
-            self.histo_array._v_attrs['shape'] = self.datas.shape
-            self.histo_array._v_attrs['scan_type'] = 'Scan2D'
 
     def prepare_moves(self):
         """
