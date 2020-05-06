@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSignal, QThread
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, DataFromPlugins
 import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
@@ -710,11 +710,11 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             if self.control_type == "0D":
                 for ind in range(len(channels)):
                     data_tot.append(np.array([np.mean(data[ind*N:(ind+1)*N])]))
-                self.data_grabed_signal.emit([OrderedDict(name='NI AI', data=data_tot, type='Data0D', labels=channels)])
+                self.data_grabed_signal.emit([DataFromPlugins(name='NI AI', data=data_tot, dim='Data0D', labels=channels)])
             else:
                 for ind in range(len(channels)):
                     data_tot.append(data[ind*N:(ind+1)*N])
-                self.data_grabed_signal.emit([OrderedDict(name='NI AI', data=data_tot, type='Data1D', labels=channels)])
+                self.data_grabed_signal.emit([DataFromPlugins(name='NI AI', data=data_tot, dim='Data1D', labels=channels)])
 
         elif self.settings.child(('NIDAQ_type')).value()==DAQ_NIDAQ_source(1).name: #counter input
 
@@ -739,7 +739,7 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
         data_counter = data_counter.astype(float)
         data_counter = data_counter / (self.settings.child('counter_settings', 'counting_time').value() * 1e-3)
 
-        self.data_grabed_signal.emit([OrderedDict(name='NI Counter', data=[data_counter], type='Data0D', labels=channels)])
+        self.data_grabed_signal.emit([DataFromPlugins(name='NI Counter', data=[data_counter], dim='Data0D', labels=channels)])
 
     def stop(self):
         """

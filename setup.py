@@ -82,8 +82,9 @@ setup(
     #           'style': helpers.StyleCommand},
     packages=find_packages(),
     package_data={'': ['*.dll']},
-    install_requires=[
 
+    install_requires=[
+        'pymodaq>=2.0',
         ],
     **setupOpts
 )

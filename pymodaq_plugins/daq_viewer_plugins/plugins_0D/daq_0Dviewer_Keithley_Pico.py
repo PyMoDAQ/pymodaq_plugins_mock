@@ -1,6 +1,6 @@
 from PyQt5.QtCore import pyqtSignal
 from easydict import EasyDict as edict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 import numpy as np
@@ -163,7 +163,7 @@ class DAQ_0DViewer_Keithley_Pico(DAQ_Viewer_base):
         #for ind in range(Naverage):
         #    data_tot.append(self.controller.query_ascii_values('READ?')[0])
         data_tot=[np.array([np.mean(np.array(data_tot))])]
-        self.data_grabed_signal.emit([OrderedDict(name='Keithley',data=data_tot, type='Data0D')])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Keithley',data=data_tot, dim='Data0D')])
 
 
     def stop(self):

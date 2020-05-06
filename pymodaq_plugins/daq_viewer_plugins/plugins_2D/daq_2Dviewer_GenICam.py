@@ -21,7 +21,8 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import pymodaq.daq_utils.custom_parameter_tree as custom_tree
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, select_file, recursive_find_files_extension, ListPicker
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, recursive_find_files_extension
+from pymodaq.daq_utils.gui_utils import select_file, ListPicker
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from harvesters.core import Harvester
 from harvesters.util.pfnc import mono_location_formats, \

@@ -17,32 +17,33 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     Produces one data signal with two hypergaussians whose parameters are fully controllable or
     produces 2 data signals, each beeing a fully controllable hypergaussian
     """
-    params= comon_parameters+[
-             {'name': 'rolling', 'type': 'int', 'value': 0, 'min':0},
-             {'name': 'multi', 'type': 'bool', 'value': False, 'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
-             {'name': 'Mock1', 'type': 'group', 'children':[
-                {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20},
-                {'name': 'x0', 'type': 'float', 'value': 500 , 'default':50},
-                {'name': 'dx', 'type': 'float', 'value': 0.3 , 'default':20},
-                {'name': 'n', 'type': 'float', 'value': 1 , 'default':1, 'min':1},
-                {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
-                ]},
-             {'name': 'Mock2', 'type': 'group', 'children':[
-                    {'name': 'Amp', 'type': 'int', 'value': 10 },
-                    {'name': 'x0', 'type': 'float', 'value': 520 },
-                    {'name': 'dx', 'type': 'float', 'value': 0.7 },
-                    {'name': 'n', 'type': 'float', 'value': 2 , 'default':2, 'min':1},
-                    {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0},]},
+    params = comon_parameters + [
+        {'name': 'rolling', 'type': 'int', 'value': 0, 'min': 0},
+        {'name': 'multi', 'type': 'bool', 'value': False,
+         'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
+        {'name': 'Mock1', 'type': 'group', 'children': [
+            {'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
+            {'name': 'x0', 'type': 'float', 'value': 500, 'default': 50},
+            {'name': 'dx', 'type': 'float', 'value': 0.3, 'default': 20},
+            {'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
+            {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
+        ]},
+        {'name': 'Mock2', 'type': 'group', 'children': [
+            {'name': 'Amp', 'type': 'int', 'value': 10},
+            {'name': 'x0', 'type': 'float', 'value': 520},
+            {'name': 'dx', 'type': 'float', 'value': 0.7},
+            {'name': 'n', 'type': 'float', 'value': 2, 'default': 2, 'min': 1},
+            {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}, ]},
 
-            {'name': 'x_axis', 'type': 'group', 'children': [
-                     {'name': 'Npts', 'type': 'int', 'value': 513,},
-                     {'name': 'x0', 'type': 'float', 'value': 515,},
-                     {'name': 'dx', 'type': 'float', 'value': 0.1, },
-                ]},
-            {'title': 'Laser Wavelength', 'name': 'laser_wl', 'type': 'list', 'value': 515, 'values': [405, 515, 632.8]},
-            {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'float', 'value': 100}
+        {'name': 'x_axis', 'type': 'group', 'children': [
+            {'name': 'Npts', 'type': 'int', 'value': 513, },
+            {'name': 'x0', 'type': 'float', 'value': 515, },
+            {'name': 'dx', 'type': 'float', 'value': 0.1, },
+        ]},
+        {'title': 'Laser Wavelength', 'name': 'laser_wl', 'type': 'list', 'value': 515, 'values': [405, 515, 632.8]},
+        {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'float', 'value': 100}
     ]
-    hardware_averaging=False
+    hardware_averaging = False
 
     def __init__(self,parent=None,params_state=None): #init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
         super().__init__(parent,params_state)

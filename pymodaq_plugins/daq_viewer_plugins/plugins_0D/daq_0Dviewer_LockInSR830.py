@@ -7,7 +7,7 @@ Created on Thu Jun 14 15:14:54 2018
 """
 from PyQt5.QtCore import pyqtSignal
 from easydict import EasyDict as edict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 
@@ -175,10 +175,10 @@ class DAQ_0DViewer_LockInSR830(DAQ_Viewer_base):
 
         if self.settings.child('config', 'separate_viewers').value():
             for ind_channel, dat in enumerate(data_to_export):
-                data_tot.append(OrderedDict(name=selected_channels[ind_channel],data=[dat], type='Data0D'))
+                data_tot.append(DataFromPlugins(name=selected_channels[ind_channel],data=[dat], dim='Data0D'))
             self.data_grabed_signal.emit(data_tot)
         else:
-            self.data_grabed_signal.emit([OrderedDict(name='Keithley',data=data_to_export, type='Data0D', labels=selected_channels)])
+            self.data_grabed_signal.emit([DataFromPlugins(name='Keithley',data=data_to_export, dim='Data0D', labels=selected_channels)])
 
 
     def commit_settings(self, param):
