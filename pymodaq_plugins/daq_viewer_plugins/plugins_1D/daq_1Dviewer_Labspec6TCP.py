@@ -19,7 +19,7 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
@@ -182,8 +182,8 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
             # initialize viewers with the future type of data
             self.x_axis = self.controller.get_x_axis()
 
-            self.data_grabed_signal_temp.emit([OrderedDict(name='LabSpec6', data=[self.x_axis*0], type='Data1D',
-                x_axis=dict(data=self.x_axis, units='nm', label='Wavelength'), labels=['Spectrum']),])
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='LabSpec6', data=[self.x_axis*0], dim='Data1D',
+                x_axis=Axis(data=self.x_axis, units='nm', label='Wavelength'), labels=['Spectrum']),])
 
             self.status.initialized = True
             self.status.controller = self.controller
@@ -258,8 +258,8 @@ class DAQ_1DViewer_Labspec6TCP(DAQ_Viewer_base):
         if data is None:
             self.emit_status(ThreadCommand('Update_Status', ['No data from spectrometer', 'log']))
             data = self.controller.wavelength_axis * 0
-        self.data_grabed_signal.emit([OrderedDict(name='LabSpec6', data=[data], type='Data1D',
-                            x_axis=dict(data=self.controller.wavelength_axis, units='nm', label='Wavelength'))])
+        self.data_grabed_signal.emit([DataFromPlugins(name='LabSpec6', data=[data], dim='Data1D',
+                            x_axis=Axis(data=self.controller.wavelength_axis, units='nm', label='Wavelength'))])
 
     def stop(self):
         """

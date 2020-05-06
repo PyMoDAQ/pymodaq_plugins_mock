@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets 
 from PyQt5.QtCore import pyqtSignal, QThread
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
@@ -100,7 +100,11 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                                                                 self.settings.child(('wait_time')).value(), 'value']))
 
         #initialize viewers with the future type of data
+<<<<<<< Updated upstream
         self.data_grabed_signal.emit([OrderedDict(name='Mock1', data=[0], type='Data0D', labels=['Mock1', 'label2'])])
+=======
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1',data=[0], dim='Data0D', labels=['Mock1', 'label2'])])
+>>>>>>> Stashed changes
 
         self.status.initialized = True
         self.status.controller = self.controller
@@ -142,7 +146,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                 data_tot_bis.append(np.array([1-data[0]]))
 
         #self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data0D'), OrderedDict(name='Mock2',data=data_tot_bis, type='Data0D')])
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data0D',)])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1',data=data_tot, dim='Data0D',)])
         self.ind_data+=1
 
     def stop(self):

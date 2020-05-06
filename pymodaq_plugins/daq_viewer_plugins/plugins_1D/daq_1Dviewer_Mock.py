@@ -28,13 +28,13 @@ class DAQ_1DViewer_Mock(DAQ_1DViewer_Mock_spectro):
             --------
             set_Mock_data, daq_utils.ThreadCommand
         """
-        super().ini_detector(controller)
+
 
         self.settings.child('x_axis', 'Npts').setValue(512)
         self.settings.child('x_axis', 'x0').setValue(256)
         self.settings.child('x_axis', 'dx').setValue(1)
-
-        self.set_x_axis()
+        super().ini_detector(controller)
+        #self.set_x_axis()
 
         self.settings.child('Mock1', 'x0').setValue(125)
         self.settings.child('Mock1', 'dx').setValue(20)
@@ -48,5 +48,6 @@ class DAQ_1DViewer_Mock(DAQ_1DViewer_Mock_spectro):
         self.settings.child(("laser_wl")).hide()
         self.settings.child(('exposure_ms')).hide()
 
-        self.settings.child('x_axis', 'x0').setValue(256)
+
+
         return self.status

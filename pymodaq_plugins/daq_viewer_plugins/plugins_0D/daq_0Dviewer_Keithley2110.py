@@ -1,7 +1,7 @@
-from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
+from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base, comon_parameters
+from pymodaq.daq_utils.daq_utils import DataFromPlugins
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq_plugins.hardware.keithley2110.keithley2110_VISADriver import Keithley2110VISADriver as Keithley2110
 
 class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
@@ -65,7 +65,7 @@ class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
         self.controller.set_mode(self.settings.child('K2110Params', 'mode').value())
 
         # initialize viewers with the future type of data
-        self.data_grabed_signal.emit([OrderedDict(name='Keithley2110', data=[0], type='Data0D', labels=['Meas', 'Time'])])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Keithley2110', data=[0], dim='Data0D', labels=['Meas', 'Time'])])
 
         self.status.initialized = True
         self.status.controller = self.controller
@@ -91,7 +91,7 @@ class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
 
         """
         data = self.controller.read()
-        self.data_grabed_signal.emit([OrderedDict(name='K2110', data=[[data]], type='Data0D',)])
+        self.data_grabed_signal.emit([utils.DataFromPlugins(name='K2110', data=[[data]], dim='Data0D',)])
         self.ind_data += 1
 
     def stop(self):
