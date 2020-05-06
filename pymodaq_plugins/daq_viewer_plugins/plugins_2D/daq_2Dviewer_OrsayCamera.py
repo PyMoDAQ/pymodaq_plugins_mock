@@ -9,7 +9,6 @@ import ctypes
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 
-
 class Orsay_Camera_manufacturer(IntEnum):
     """
         Enum class of manufacturer provided by OrsayCamera dll.
@@ -19,16 +18,17 @@ class Orsay_Camera_manufacturer(IntEnum):
         *names*          string list of members
         =============== =======================
     """
-    
-    Ropers=1
-    Andor=2
+
+    Ropers = 1
+    Andor = 2
 
     @classmethod
     def names(cls):
-        names=cls.__members__.items()
+        names = cls.__members__.items()
         return [name for name, member in cls.__members__.items()]
 
-Ropers_models=[
+
+Ropers_models = [
     'PIXIS: 100F',
     'PIXIS: 100R',
     'PIXIS: 100C',
@@ -262,26 +262,26 @@ Ropers_models=[
     'KURO: 1608B',
     'KURO: 2048B']
 
-Andor_models=[]
+Andor_models = []
+
 
 class Orsay_Camera_mode(IntEnum):
     """
-        Enum class 
+        Enum class
 
         =============== =======================
         **Attributes**    **Type**
         *names*          string list of members
         =============== =======================
     """
-    
-    Camera=1
-    SPIM=2
+
+    Camera = 1
+    SPIM = 2
 
     @classmethod
     def names(cls):
-        names=cls.__members__.items()
+        names = cls.__members__.items()
         return [name for name, member in cls.__members__.items()]
-
 
 
 class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
@@ -302,48 +302,52 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
         --------
         utility_classes.DAQ_Viewer_base
     """
-    params= comon_parameters+[{'title': 'Simulated camera:', 'name': 'simulated', 'type': 'bool', 'value': False , 'default':False},
-             {'title': 'Manufacturer:', 'name': 'manufacturer', 'type': 'list', 'values': Orsay_Camera_manufacturer.names(), 'value': 'Ropers'},
-             {'title': 'Model:', 'name': 'model', 'type': 'list', 'values': Ropers_models,'value': 'KURO: 1200B'},
-             {'title': 'SN:', 'name': 'serialnumber', 'type': 'str', 'value': ''},
-             {'title': 'Mode Settings:', 'name': 'camera_mode_settings', 'type': 'group', 'expanded': True, 'children': [
-                 {'title': 'Mode:', 'name': 'camera_mode', 'type': 'list', 'values': Orsay_Camera_mode.names()},
-                 {'title': 'Nx:', 'name': 'spim_x', 'type': 'int', 'value': 10, 'min': 1},
-                 {'title': 'Ny:', 'name': 'spim_y', 'type': 'int', 'value': 10, 'min': 1},
-                 ]},
-             {'title': 'Exposure:', 'name': 'exposure', 'type': 'float', 'value': 1 , 'default':0.1},
-             {'title': 'Image size:', 'name': 'image_size', 'type': 'group', 'children':[
-                {'title': 'Nx:', 'name': 'Nx', 'type': 'int', 'value': 0, 'default':0 , 'readonly': True},
-                {'title': 'Ny:', 'name': 'Ny', 'type': 'int', 'value': 0 , 'default':0 , 'readonly': True},
-                ]},
-             {'title': 'Temperature Settings:', 'name': 'temperature_settings', 'type': 'group', 'children':[
-                {'title': 'Set Point:', 'name': 'set_point', 'type': 'float', 'value': -70, 'default':-70},
-                {'title': 'Current value:', 'name': 'current_value', 'type': 'float', 'value': 0 , 'default':0, 'readonly': True},
-                {'title': 'Locked:', 'name': 'locked', 'type': 'led', 'value': False , 'default':False, 'readonly': True},
-                ]},
-             {'title': 'Binning Settings:', 'name': 'binning_settings', 'type': 'group', 'children':[
-                {'name': 'bin_x', 'type': 'int', 'value': 1 , 'default':1, 'min':1},
-                {'name': 'bin_y', 'type': 'int', 'value': 1 , 'default':1, 'min':1}
-                ]}
-             ]
+    params = comon_parameters + [
+        {'title': 'Simulated camera:', 'name': 'simulated', 'type': 'bool', 'value': False, 'default': False},
+        {'title': 'Manufacturer:', 'name': 'manufacturer', 'type': 'list', 'values': Orsay_Camera_manufacturer.names(),
+         'value': 'Ropers'},
+        {'title': 'Model:', 'name': 'model', 'type': 'list', 'values': Ropers_models, 'value': 'KURO: 1200B'},
+        {'title': 'SN:', 'name': 'serialnumber', 'type': 'str', 'value': ''},
+        {'title': 'Mode Settings:', 'name': 'camera_mode_settings', 'type': 'group', 'expanded': True, 'children': [
+            {'title': 'Mode:', 'name': 'camera_mode', 'type': 'list', 'values': Orsay_Camera_mode.names()},
+            {'title': 'Nx:', 'name': 'spim_x', 'type': 'int', 'value': 10, 'min': 1},
+            {'title': 'Ny:', 'name': 'spim_y', 'type': 'int', 'value': 10, 'min': 1},
+        ]},
+        {'title': 'Exposure (s):', 'name': 'exposure', 'type': 'float', 'value': 1, 'default': 0.1},
+        {'title': 'Image size:', 'name': 'image_size', 'type': 'group', 'children': [
+            {'title': 'Nx:', 'name': 'Nx', 'type': 'int', 'value': 0, 'default': 0, 'readonly': True},
+            {'title': 'Ny:', 'name': 'Ny', 'type': 'int', 'value': 0, 'default': 0, 'readonly': True},
+        ]},
+        {'title': 'Temperature Settings:', 'name': 'temperature_settings', 'type': 'group', 'children': [
+            {'title': 'Set Point:', 'name': 'set_point', 'type': 'float', 'value': -70, 'default': -70},
+            {'title': 'Current value:', 'name': 'current_value', 'type': 'float', 'value': 0, 'default': 0,
+             'readonly': True},
+            {'title': 'Locked:', 'name': 'locked', 'type': 'led', 'value': False, 'default': False, 'readonly': True},
+        ]},
+        {'title': 'Binning Settings:', 'name': 'binning_settings', 'type': 'group', 'children': [
+            {'name': 'bin_x', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
+            {'name': 'bin_y', 'type': 'int', 'value': 1, 'default': 1, 'min': 1}
+        ]}
+        ]
     hardware_averaging = False
 
-    def __init__(self,parent=None,params_state=None):
+    def __init__(self, parent=None, params_state=None):
 
-        super(DAQ_2DViewer_OrsayCamera,self).__init__(parent,params_state) #initialize base class with commom attributes and methods
+        super(DAQ_2DViewer_OrsayCamera, self).__init__(parent,
+                                                       params_state)  # initialize base class with commom attributes and methods
 
-        self.x_axis=None
-        self.y_axis=None
-        self.controller=None
-        self.data=None
-        self.CCDSIZEX, self.CCDSIZEY=(None,None)
-        self.data_pointer=None
-        self.camera_done=False
-        self.spectrum_done=False
-        self.spim_done=False
-       
+        self.x_axis = None
+        self.y_axis = None
+        self.controller = None
+        self.data = None
+        self.CCDSIZEX, self.CCDSIZEY = (None, None)
+        self.data_pointer = None
+        self.camera_done = False
+        self.spectrum_done = False
+        self.spim_done = False
+        self.data_shape = 'Data2D'
 
-    def commit_settings(self,param):
+    def commit_settings(self, param):
         """
             | Activate parameters changes on the hardware from parameter's name.
             |
@@ -360,43 +364,43 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
         """
         try:
-            if param.name()=='bin_x':
-                self.controller.setBinning(param.value(),self.settings.child('binning_settings','bin_y').value())
+            if param.name() == 'bin_x':
+                self.controller.setBinning(param.value(), self.settings.child('binning_settings', 'bin_y').value())
                 Nx, Ny = self.controller.getImageSize()
-                self.settings.child('image_size','Nx').setValue(Nx)
-                self.settings.child('image_size','Ny').setValue(Ny)
-            elif param.name()=='bin_y':
-                self.controller.setBinning(self.settings.child('binning_settings','bin_x').value(),param.value())
+                self.settings.child('image_size', 'Nx').setValue(Nx)
+                self.settings.child('image_size', 'Ny').setValue(Ny)
+            elif param.name() == 'bin_y':
+                self.controller.setBinning(self.settings.child('binning_settings', 'bin_x').value(), param.value())
                 Nx, Ny = self.controller.getImageSize()
-                self.settings.child('image_size','Nx').setValue(Nx)
-                self.settings.child('image_size','Ny').setValue(Ny)
-            elif param.name()=='exposure':
+                self.settings.child('image_size', 'Nx').setValue(Nx)
+                self.settings.child('image_size', 'Ny').setValue(Ny)
+            elif param.name() == 'exposure':
                 self.controller.setExposureTime(self.settings.child(('exposure')).value())
-            elif param.name()=='set_point':
+            elif param.name() == 'set_point':
                 self.controller.setTemperature(param.value())
-            elif param.name()=='manufacturer':
-                mod=sys.modules[__name__] #current module
-                models=getattr(mod,'{:s}_models'.format(param.name()))
-                if models==[]:
-                    models=['']
+            elif param.name() == 'manufacturer':
+                mod = sys.modules[__name__]  # current module
+                models = getattr(mod, '{:s}_models'.format(param.name()))
+                if models == []:
+                    models = ['']
                 self.settings.child(('model')).setOpts(limits=models)
                 if 'PIXIS: 256E' in models:
                     self.settings.child(('model')).setValue('PIXIS: 256E')
 
-            elif param.name()=='camera_mode':
+            elif param.name() == 'camera_mode':
                 self.update_camera_mode(param.value())
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
 
-    def dataLocker(self,camera, datatype, sx, sy, sz):
+    def dataLocker(self, camera, datatype, sx, sy, sz):
         """
             | CallBack to obtain the tab and store the newest data.
             | In a full program context, it is recommanded to lock the tab (to keep size values, type and integrity for example).
             | It permit to use the same code in case of callback.
             |
-            
+
             The data type is :
                 * **1**  : byte
                 * **2**  : short
@@ -423,13 +427,13 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
 
        """
-        sx[0] = self.settings.child('image_size','Nx').value()
-        sy[0] = self.settings.child('image_size','Ny').value()
+        sx[0] = self.settings.child('image_size', 'Nx').value()
+        sy[0] = self.settings.child('image_size', 'Ny').value()
         sz[0] = 1
         datatype[0] = 11
         return self.data_pointer.value
 
-    def dataUnlocker(self,camera, newdata):
+    def dataUnlocker(self, camera, newdata):
         """
             Transmission of new acquired data
 
@@ -446,36 +450,34 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             emit_data
 
         """
-        #print(self.data[0:10])
+        # print(self.data[0:10])
         if newdata:
-            self.camera_done=True
+            self.camera_done = True
             self.emit_data()
 
-    def spimdataLocker(self,camera, datatype, sx, sy, sz):
+    def spimdataLocker(self, camera, datatype, sx, sy, sz):
         """
         Même chose que pour le mode focus, mais le tableau est 3D, voire plus
         """
-        SPIMX=self.settings.child('camera_mode_settings','spim_x').value()
-        SPIMY=self.settings.child('camera_mode_settings','spim_y').value()
-        sizex=self.settings.child('image_size','Nx').value()
+        SPIMX = self.settings.child('camera_mode_settings', 'spim_x').value()
+        SPIMY = self.settings.child('camera_mode_settings', 'spim_y').value()
+        sizex = self.settings.child('image_size', 'Nx').value()
         sx[0] = SPIMX
         sy[0] = SPIMY
         sz[0] = sizex
         datatype[0] = 11
         return self.pointeurspim.value
 
-    def spimdataUnlocker(self,camera, newdata, running):
+    def spimdataUnlocker(self, camera, newdata, running):
         if running:
             # imprime un point par spectre
-            #print(".", end = "")
+            # print(".", end = "")
             pass
         else:
-            self.spim_done=True
+            self.spim_done = True
             self.emit_data()
 
-
-
-    def spectrumdataLocker(self,camera, datatype, sx):
+    def spectrumdataLocker(self, camera, datatype, sx):
         """
         Callback pour obtenir le tableau ou stcoker les nouvelles données.
         Dans un programme complet il est conseillé de verrouiler ce tableau (par exemple ne pas changer sa dimension, son type, le détuire etc...)
@@ -491,17 +493,17 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             11  float 32 bit
             12  double 64 bit
         """
-        sizex=self.settings.child('image_size','Nx').value()
+        sizex = self.settings.child('image_size', 'Nx').value()
         sx[0] = sizex
         datatype[0] = 11
         return self.pointeurspectrum.value
 
-    def spectrumdataUnlocker(self,camera, newdata):
+    def spectrumdataUnlocker(self, camera, newdata):
         """
         Le tableau peut être utilisé
         on imprime les premières valeurs
         """
-        self.spectrum_done=True
+        self.spectrum_done = True
         self.emit_data()
 
     def emit_data(self):
@@ -513,31 +515,58 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             DAQ_utils.ThreadCommand
         """
         try:
-            self.ind_grabbed+=1
-            #print(self.ind_grabbed)
-            if self.settings.child('camera_mode_settings', 'camera_mode').value()=="Camera":
+            self.ind_grabbed += 1
+            # print(self.ind_grabbed)
+            if self.settings.child('camera_mode_settings', 'camera_mode').value() == "Camera":
                 if self.camera_done:
-                    self.data_grabed_signal.emit([OrderedDict(name='Camera '+self.settings.child(('model')).value(),data=[self.data.reshape((self.settings.child('image_size','Ny').value(),self.settings.child('image_size','Nx').value()))], type='Data2D')])
-            else:#spim mode
-                #print("spimmode")
+                    # self.data_grabed_signal.emit([OrderedDict(name='Camera '+self.settings.child(('model')).value(),data=[self.data.reshape((self.settings.child('image_size','Ny').value(),self.settings.child('image_size','Nx').value()))], type='Data2D')])
+                    self.data_grabed_signal.emit([OrderedDict(name='Camera' + self.settings.child(('model')).value(),
+                                                              data=[np.squeeze(self.data.reshape(
+                                                                  (self.settings.child('image_size', 'Ny').value(),
+                                                                   self.settings.child('image_size', 'Nx').value())))],
+                                                              type=self.data_shape)])
+
+            else:  # spim mode
+                # print("spimmode")
                 if self.spectrum_done:
-                    #print("spectrum done")
+                    # print("spectrum done")
                     if not self.spim_done:
-                        self.spectrum_done=False
-                        self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ',data=[self.spimdata.reshape((self.settings.child('image_size','Nx').value(),self.settings.child('camera_mode_settings','spim_y').value(),self.settings.child('camera_mode_settings','spim_x').value()))], type='DataND'),
-                                                                 OrderedDict(name='Spectrum',data=[self.spectrumdata], type='Data1D')
-                                                                 ])
+                        self.spectrum_done = False
+                        self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+                            self.settings.child(
+                                'image_size',
+                                'Nx').value(),
+                            self.settings.child(
+                                'camera_mode_settings',
+                                'spim_y').value(),
+                            self.settings.child(
+                                'camera_mode_settings',
+                                'spim_x').value()))],
+                                                                       type='DataND'),
+                                                           OrderedDict(name='Spectrum', data=[self.spectrumdata],
+                                                                       type='Data1D')
+                                                           ])
                 elif self.spim_done:
-                    #print('spimdone')
-                    self.data_grabed_signal.emit([OrderedDict(name='SPIM ',data=[self.spimdata.reshape((self.settings.child('image_size','Nx').value(),self.settings.child('camera_mode_settings','spim_y').value(),self.settings.child('camera_mode_settings','spim_x').value()))], type='DataND'),
-                                                                OrderedDict(name='Spectrum',data=[self.spectrumdata], type='Data1D')
-                                                                ])
-                    self.spectrum_done=False
-                    self.spim_done=False
+                    # print('spimdone')
+                    self.data_grabed_signal.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+                        self.settings.child(
+                            'image_size',
+                            'Nx').value(),
+                        self.settings.child(
+                            'camera_mode_settings',
+                            'spim_y').value(),
+                        self.settings.child(
+                            'camera_mode_settings',
+                            'spim_x').value()))],
+                                                              type='DataND'),
+                                                  OrderedDict(name='Spectrum', data=[self.spectrumdata], type='Data1D')
+                                                  ])
+                    self.spectrum_done = False
+                    self.spim_done = False
 
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
 
     def ini_detector(self, controller=None):
         """
@@ -556,30 +585,33 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             --------
             DAQ_utils.ThreadCommand, hardware1D.DAQ_1DViewer_Picoscope.update_pico_settings
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
+        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
             from pymodaq_plugins.hardware.STEM import orsaycamera
-            manufacturer=Orsay_Camera_manufacturer[self.settings.child(('manufacturer')).value()].value
-            if self.settings.child(('controller_status')).value()=="Slave":
-                if controller is None: 
+            manufacturer = Orsay_Camera_manufacturer[self.settings.child(('manufacturer')).value()].value
+            if self.settings.child(('controller_status')).value() == "Slave":
+                if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
-                    self.controller=controller
+                    self.controller = controller
             else:
                 if self.settings.child(('simulated')).value():
-                    self.controller=orsaycamera.orsayCamera(manufacturer,self.settings.child(('model')).value(),'1234',True) #index represents manufacturer
+                    self.controller = orsaycamera.orsayCamera(manufacturer, self.settings.child(('model')).value(),
+                                                              '1234', True)  # index represents manufacturer
                 else:
-                    self.controller=orsaycamera.orsayCamera(manufacturer,self.settings.child(('model')).value(),self.settings.child(('serialnumber')).value(),False) #index represents manufacturer
+                    self.controller = orsaycamera.orsayCamera(manufacturer, self.settings.child(('model')).value(),
+                                                              self.settings.child(('serialnumber')).value(),
+                                                              False)  # index represents manufacturer
 
-            #%%%%%%% Register callback to get data from camera
-            #mode camera only
+            # %%%%%%% Register callback to get data from camera
+            # mode camera only
             self.fnlock = orsaycamera.DATALOCKFUNC(self.dataLocker)
             self.controller.registerDataLocker(self.fnlock)
 
             self.fnunlock = orsaycamera.DATAUNLOCKFUNC(self.dataUnlocker)
             self.controller.registerDataUnlocker(self.fnunlock)
 
-            #mode SPIM+spectrum
+            # mode SPIM+spectrum
             self.fnspimlock = orsaycamera.SPIMLOCKFUNC(self.spimdataLocker)
             self.controller.registerSpimDataLocker(self.fnspimlock)
             self.fnspimunlock = orsaycamera.SPIMUNLOCKFUNC(self.spimdataUnlocker)
@@ -592,36 +624,36 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
 
             self.controller.setCurrentPort(0)
 
-            #%%%%%% Get image size and current binning
+            # %%%%%% Get image size and current binning
             self.CCDSIZEX, self.CCDSIZEY = self.controller.getCCDSize()
-            bin_x,bin_y=self.controller.getBinning()
+            bin_x, bin_y = self.controller.getBinning()
             Nx, Ny = self.controller.getImageSize()
-            self.settings.child('image_size','Nx').setValue(Nx)
-            self.settings.child('image_size','Ny').setValue(Ny)
-            self.settings.child('binning_settings','bin_x').setValue(bin_x)
-            self.settings.child('binning_settings','bin_y').setValue(bin_y)
+            self.settings.child('image_size', 'Nx').setValue(Nx)
+            self.settings.child('image_size', 'Ny').setValue(Ny)
+            self.settings.child('binning_settings', 'bin_x').setValue(bin_x)
+            self.settings.child('binning_settings', 'bin_y').setValue(bin_y)
 
-            #%%%%%%% Set and Get temperature from camera
-            self.controller.setTemperature(self.settings.child('temperature_settings','set_point').value())
-            temp,locked_status=self.controller.getTemperature()
-            self.settings.child('temperature_settings','current_value').setValue(temp)
-            self.settings.child('temperature_settings','locked').setValue(locked_status)
-            #set timer to update temperature info from controller
-            self.timer=self.startTimer(2000) #Timer event fired every 1s
+            # %%%%%%% Set and Get temperature from camera
+            self.controller.setTemperature(self.settings.child('temperature_settings', 'set_point').value())
+            temp, locked_status = self.controller.getTemperature()
+            self.settings.child('temperature_settings', 'current_value').setValue(temp)
+            self.settings.child('temperature_settings', 'locked').setValue(locked_status)
+            # set timer to update temperature info from controller
+            self.timer = self.startTimer(2000)  # Timer event fired every 1s
 
-            #%%%%%%% init axes from image
-            self.x_axis=self.get_xaxis()
-            self.y_axis=self.get_yaxis()
-            self.status.x_axis=self.x_axis
-            self.status.y_axis=self.y_axis
-            self.status.initialized=True
-            self.status.controller=self.controller
+            # %%%%%%% init axes from image
+            self.x_axis = self.get_xaxis()
+            self.y_axis = self.get_yaxis()
+            self.status.x_axis = self.x_axis
+            self.status.y_axis = self.y_axis
+            self.status.initialized = True
+            self.status.controller = self.controller
 
             return self.status
 
         except Exception as e:
-            self.status.info=getLineInfo()+ str(e)
-            self.status.initialized=False
+            self.status.info = getLineInfo() + str(e)
+            self.status.initialized = False
             return self.status
 
     def timerEvent(self, event):
@@ -635,9 +667,9 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             *event*           QTimerEvent object   Containing id from timer issuing this event
             =============== ==================== ==============================================
         """
-        temp,locked_status=self.controller.getTemperature()
-        self.settings.child('temperature_settings','current_value').setValue(temp)
-        self.settings.child('temperature_settings','locked').setValue(locked_status)
+        temp, locked_status = self.controller.getTemperature()
+        self.settings.child('temperature_settings', 'current_value').setValue(temp)
+        self.settings.child('temperature_settings', 'locked').setValue(locked_status)
 
     def close(self):
         """
@@ -656,10 +688,12 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
         """
         if self.controller is not None:
             Nx, Ny = self.controller.getImageSize()
-            self.settings.child('image_size','Nx').setValue(Nx)
-            self.settings.child('image_size','Ny').setValue(Ny)
-            self.x_axis=np.linspace(0,self.settings.child('image_size','Nx').value()-1,self.settings.child('image_size','Nx').value(),dtype=np.int)
-        else: raise(Exception('Camera not defined'))
+            self.settings.child('image_size', 'Nx').setValue(Nx)
+            self.settings.child('image_size', 'Ny').setValue(Ny)
+            self.x_axis = np.linspace(0, self.settings.child('image_size', 'Nx').value() - 1,
+                                      self.settings.child('image_size', 'Nx').value(), dtype=np.int)
+        else:
+            raise (Exception('Camera not defined'))
         return self.x_axis
 
     def get_yaxis(self):
@@ -673,43 +707,56 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
         """
         if self.controller is not None:
             Nx, Ny = self.controller.getImageSize()
-            self.settings.child('image_size','Nx').setValue(Nx)
-            self.settings.child('image_size','Ny').setValue(Ny)
-            self.y_axis=np.linspace(0,self.settings.child('image_size','Ny').value()-1,self.settings.child('image_size','Ny').value(),dtype=np.int)
-        else: raise(Exception('Camera not defined'))
+            self.settings.child('image_size', 'Nx').setValue(Nx)
+            self.settings.child('image_size', 'Ny').setValue(Ny)
+            self.y_axis = np.linspace(0, self.settings.child('image_size', 'Ny').value() - 1,
+                                      self.settings.child('image_size', 'Ny').value(), dtype=np.int)
+        else:
+            raise (Exception('Camera not defined'))
         return self.y_axis
 
-    def update_camera_mode(self,mode='Camera'):
-        sizex=self.settings.child('image_size','Nx').value()
-        sizey=self.settings.child('image_size','Ny').value()
+    def update_camera_mode(self, mode='Camera'):
+        sizex = self.settings.child('image_size', 'Nx').value()
+        sizey = self.settings.child('image_size', 'Ny').value()
+        image_size = sizex * sizey
 
-        if mode=="Camera":
-            #%%%%%% Initialize data: self.data for the memory to store new data and self.data_average to store the average data
-            image_size=sizex*sizey
-            self.data= np.zeros((image_size,), dtype = np.float32)
+        if image_size == 1:
+            self.data_shape = 'Data0D'
+        elif sizex == 1 or sizey == 1:
+            self.data_shape = 'Data1D'
+        else:
+            self.data_shape = 'Data2D'
+
+        if mode == "Camera":
+            # %%%%%% Initialize data: self.data for the memory to store new data and self.data_average to store the average data
+
+            self.data = np.zeros((image_size,), dtype=np.float32)
             self.data_pointer = self.data.ctypes.data_as(ctypes.c_void_p)
 
-        elif mode=="SPIM":
-            Ny=self.settings.child('image_size','Ny').value()
-            self.settings.child('binning_settings','bin_y').setValue(Ny*self.settings.child('binning_settings','bin_y').value())
-            self.commit_settings(self.settings.child('binning_settings','bin_y'))
+        elif mode == "SPIM":
+            Ny = self.settings.child('image_size', 'Ny').value()
+            self.settings.child('binning_settings', 'bin_y').setValue(
+                Ny * self.settings.child('binning_settings', 'bin_y').value())
+            self.commit_settings(self.settings.child('binning_settings', 'bin_y'))
             QtWidgets.QApplication.processEvents()
-            #%%%%%% Initialize data: self.data for the memory to store new data and self.data_average to store the average data
-            SPIMX=self.settings.child('camera_mode_settings','spim_x').value()
-            SPIMY=self.settings.child('camera_mode_settings','spim_y').value()
+            # %%%%%% Initialize data: self.data for the memory to store new data and self.data_average to store the average data
+            SPIMX = self.settings.child('camera_mode_settings', 'spim_x').value()
+            SPIMY = self.settings.child('camera_mode_settings', 'spim_y').value()
             spimsize = sizex * SPIMY * SPIMX
 
-            self.spimdata= np.zeros((spimsize,), dtype = np.float32)
+            self.spimdata = np.zeros((spimsize,), dtype=np.float32)
             self.pointeurspim = self.spimdata.ctypes.data_as(ctypes.c_void_p)
 
-            self.spectrumdata = np.zeros((sizex,), dtype = np.float32)
+            self.spectrumdata = np.zeros((sizex,), dtype=np.float32)
             self.pointeurspectrum = self.spectrumdata.ctypes.data_as(ctypes.c_void_p)
 
-            #init the viewers
-            self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ',data=[self.spimdata.reshape((self.settings.child('image_size','Nx').value(),self.settings.child('camera_mode_settings','spim_y').value(),self.settings.child('camera_mode_settings','spim_x').value()))], type='DataND', nav_axes=(1,2)),
-                                               OrderedDict(name='Spectrum',data=[self.spectrumdata], type='Data1D')
-                                                        ])
-
+            # init the viewers
+            self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+                self.settings.child('image_size', 'Nx').value(),
+                self.settings.child('camera_mode_settings', 'spim_y').value(),
+                self.settings.child('camera_mode_settings', 'spim_x').value()))],
+                                                           type='DataND', nav_axes=(1, 2)),
+                                               OrderedDict(name='Spectrum', data=[self.spectrumdata], type='Data1D')])
 
     def grab_data(self, Naverage=1, **kwargs):
         """
@@ -727,38 +774,40 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             DAQ_utils.ThreadCommand
         """
         try:
-            self.camera_done=False
-            self.spectrum_done=False
-            self.spim_done=False
+            self.camera_done = False
+            self.spectrum_done = False
+            self.spim_done = False
 
-            self.ind_grabbed=0 #to keep track of the current image in the average
-            self.Naverage=Naverage #no need averaging is done software wise by DAQ_Viewer_Detector
+            self.ind_grabbed = 0  # to keep track of the current image in the average
+            self.Naverage = Naverage  # no need averaging is done software wise by DAQ_Viewer_Detector
 
-            self.update_camera_mode(self.settings.child('camera_mode_settings','camera_mode').value())
+            self.update_camera_mode(self.settings.child('camera_mode_settings', 'camera_mode').value())
 
-            if self.settings.child('camera_mode_settings','camera_mode').value()=='Camera':
-                self.controller.setAccumulationNumber(Naverage) #stop the acquisition after Navergae image if third argument of startfocus is 1
+            if self.settings.child('camera_mode_settings', 'camera_mode').value() == 'Camera':
+                self.controller.setAccumulationNumber(
+                    Naverage)  # stop the acquisition after Navergae image if third argument of startfocus is 1
                 self.controller.startFocus(self.settings.child(('exposure')).value(), "2d", 1)
 
-            else: #spim mode
-                SPIMX=self.settings.child('camera_mode_settings','spim_x').value()
-                SPIMY=self.settings.child('camera_mode_settings','spim_y').value()
+            else:  # spim mode
+                SPIMX = self.settings.child('camera_mode_settings', 'spim_x').value()
+                SPIMY = self.settings.child('camera_mode_settings', 'spim_y').value()
                 self.controller.startSpim(SPIMX * SPIMY, 1, self.settings.child(('exposure')).value(), False)
                 self.controller.resumeSpim(4)  # stop eof
 
-            #%%%%% Start acquisition with the given exposure in ms, in "1d" or "2d" mode
+            # %%%%% Start acquisition with the given exposure in ms, in "1d" or "2d" mode
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),"log"]))
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), "log"]))
 
     def stop(self):
         """
             stop the camera's actions.
         """
         try:
-            if self.settings.child('camera_mode_settings','camera_mode').value()=='Camera':
+            if self.settings.child('camera_mode_settings', 'camera_mode').value() == 'Camera':
                 self.controller.stopFocus()
-            else: #spim mode
+            else:  # spim mode
                 self.controller.stopSpim(True)
-        except: pass
+        except:
+            pass
         return ""

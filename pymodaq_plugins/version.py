@@ -8,11 +8,8 @@ from subprocess import Popen, PIPE
 from os.path import abspath, dirname
 
 
-<<<<<<< Updated upstream
-VERSION = (1, 2, 3, 'final', 0)
-=======
 VERSION = (2, 0, 0, 'final', 0)
->>>>>>> Stashed changes
+
 
 
 def git_sha():

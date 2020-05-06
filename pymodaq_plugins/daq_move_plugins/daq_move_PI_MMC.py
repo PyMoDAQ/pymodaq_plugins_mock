@@ -1,17 +1,25 @@
+"""
+this plugin use an old dll from PI MMC-DLL not compatible with their new GCS-command stuff
+The dll is 32 bits only so should be used with a 32bits python distribution
+C-862 Mercury™-DC Motor Controller
+C-863 Mercury™-DC Motor Controller
+C-663 Mercury™-Step Motor Controller
+C-170 Redstone PILine® Controller
+
+"""
+
+import sys, os
 from PyQt5.QtCore import QThread
 from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
-import os
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
-import platform
+
 from pymodaq_plugins.hardware.PI.mmc_wrapper import MMC_Wrapper
 
-#this plugin use an old dll from PI MMC-DLL not compatible with their new GCS-command stuff
-# 􀂄C-862 Mercury™-DC Motor Controller
-# 􀂄C-863 Mercury™-DC Motor Controller
-# 􀂄C-663 Mercury™-Step Motor Controller
-# 􀂄C-170 Redstone PILine® Controller
+#is64bit = sys.maxsize > 2**32
+if (sys.maxsize > 2**32):
+    raise Exception("It must a python 32 bit version")
 
 ports = MMC_Wrapper.ports
 

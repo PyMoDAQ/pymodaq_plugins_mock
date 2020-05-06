@@ -23,6 +23,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
 
     params = comon_parameters+[{'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1 , 'default':1, 'min':0, 'max': 3},
             {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1 , 'default':0, 'min':0},
+            {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
+            {'title': 'Bool', 'name': 'boolean', 'type': 'bool', 'value': False},
             {'name': 'rolling', 'type': 'int', 'value': 1, 'min': 0},
             {'name': 'Nx', 'type': 'int', 'value': 100 , 'default':100, 'min':1},
             {'name': 'Ny', 'type': 'int', 'value': 200 , 'default':200, 'min':1},
@@ -234,6 +236,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         for ind in range(Naverage):
             data_tmp+=self.set_Mock_data()
         data_tmp=data_tmp/Naverage
+
+        data_tmp = data_tmp * (data_tmp >= self.settings.child('threshold').value())
         for ind in range(self.settings.child(('Nimagespannel')).value()):
             datatmptmp=[]
             for indbis in range(self.settings.child(('Nimagescolor')).value()):

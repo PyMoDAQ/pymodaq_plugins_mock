@@ -75,8 +75,9 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         else:
             self.set_Mock_data()
-               
-                
+
+
+
     def set_Mock_data(self):
         """
             For each parameter of the settings tree :

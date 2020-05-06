@@ -227,6 +227,10 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             elif param.name() == 'flip_wavelength':
                 self.get_xaxis()
 
+            elif param.name() in custom_parameter_tree.iter_children(self.settings.child('camera_settings', 'readout_settings','image_settings')):
+                if self.settings.child( 'camera_settings', 'readout').value() == 'Image':
+                    self.set_image_area()
+
             pass
 
 
