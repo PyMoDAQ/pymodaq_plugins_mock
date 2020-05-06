@@ -15,7 +15,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 import pymodaq_plugins.hardware.TIS as TIS
 libpath = os.path.split(TIS.__file__)[0]
@@ -88,7 +88,7 @@ class DAQ_2DViewer_TIS(DAQ_Viewer_base):
         dat = self.controller.get_image_data()
         data = np.array(dat[0][:],dtype=np.uint8)
         data = data.reshape((dat[2],dat[1],3))
-        self.data_grabed_signal.emit([OrderedDict(name='TIS ', data=[data[:,:,0], data[:,:,1], data[:,:,2]], type='Data2D'),])
+        self.data_grabed_signal.emit([DataFromPlugins(name='TIS ', data=[data[:,:,0], data[:,:,1], data[:,:,2]], dim='Data2D'),])
 
 
 
@@ -181,7 +181,7 @@ class DAQ_2DViewer_TIS(DAQ_Viewer_base):
             self.y_axis=self.get_yaxis()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='TIS', data=[np.zeros((len(self.y_axis),len(self.x_axis)))], type='Data2D'),])
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='TIS', data=[np.zeros((len(self.y_axis),len(self.x_axis)))], dim='Data2D'),])
 
 
             self.status.x_axis=self.x_axis

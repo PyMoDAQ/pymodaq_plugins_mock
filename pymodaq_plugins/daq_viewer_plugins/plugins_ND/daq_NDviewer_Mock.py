@@ -5,7 +5,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, Axis
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, Axis, DataFromPlugins
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 class DAQ_NDViewer_Mock(DAQ_Viewer_base):
@@ -198,7 +198,7 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             self.set_Mock_data()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='MockND', data=[np.zeros((128, 30, 10))], type='DataND',
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))], dim='DataND',
                                                            nav_axis=(0, 1)), ])
 
             self.status.x_axis = self.x_axis
@@ -260,7 +260,7 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             data_tmp += self.set_Mock_data()
         data_tmp = data_tmp / Naverage
 
-        data = [OrderedDict(name='MockND_{:d}'.format(ind), data=data_tmp, type='DataND', nav_axes=(0, 1),
+        data = [DataFromPlugins(name='MockND_{:d}'.format(ind), data=data_tmp, dim='DataND', nav_axes=(0, 1),
                             nav_x_axis=Axis(data=self.x_axis, label='X space'),
                             nav_y_axis=Axis(data=self.y_axis, label='Y space'),
                             x_axis=Axis(data=self.time_axis, label='time label'))]

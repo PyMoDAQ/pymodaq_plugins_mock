@@ -5,7 +5,7 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, get_new_file_name
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, get_new_file_name, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
@@ -54,7 +54,7 @@ class DAQ_1DViewer_Mock_externalh5(DAQ_Viewer_base):
         super().__init__(parent,params_state)
 
 
-        self.x_axis = dict(label='photon wavelength', unit='nm')
+        self.x_axis = Axis(label='photon wavelength', unit='nm')
         self.ind_data = 0
 
     def init_h5file(self):
@@ -198,7 +198,7 @@ class DAQ_1DViewer_Mock_externalh5(DAQ_Viewer_base):
             self.set_Mock_data()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', data=self.data_mock, type='Data1D',
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=self.data_mock, dim='Data1D',
                 x_axis= self.x_axis, labels=['Mock1', 'label2']),])
 
             self.status.initialized=True

@@ -1,6 +1,6 @@
 from PyQt5.QtCore import pyqtSignal
 from easydict import EasyDict as edict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from collections import OrderedDict
 import numpy as np
@@ -158,7 +158,8 @@ class DAQ_1DViewer_Tektronix(DAQ_Viewer_base):
                 data_tmp = self.read_channel_data(channel,x_axis_out= False)
             data_tot.append(data_tmp)
 
-        self.data_grabed_signal.emit([OrderedDict(name='Tektronix',data=data_tot, type='Data1D', x_axis= dict(data= x_axis ,label= 'Time', units= 's'))])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Tektronix', data=data_tot, dim='Data1D',
+                                                      x_axis=Axis(data=x_axis, label='Time', units='s'))])
 
 
     def get_out_waveform_horizontal_sampling_interval(self):

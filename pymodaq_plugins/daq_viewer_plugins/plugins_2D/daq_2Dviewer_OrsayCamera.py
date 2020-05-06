@@ -3,7 +3,7 @@ import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from enum import IntEnum
 import ctypes
 from pymodaq.daq_viewer.utility_classes import comon_parameters
@@ -520,11 +520,11 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             if self.settings.child('camera_mode_settings', 'camera_mode').value() == "Camera":
                 if self.camera_done:
                     # self.data_grabed_signal.emit([OrderedDict(name='Camera '+self.settings.child(('model')).value(),data=[self.data.reshape((self.settings.child('image_size','Ny').value(),self.settings.child('image_size','Nx').value()))], type='Data2D')])
-                    self.data_grabed_signal.emit([OrderedDict(name='Camera' + self.settings.child(('model')).value(),
+                    self.data_grabed_signal.emit([DataFromPlugins(name='Camera' + self.settings.child(('model')).value(),
                                                               data=[np.squeeze(self.data.reshape(
                                                                   (self.settings.child('image_size', 'Ny').value(),
                                                                    self.settings.child('image_size', 'Nx').value())))],
-                                                              type=self.data_shape)])
+                                                              dim=self.data_shape)])
 
             else:  # spim mode
                 # print("spimmode")
@@ -532,7 +532,7 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
                     # print("spectrum done")
                     if not self.spim_done:
                         self.spectrum_done = False
-                        self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+                        self.data_grabed_signal_temp.emit([DataFromPlugins(name='SPIM ', data=[self.spimdata.reshape((
                             self.settings.child(
                                 'image_size',
                                 'Nx').value(),
@@ -542,13 +542,13 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
                             self.settings.child(
                                 'camera_mode_settings',
                                 'spim_x').value()))],
-                                                                       type='DataND'),
-                                                           OrderedDict(name='Spectrum', data=[self.spectrumdata],
-                                                                       type='Data1D')
+                                                                       dim='DataND'),
+                                                           DataFromPlugins(name='Spectrum', data=[self.spectrumdata],
+                                                                       dim='Data1D')
                                                            ])
                 elif self.spim_done:
                     # print('spimdone')
-                    self.data_grabed_signal.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+                    self.data_grabed_signal.emit([DataFromPlugins(name='SPIM ', data=[self.spimdata.reshape((
                         self.settings.child(
                             'image_size',
                             'Nx').value(),
@@ -558,8 +558,8 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
                         self.settings.child(
                             'camera_mode_settings',
                             'spim_x').value()))],
-                                                              type='DataND'),
-                                                  OrderedDict(name='Spectrum', data=[self.spectrumdata], type='Data1D')
+                                                              dim='DataND'),
+                                                  DataFromPlugins(name='Spectrum', data=[self.spectrumdata], dim='Data1D')
                                                   ])
                     self.spectrum_done = False
                     self.spim_done = False
@@ -751,12 +751,12 @@ class DAQ_2DViewer_OrsayCamera(DAQ_Viewer_base):
             self.pointeurspectrum = self.spectrumdata.ctypes.data_as(ctypes.c_void_p)
 
             # init the viewers
-            self.data_grabed_signal_temp.emit([OrderedDict(name='SPIM ', data=[self.spimdata.reshape((
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='SPIM ', data=[self.spimdata.reshape((
                 self.settings.child('image_size', 'Nx').value(),
                 self.settings.child('camera_mode_settings', 'spim_y').value(),
                 self.settings.child('camera_mode_settings', 'spim_x').value()))],
-                                                           type='DataND', nav_axes=(1, 2)),
-                                               OrderedDict(name='Spectrum', data=[self.spectrumdata], type='Data1D')])
+                                                           dim='DataND', nav_axes=(1, 2)),
+                                               DataFromPlugins(name='Spectrum', data=[self.spectrumdata], dim='Data1D')])
 
     def grab_data(self, Naverage=1, **kwargs):
         """

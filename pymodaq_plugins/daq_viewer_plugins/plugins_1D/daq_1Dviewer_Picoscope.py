@@ -4,7 +4,7 @@ import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
 import pymodaq_plugins.hardware.picoscope.picoscope_5000A as picoscope
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from bitstring import BitArray
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
@@ -454,7 +454,7 @@ class DAQ_1DViewer_Picoscope(DAQ_Viewer_base):
                     status,data_channel=self.pico.get_data(channel=ind_channel,buffer=self.buffers[ind_segment][ind])
                     data[ind,:,ind_segment]=data_channel['data']
             data_export=[np.sum(data[ind,:,:],axis=1)/Nsegments for ind in range(len(channels))]
-            self.data_grabed_signal.emit([OrderedDict(name='picoscope',data=data_export, type='Data1D')])
+            self.data_grabed_signal.emit([DataFromPlugins(name='picoscope',data=data_export, dim='Data1D')])
                 
         except Exception as e:
             self.emit_status(ThreadCommand("Update_Status",[getLineInfo()+ str(e),'log']))

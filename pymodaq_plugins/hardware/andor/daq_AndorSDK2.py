@@ -2,12 +2,11 @@ import numpy as np
 from enum import IntEnum
 import ctypes
 import platform
-from collections import OrderedDict
 from PyQt5 import QtWidgets, QtCore
 from easydict import EasyDict as edict
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 
-from pymodaq.daq_utils.daq_utils import ThreadCommand
+from pymodaq.daq_utils.daq_utils import ThreadCommand, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq_plugins.hardware.andor import _andorsdk
 from pymodaq.daq_utils import custom_parameter_tree
@@ -251,7 +250,8 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             sizey = self.settings.child('camera_settings','image_size','Ny').value()
             sizex = self.settings.child('camera_settings','image_size','Nx').value()
             self.controller.GetAcquiredDataNumpy(self.data_pointer, sizex*sizey)
-            self.data_grabed_signal.emit([OrderedDict(name='Camera', data=[np.squeeze(self.data.reshape((sizey, sizex)).astype(np.float))], type=self.data_shape)])
+            self.data_grabed_signal.emit([DataFromPlugins(name='Camera',
+                    data=[np.squeeze(self.data.reshape((sizey, sizex)).astype(np.float))], dim=self.data_shape)])
             QtWidgets.QApplication.processEvents() #here to be sure the timeevents are executed even if in continuous grab mode
 
         except Exception as e:
@@ -553,7 +553,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         if self.controller is not None:
             # if self.control_type == "camera":
             Nx=self.settings.child('camera_settings', 'image_size', 'Nx').value()
-            self.x_axis = dict(data=np.linspace(0, Nx-1, Nx, dtype=np.int), label='Pixels')
+            self.x_axis = Axis(data=np.linspace(0, Nx-1, Nx, dtype=np.int), label='Pixels')
 
             if self.control_type == "shamrock" or self.control_type == "both" and self.CCDSIZEX is not None:
                 (err, calib) = self.controller.GetCalibrationSR(0, self.CCDSIZEX)
@@ -587,7 +587,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         if self.controller is not None:
 
             Ny = self.settings.child('camera_settings', 'image_size', 'Ny').value()
-            self.y_axis = dict(data=np.linspace(0, Ny-1, Ny, dtype=np.int), label='Pixels')
+            self.y_axis = Axis(data=np.linspace(0, Ny-1, Ny, dtype=np.int), label='Pixels')
             self.emit_y_axis()
         else: raise(Exception('Camera not defined'))
         return self.y_axis
@@ -605,8 +605,8 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
         if data_shape != self.data_shape:
             self.data_shape = data_shape
             #init the viewers
-            self.data_grabed_signal_temp.emit([OrderedDict(name='Camera ',
-                data=[np.squeeze(self.data.reshape((sizey,sizex)).astype(np.float))], type=self.data_shape)])
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='Camera ',
+                data=[np.squeeze(self.data.reshape((sizey,sizex)).astype(np.float))], dim=self.data_shape)])
 
     def grab_data(self, Naverage=1, **kwargs):
         """

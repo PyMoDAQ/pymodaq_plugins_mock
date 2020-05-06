@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 import sys
 import clr
 from easydict import EasyDict as edict
@@ -110,7 +110,8 @@ class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
                 exp_min=self.controller.getMinimumIntegrationTime(ind_spectro)
                 exp=self.controller.getIntegrationTime(ind_spectro)/1000
                 wavelengths = self.get_xaxis(ind_spectro)
-                data_init.append(OrderedDict(name=name,data=[np.zeros_like(wavelengths)], type='Data1D',x_axis=dict(data= wavelengths ,label= 'Wavelength', units= 'nm')))
+                data_init.append(DataFromPlugins(name=name, data=[np.zeros_like(wavelengths)], dim='Data1D',
+                                                 x_axis=Axis(data=wavelengths, label='Wavelength', units='nm')))
                 for ind in range(2): #this is to take into account that adding it once doen't work (see pyqtgraph Parameter...)
                     try:
                         self.settings.child(('spectrometers')).addChild({'title': name,'name': 'spectro{:d}'.format(ind_spectro), 'type': 'group', 'children':[
@@ -162,7 +163,7 @@ class DAQ_1DViewer_OceanOptics(DAQ_Viewer_base):
                     self.controller.setScansToAverage(ind_spectro,Naverage)
                     data_chelou=self.controller.getSpectrum(ind_spectro)
                     data=np.array([data_chelou[ind] for ind in range(len(data_chelou))])
-                    datas.append(OrderedDict(name=self.spectro_names[ind_spectro],data=[data], type='Data1D'))
+                    datas.append(DataFromPlugins(name=self.spectro_names[ind_spectro],data=[data], dim='Data1D'))
                     QtWidgets.QApplication.processEvents()
 
             self.data_grabed_signal.emit(datas)

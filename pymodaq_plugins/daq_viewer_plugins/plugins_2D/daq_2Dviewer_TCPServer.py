@@ -2,7 +2,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_TCP_server
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 
 class DAQ_2DViewer_TCPServer(DAQ_Viewer_TCP_server):
     """
@@ -46,6 +46,6 @@ class DAQ_2DViewer_TCPServer(DAQ_Viewer_TCP_server):
         """
             Send the grabed data signal.
         """
-        self.data_grabed_signal.emit([OrderedDict(name='Gatan',data=data, type='Data2D')])
+        self.data_grabed_signal.emit([DataFromPlugins(name='TCP Server 2D',data=data, type='Data2D')])
 
 

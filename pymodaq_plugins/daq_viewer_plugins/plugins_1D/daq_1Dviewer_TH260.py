@@ -11,7 +11,8 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
 
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, get_new_file_name
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, get_new_file_name, DataFromPlugins, \
+    Axis
 from pymodaq.daq_utils.h5modules import H5Saver
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
@@ -254,19 +255,19 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
                 rates = [np.array(rate) for rate in self.get_rates()[1:]]
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=rates, type='Data0D')])
+                self.data_grabed_signal.emit([DataFromPlugins(name='TH260', data=rates, dim='Data0D')])
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
                     self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=True)
                 records = np.sum(np.array([np.sum(data) for data in self.datas]))
                 self.settings.child('acquisition', 'rates', 'records').setValue(records)
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
+                self.data_grabed_signal.emit([DataFromPlugins(name='TH260', data=self.datas, dim='Data1D',)])
                 self.general_timer.start()
 
             elif mode == 'T3':
                 self.h5saver.h5_file.flush()
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D',
+                self.data_grabed_signal.emit([DataFromPlugins(name='TH260', data=[self.datas], dim='Data1D',
                                                           external_h5=self.h5saver.h5_file)])
                 self.general_timer.start()
 
@@ -283,16 +284,16 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting':
                 rates = [np.array(rate) for rate in self.get_rates()[1:]]
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=rates, type='Data0D')])
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=rates, dim='Data0D')])
             elif mode == 'Histo':
                 channels_index = [self.channels_enabled[k]['index'] for k in self.channels_enabled.keys() if self.channels_enabled[k]['enabled']]
                 for ind, channel in enumerate(channels_index):
                     self.controller.TH260_GetHistogram(self.device, self.data_pointers[ind], channel=channel, clear=False)
                 records = np.sum(np.array([np.sum(data) for data in self.datas]))
                 self.settings.child('acquisition', 'rates', 'records').setValue(records)
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',)])
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, dim='Data1D',)])
             elif mode == 'T3':
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=[self.datas], type='Data1D')])
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=[self.datas], dim='Data1D')])
 
 
         except Exception as e:
@@ -337,18 +338,18 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
             if mode == 'Counting':
                 self.controller.TH260_Initialize(self.device, mode=0)  # histogram
                 self.datas = [np.zeros((1,), dtype=np.uint32) for ind in range(N)]
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data0D', labels=labels)])
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, dim='Data0D', labels=labels)])
                 self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
             elif mode == 'Histo':
                 self.controller.TH260_Initialize(self.device, mode=0)  # histogram
                 self.datas = [np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.uint32) for ind in range(N)]
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, dim='Data1D',
                                                                 x_axis=self.get_xaxis(), labels=labels)])
                 self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
             elif mode == 'T3':
                 self.controller.TH260_Initialize(self.device, mode=3)  # T3 mode
                 self.datas = [np.zeros((self.settings.child('acquisition', 'timings', 'nbins').value(),), dtype=np.uint32) for ind in range(N)]
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='Data1D',
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, dim='Data1D',
                                                                 x_axis=self.get_xaxis(), labels=labels)])
                 self.data_pointers = [data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)) for data in self.datas]
 
@@ -658,7 +659,7 @@ class DAQ_1DViewer_TH260(DAQ_Viewer_base):
         if self.controller is not None:
             res = self.settings.child('acquisition', 'timings', 'resolution').value()
             Nbins = self.settings.child('acquisition', 'timings', 'nbins').value()
-            self.x_axis = dict(data=np.linspace(0, (Nbins-1)*res, Nbins), label='Time', units='ns')
+            self.x_axis = Axis(data=np.linspace(0, (Nbins-1)*res, Nbins), label='Time', units='ns')
         else:
             raise(Exception('Controller not defined'))
         return self.x_axis

@@ -4,7 +4,7 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, DataFromPlugins, Axis
 from pymodaq.daq_utils.daq_utils import gauss1D
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
@@ -124,8 +124,8 @@ class DAQ_2DViewer_Mock_nav(DAQ_Viewer_base):
             #self.data_ptr = self.data.ctypes.data_as()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', nav_axes=[0, 1] ,
-                                data=self.data, type='DataND',
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', nav_axes=[0, 1] ,
+                                data=self.data, dim='DataND',
                 nav_x_axis= x_axis, nav_y_axis= y_axis, labels=['Mock1'],
                                                x_axis = self.signal_axis)])
 
@@ -181,8 +181,8 @@ class DAQ_2DViewer_Mock_nav(DAQ_Viewer_base):
         """
         # start moves
         self.data = np.zeros((len(self.x_axis), len(self.y_axis), len(self.signal_axis)))
-        self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', nav_axes=[0, 1],
-                                                       data=self.data, type='DataND',
+        self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', nav_axes=[0, 1],
+                                                       data=self.data, dim='DataND',
                                                        nav_x_axis=self.x_axis, nav_y_axis=self.y_axis, labels=['Mock1'],
                                                        x_axis=self.signal_axis)])
         QtWidgets.QApplication.processEvents()
@@ -191,15 +191,15 @@ class DAQ_2DViewer_Mock_nav(DAQ_Viewer_base):
 
             self.data[self.scan_parameters.axis_2D_1_indexes[ind], self.scan_parameters.axis_2D_2_indexes[ind], :] = self.set_Mock_data()
             if ind%10 == 0:
-                self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', nav_axes=[0, 1],
-                                                               data=self.data, type='DataND',
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', nav_axes=[0, 1],
+                                                               data=self.data, dim='DataND',
                                                        nav_x_axis=self.x_axis, nav_y_axis=self.y_axis, labels=['Mock1'],
                                                        x_axis=self.signal_axis)])
                 QtWidgets.QApplication.processEvents()
             QThread.msleep(100)
 
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1', nav_axes=[0, 1],
-                                                       data=self.data, type='DataND',
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', nav_axes=[0, 1],
+                                                       data=self.data, dim='DataND',
                                                        nav_x_axis=self.x_axis, nav_y_axis=self.y_axis, labels=['Mock1'],
                                                        x_axis=self.signal_axis)])
 

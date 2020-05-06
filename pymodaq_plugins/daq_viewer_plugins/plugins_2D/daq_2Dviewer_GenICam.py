@@ -21,7 +21,7 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import pymodaq.daq_utils.custom_parameter_tree as custom_tree
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, recursive_find_files_extension
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, recursive_find_files_extension, DataFromPlugins, Axis
 from pymodaq.daq_utils.gui_utils import select_file, ListPicker
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from harvesters.core import Harvester
@@ -113,7 +113,7 @@ class DAQ_2DViewer_GenICam(DAQ_Viewer_base):
                     data_tmp = component.data.reshape(height, width)
                     self.data[offsety:offsety+height, offsetx:offsetx+width] = data_tmp
                     self.data_grabed_signal.emit(
-                        [OrderedDict(name='GenICam ', data=[self.data], type='Data2D'), ])
+                        [DataFromPlugins(name='GenICam ', data=[self.data], dim='Data2D'), ])
                 else:
                     # The image requires you to reshape it to draw it on the canvas:
                     if data_format in rgb_formats or \
@@ -128,7 +128,7 @@ class DAQ_2DViewer_GenICam(DAQ_Viewer_base):
                             # Swap every R and B:
                             content = content[:, :, ::-1]
                     self.data_grabed_signal.emit(
-                        [OrderedDict(name='GenICam ', data=[self.data[:,:,ind] for ind in range(min(3,component.num_components_per_pixel))], type='Data2D'), ])
+                        [DataFromPlugins(name='GenICam ', data=[self.data[:,:,ind] for ind in range(min(3,component.num_components_per_pixel))], dim='Data2D'), ])
 
                 self.grabbing = False
 
@@ -375,7 +375,7 @@ class DAQ_2DViewer_GenICam(DAQ_Viewer_base):
             self.height = self.controller.device.node_map.get_node('Height').value
             self.data = np.zeros((self.height, self.width))
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='GenICam', data=[self.data], type='Data2D'),])
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='GenICam', data=[self.data], dim='Data2D'),])
 
 
             self.status.x_axis=self.x_axis

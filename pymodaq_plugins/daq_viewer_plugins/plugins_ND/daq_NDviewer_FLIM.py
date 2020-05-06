@@ -13,7 +13,7 @@ import os
 from easydict import EasyDict as edict
 import ctypes
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, zeros_aligned
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, zeros_aligned, DataFromPlugins, Axis
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
@@ -120,7 +120,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                 self.stop_scanner.emit()
                 self.h5saver.h5_file.flush()
                 datas = self.process_histo_from_h5_and_correct_shifts(self.Nx, self.Ny, channel=0, marker=65)
-                self.data_grabed_signal.emit([OrderedDict(name='TH260', data=datas, type='DataND', nav_axes=(0, 1),
+                self.data_grabed_signal.emit([DataFromPlugins(name='TH260', data=datas, dim='DataND', nav_axes=(0, 1),
                                                           nav_x_axis=self.get_nav_xaxis(),
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis(),
@@ -141,7 +141,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
             elif mode == 'FLIM':
 
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, type='DataND', nav_axes=(0, 1),
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, dim='DataND', nav_axes=(0, 1),
                                                           nav_x_axis=self.get_nav_xaxis(),
                                                           nav_y_axis=self.get_nav_yaxis(),
                                                           xaxis=self.get_xaxis())])
@@ -321,7 +321,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
                 self.controller.TH260_Initialize(self.device, mode=3)  # mode T3
                 self.controller.TH260_SetMarkerEnable(self.device, 1)
                 self.datas = np.zeros((10, 10, 1024))
-                self.data_grabed_signal_temp.emit([OrderedDict(name='TH260', data=self.datas, nav_axes=[0, 1], type='DataND')])
+                self.data_grabed_signal_temp.emit([DataFromPlugins(name='TH260', data=self.datas, nav_axes=[0, 1], dim='DataND')])
 
                 self.data_pointers = self.datas.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32))
                 self.actual_mode = mode

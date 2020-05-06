@@ -4,7 +4,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 from enum import IntEnum
@@ -504,7 +504,7 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
         else:
             raise Exception('no return from the controller')
 
-        data=[OrderedDict(name='OpenCV',data=data_cam, type='Data2D')]
+        data=[DataFromPlugins(name='OpenCV',data=data_cam, dim='Data2D')]
 
         self.data_grabed_signal.emit(data)
 

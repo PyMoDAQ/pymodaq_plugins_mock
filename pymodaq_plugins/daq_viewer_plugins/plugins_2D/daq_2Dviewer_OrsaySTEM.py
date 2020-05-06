@@ -4,7 +4,7 @@ import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from enum import IntEnum
 import ctypes
 from pyqtgraph.parametertree import Parameter, ParameterTree
@@ -221,8 +221,11 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
             elif param.name()=='do_hyperspectroscopy':
                 if param.value():
                     data_stem_STEM_as_reference = self.data_stem.reshape((2, self.SIZEX,self.SIZEY)).astype(np.float64)
-                    self.data_stem_STEM_as_reference = [OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem_STEM_as_reference[0]],type='Data2D'),
-                                                        OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem_STEM_as_reference[1]], type='Data2D'),]
+                    self.data_stem_STEM_as_reference = [
+                        DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input1').value(),
+                                        data=[data_stem_STEM_as_reference[0]], dim='Data2D'),
+                        DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input2').value(),
+                                        data=[data_stem_STEM_as_reference[1]], dim='Data2D'),]
 
                 # init the viewers
                 self.emit_data_init()
@@ -238,8 +241,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
                         self.init_data()
 
                         #init the viewers type
-                        self.emit_data_temp([OrderedDict(name='SPIM ',data=[np.zeros((1024,10,10))], type='DataND'),#data from SPIM camera
-                                            OrderedDict(name='Spectrum',data=[np.zeros((1024,))], type='Data1D')])
+                        self.emit_data_temp([DataFromPlugins(name='SPIM ',data=[np.zeros((1024,10,10))], dim='DataND'),#data from SPIM camera
+                                            DataFromPlugins(name='Spectrum',data=[np.zeros((1024,))], dim='Data1D')])
                     else:
                         self.settings.child('ROIselect', 'use_ROI').setOpts(readonly=False)
                         if self.camera is None:
@@ -375,8 +378,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
 
         if not self.settings.child(('do_hyperspectroscopy')).value():
             data_stem = [
-                OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[self.data_stem_current[0]], type='Data2D'),
-                OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[self.data_stem_current[1]], type='Data2D'), ]
+                DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[self.data_stem_current[0]], dim='Data2D'),
+                DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[self.data_stem_current[1]], dim='Data2D'), ]
             if self.data_stem_ready:
                 if self.stem_scan_finished:
                     self.data_grabed_signal.emit(data_stem)
@@ -385,8 +388,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
                     self.data_grabed_signal_temp.emit(data_stem)
         else:
             data_stem = [
-                OrderedDict(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[self.data_stem_current[0]], type='Data2D'),
-                OrderedDict(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[self.data_stem_current[1]], type='Data2D'), ]
+                DataFromPlugins(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[self.data_stem_current[0]], dim='Data2D'),
+                DataFromPlugins(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[self.data_stem_current[1]], dim='Data2D'), ]
             if self.data_spectrum_spim_ready and self.stem_scan_finished: #all data have been taken
                 self.spim_scan.stopImaging(True)
                 self.data_grabed_signal.emit(self.data_stem_STEM_as_reference+data_stem+self.data_spectrum_spim)
@@ -399,25 +402,25 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
                                             self.SIZEY)).astype(np.float64)
         if not self.settings.child(('do_hyperspectroscopy')).value():
             data_stem = [
-            OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
-                        type='Data2D'),
-            OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
-                        type='Data2D'), ]
+            DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
+                        dim='Data2D'),
+            DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
+                        dim='Data2D'), ]
 
 
             self.data_grabed_signal_temp.emit(data_stem)
         else:
             data_stem = [
-            OrderedDict(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
-                        type='Data2D'),
-            OrderedDict(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
-                        type='Data2D'), ]
+            DataFromPlugins(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
+                        dim='Data2D'),
+            DataFromPlugins(name='SPIM '+self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
+                        dim='Data2D'), ]
             if self.data_stem_STEM_as_reference is None:
                 self.data_stem_STEM_as_reference= [
-            OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
-                        type='Data2D'),
-            OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
-                        type='Data2D'), ]
+            DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input1').value(), data=[data_stem[0]],
+                        dim='Data2D'),
+            DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input2').value(), data=[data_stem[1]],
+                        dim='Data2D'), ]
 
             self.data_grabed_signal_temp.emit(self.data_stem_STEM_as_reference+data_stem+self.data_spectrum_spim)
 
@@ -429,8 +432,8 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
         """
         data_stem=self.data_stem.reshape((2,self.settings.child('stem_settings','pixels_settings','Ny').value(),self.settings.child('stem_settings','pixels_settings','Nx').value())).astype(np.float64)
         #print('livedata')
-        self.data_grabed_signal_temp.emit([OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input1').value(),data=[data_stem[0]], type='Data2D'),
-                                        OrderedDict(name=self.settings.child('stem_settings', 'inputs', 'input2').value(),data=[data_stem[1]], type='Data2D')]
+        self.data_grabed_signal_temp.emit([DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input1').value(),data=[data_stem[0]], dim='Data2D'),
+                                        DataFromPlugins(name=self.settings.child('stem_settings', 'inputs', 'input2').value(),data=[data_stem[1]], dim='Data2D')]
                                         )
 
 
@@ -470,8 +473,9 @@ class DAQ_2DViewer_OrsaySTEM(DAQ_Viewer_base):
             self.SIZEY = Ny
             self.spim_scan.setImageArea(Nx, Ny, startx, endx, starty, endy)
 
-        self.data_spectrum_spim=[OrderedDict(name='SPIM ',data=[np.zeros((self.settings.child('hyperspectroscopy','image_size','Nx').value(),self.settings.child('hyperspectroscopy','camera_mode_settings','spim_y').value(),self.settings.child('hyperspectroscopy','camera_mode_settings','spim_x').value()))], type='DataND'),
-                                 OrderedDict(name='Spectrum',data=[np.zeros((self.settings.child('hyperspectroscopy','image_size','Nx').value(),))], type='Data1D')]
+        self.data_spectrum_spim=[DataFromPlugins(name='SPIM ',
+                                                 data=[np.zeros((self.settings.child('hyperspectroscopy','image_size','Nx').value(),self.settings.child('hyperspectroscopy','camera_mode_settings','spim_y').value(),self.settings.child('hyperspectroscopy','camera_mode_settings','spim_x').value()))], dim='DataND'),
+                                 DataFromPlugins(name='Spectrum',data=[np.zeros((self.settings.child('hyperspectroscopy','image_size','Nx').value(),))], dim='Data1D')]
 
         self.data_stem= np.zeros((2*Nx*Ny), dtype = np.int16)
         self.data_stem_current = np.zeros((2,Nx,Ny), dtype = np.int16)

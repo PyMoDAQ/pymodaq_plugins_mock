@@ -5,7 +5,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
     """
@@ -143,7 +143,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             self.y_axis=self.get_yaxis()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([OrderedDict(name='Mock1', data=[np.zeros((128,30))], type='Data2D'),])
+            self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=[np.zeros((128,30))], dim='Data2D'),])
                                                #OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
 
             self.status.x_axis=self.x_axis
@@ -242,7 +242,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             datatmptmp=[]
             for indbis in range(self.settings.child(('Nimagescolor')).value()):
                 datatmptmp.append(data_tmp)
-            data.append(OrderedDict(name='Mock2D_{:d}'.format(ind),data=datatmptmp, type='Data2D'))
+            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind),data=datatmptmp, dim='Data2D'))
         #data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
         return data
 
