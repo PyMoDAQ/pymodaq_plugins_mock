@@ -246,16 +246,18 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             daq_utils.ThreadCommand
         """
         try:
-            self.ind_grabbed+=1
-            sizey = self.settings.child('camera_settings','image_size','Ny').value()
-            sizex = self.settings.child('camera_settings','image_size','Nx').value()
-            self.controller.GetAcquiredDataNumpy(self.data_pointer, sizex*sizey)
+            self.ind_grabbed += 1
+            sizey = self.settings.child('camera_settings', 'image_size', 'Ny').value()
+            sizex = self.settings.child('camera_settings', 'image_size', 'Nx').value()
+            self.controller.GetAcquiredDataNumpy(self.data_pointer, sizex * sizey)
             self.data_grabed_signal.emit([DataFromPlugins(name='Camera',
-                    data=[np.squeeze(self.data.reshape((sizey, sizex)).astype(np.float))], dim=self.data_shape)])
-            QtWidgets.QApplication.processEvents() #here to be sure the timeevents are executed even if in continuous grab mode
+                                                          data=[np.squeeze(
+                                                              self.data.reshape((sizey, sizex)).astype(np.float))],
+                                                          dim=self.data_shape)])
+            QtWidgets.QApplication.processEvents()  # here to be sure the timeevents are executed even if in continuous grab mode
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+            self.emit_status(ThreadCommand('Update_Status', [str(e), 'log']))
 
 
     def update_read_mode(self):
@@ -568,7 +570,7 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
                     if self.settings.child('spectro_settings', 'flip_wavelength').value():
                         calib = calib[::-1]
 
-                    self.x_axis = dict(data=calib, label='Wavelength (nm)')
+                    self.x_axis = Axis(data=calib, label='Wavelength (nm)')
 
             self.emit_x_axis()
         else:

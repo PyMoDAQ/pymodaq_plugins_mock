@@ -264,7 +264,7 @@ class DAQ_1DViewer_Mock_externalh5(DAQ_Viewer_base):
         self.h5saver.add_array(self.h5saver.current_group, 'h5data', 'external_h5', array_to_save=data_tot[0],
                                data_dimension='1D')
 
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1', data=data_tot, type='Data1D',
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot, dim='Data1D',
                                                   external_h5=self.h5saver.h5_file)])
 
 

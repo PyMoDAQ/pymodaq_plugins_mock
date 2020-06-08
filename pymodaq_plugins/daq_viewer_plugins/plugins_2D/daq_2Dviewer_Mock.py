@@ -139,8 +139,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             else:
                 self.controller="Mock controller"
 
-            self.x_axis=self.get_xaxis()
-            self.y_axis=self.get_yaxis()
+            self.x_axis = self.get_xaxis()
+            self.y_axis = self.get_yaxis()
 
             # initialize viewers with the future type of data
             self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=[np.zeros((128,30))], dim='Data2D'),])

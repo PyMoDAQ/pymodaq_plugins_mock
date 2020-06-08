@@ -49,7 +49,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         super().__init__(parent,params_state)
 
 
-        self.x_axis=Axis(label='photon wavelength', unit='nm')
+        self.x_axis=Axis(label='photon wavelength', units='nm')
         self.ind_data=0
 
 
@@ -240,7 +240,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         data_tot=[data/Naverage for data in data_tot]
 
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data1D')])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot, dim='Data1D')])
 
     def stop(self):
         """

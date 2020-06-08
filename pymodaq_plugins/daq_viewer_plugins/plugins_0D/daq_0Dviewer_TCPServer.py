@@ -46,10 +46,7 @@ class DAQ_0DViewer_TCPServer(DAQ_Viewer_TCP_server):
         """
             Send the grabed data signal.
         """
-<<<<<<< Updated upstream
-        self.data_grabed_signal.emit([OrderedDict(name='Gatan', data=data, type='Data0D')])
-=======
+
         self.data_grabed_signal.emit([DataFromPlugins(name='TCPServer',data=data, dim='Data0D')])
 
 
->>>>>>> Stashed changes

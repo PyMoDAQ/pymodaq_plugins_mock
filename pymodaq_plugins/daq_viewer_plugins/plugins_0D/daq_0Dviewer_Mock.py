@@ -100,11 +100,8 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                                                                 self.settings.child(('wait_time')).value(), 'value']))
 
         #initialize viewers with the future type of data
-<<<<<<< Updated upstream
-        self.data_grabed_signal.emit([OrderedDict(name='Mock1', data=[0], type='Data0D', labels=['Mock1', 'label2'])])
-=======
-        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1',data=[0], dim='Data0D', labels=['Mock1', 'label2'])])
->>>>>>> Stashed changes
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1',data=[np.array(0)], dim='Data0D', labels=['Mock1', 'label2'])])
+
 
         self.status.initialized = True
         self.status.controller = self.controller
