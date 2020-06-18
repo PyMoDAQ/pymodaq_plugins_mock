@@ -40,7 +40,7 @@ class Time(object):
 class PiezoConcept(object):
 
     def __init__(self):
-        super(PiezoConcept, self).__init__()
+        super().__init__()
         self._piezo=None
         self._VISA_rm = pyvisa.ResourceManager()
         self.com_ports = self.get_ressources()
@@ -59,17 +59,17 @@ class PiezoConcept(object):
         com_ports=[infos[key].alias for key in infos.keys()]
         return com_ports
     
-    def init_communication(self,com_port):
+    def init_communication(self, com_port):
         if com_port in self.com_ports:
-            self._piezo=self._VISA_rm.open_resource(com_port)
-            #set attributes
-            self._piezo.baud_rate=115200
-            self._piezo.data_bits=8
-            self._piezo.stop_bits=pyvisa.constants.StopBits['one']
-            self._piezo.parity=pyvisa.constants.Parity['none']
-            self._piezo.flow_control=0
-            self._piezo.read_termination=self._piezo.LF
-            self._piezo.write_termination=self._piezo.LF
+            self._piezo = self._VISA_rm.open_resource(com_port)
+            # set attributes
+            self._piezo.baud_rate = 115200
+            self._piezo.data_bits = 8
+            self._piezo.stop_bits = pyvisa.constants.StopBits['one']
+            self._piezo.parity = pyvisa.constants.Parity['none']
+            self._piezo.flow_control = 0
+            self._piezo.read_termination = self._piezo.LF
+            self._piezo.write_termination = self._piezo.LF
             self.timeout = 2000
         else:
             raise IOError('{:s} is not a valid port'.format(com_port))
@@ -274,3 +274,42 @@ class PiezoConcept(object):
 
         if info[-2] != 'Ok':
             raise IOError('{:}: set_TTL_state wrong return'.format(ret))
+
+class PiezoConceptPI(PiezoConcept):
+    def __init__(self):
+        super().__init__()
+
+    def get_controller_infos(self):
+        self._write_command('*IDN?')
+        return self._get_read()
+
+    def get_position(self, axis='X'):
+        """ return the given axis position always in nm
+        Parameters
+        ----------
+        axis: str, default 'X'
+            either 'X' or 'Y'
+        Returns
+        -------
+        pos
+            an instance of the Position class containing the attributes:
+                axis (either ('X' or 'Y'), pos and unit (either 'u' or 'n')
+        """
+        ind = ['X', 'Y'].index(axis) + 1
+        pos_str = self._query(f'POS? {ind}')
+        pos = Position(axis, float(pos_str), 'u')
+        return pos
+
+    def move_axis(self, move_type='ABS', pos=Position(axis='X', pos=100., unit='u')):
+        if pos.unit == 'n':
+            pos.pos = pos.pos / 1000
+            pos.unit = 'u'
+        ind = ['X', 'Y'].index(pos.axis) + 1
+        cmd = f'{ind} {pos.pos}'
+        if move_type == 'ABS':
+            cmd = 'MOV ' + cmd
+        else:
+            raise Exception('{:s} is not a valid displacement type'.format(move_type))
+
+        ret = self._write_command(cmd)
+        return ret
