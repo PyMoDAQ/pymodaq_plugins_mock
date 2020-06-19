@@ -13,7 +13,8 @@ import os
 from easydict import EasyDict as edict
 import ctypes
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, zeros_aligned, DataFromPlugins, Axis
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, zeros_aligned, DataFromPlugins, Axis
+from pymodaq.daq_utils.scanner import ScanParameters
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes

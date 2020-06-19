@@ -5,7 +5,7 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, Axis, DataFromPlugins
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, Axis, DataFromPlugins, NavAxis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 class DAQ_NDViewer_Mock(DAQ_Viewer_base):
@@ -33,10 +33,11 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             {'name': 'y0', 'type': 'float', 'value': 100, 'default': 100, 'min': 0},
             {'name': 'dx', 'type': 'float', 'value': 20, 'default': 20, 'min': 1},
             {'name': 'dy', 'type': 'float', 'value': 40, 'default': 40, 'min': 1},
+            {'name': 'lambda', 'type': 'float', 'value': 8, 'default': 1, 'min': 0.1},
             {'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
         ]},
         {'title': 'Temporal properties:', 'name': 'temp_settings', 'type': 'group', 'children': [
-            {'name': 'Nt', 'type': 'int', 'value': 100, 'default': 100, 'min': 1},
+            {'name': 'Nt', 'type': 'int', 'value': 150, 'default': 100, 'min': 1},
             {'name': 'amp', 'type': 'int', 'value': 20, 'default': 20, 'min': 1},
             {'name': 't0', 'type': 'slide', 'value': 50, 'default': 50, 'min': 0},
             {'name': 'dt', 'type': 'float', 'value': 20, 'default': 20, 'min': 1},
@@ -116,7 +117,8 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
                 ('amp_noise')).value() * np.random.rand(len(self.y_axis), len(self.x_axis))
 
             for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis / 8) ** 2
+                data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis /
+                                                    self.settings.child('spatial_settings', 'lambda').value()) ** 2
             data_mock = np.roll(data_mock, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
 
             try:
@@ -146,7 +148,8 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
                               np.random.rand(len(self.y_axis), len(self.x_axis))
 
             for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis / 4) ** 2
+                data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis /
+                                                    self.settings.child('spatial_settings', 'lambda').value()) ** 2
 
             ind = 0
             for indy in range(data_mock.shape[0]):
@@ -157,7 +160,6 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
                               self.settings.child('temp_settings', 'n').value()) * \
                               np.sin(np.roll(self.time_axis, ind) / 4) ** 2
                     ind += 1
-
 
             image = np.roll(image, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
 
@@ -199,7 +201,7 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
 
             # initialize viewers with the future type of data
             self.data_grabed_signal_temp.emit([DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))], dim='DataND',
-                                                           nav_axis=(0, 1)), ])
+                                                           nav_axes=(0, 1)), ])
 
             self.status.x_axis = self.x_axis
             self.status.y_axis = self.y_axis
@@ -260,9 +262,9 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             data_tmp += self.set_Mock_data()
         data_tmp = data_tmp / Naverage
 
-        data = [DataFromPlugins(name='MockND_{:d}'.format(ind), data=data_tmp, dim='DataND', nav_axes=(0, 1),
-                            nav_x_axis=Axis(data=self.x_axis, label='X space'),
-                            nav_y_axis=Axis(data=self.y_axis, label='Y space'),
+        data = [DataFromPlugins(name='MockND_{:d}'.format(ind), data=[data_tmp], dim='DataND', nav_axes=(1, 0),
+                            nav_x_axis=NavAxis(data=self.x_axis, label='X space', nav_index=1),
+                            nav_y_axis=NavAxis(data=self.y_axis, label='Y space', nav_index=0),
                             x_axis=Axis(data=self.time_axis, label='time label'))]
         return data
 
@@ -270,5 +272,5 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
         """
             not implemented.
         """
-        self.live=False
+        self.live = False
         return ""

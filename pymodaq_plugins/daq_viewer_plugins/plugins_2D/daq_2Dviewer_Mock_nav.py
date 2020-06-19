@@ -4,7 +4,8 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, ScanParameters, DataFromPlugins, Axis
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
+from pymodaq.daq_utils.scanner import ScanParameters
 from pymodaq.daq_utils.daq_utils import gauss1D
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 
