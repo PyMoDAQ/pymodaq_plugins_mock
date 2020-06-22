@@ -198,7 +198,6 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
                 self.controller = "Mock controller"
 
             self.set_Mock_data()
-
             # initialize viewers with the future type of data
             self.data_grabed_signal_temp.emit([DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))], dim='DataND',
                                                            nav_axes=(0, 1)), ])

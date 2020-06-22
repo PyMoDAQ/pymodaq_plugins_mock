@@ -132,30 +132,30 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         try:
 
             if self.settings.child(('controller_status')).value()=="Slave":
-                if controller is None: 
+                if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
-                    self.controller=controller
+                    self.controller = controller
             else:
-                self.controller="Mock controller"
+                self.controller = "Mock controller"
 
             self.x_axis = self.get_xaxis()
             self.y_axis = self.get_yaxis()
 
             # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=[np.zeros((128,30))], dim='Data2D'),])
+            self.data_grabed_signal_temp.emit(self.average_data(1))
                                                #OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
 
-            self.status.x_axis=self.x_axis
-            self.status.y_axis=self.y_axis
-            self.status.initialized=True
-            self.status.controller=self.controller
+            self.status.x_axis = self.x_axis
+            self.status.y_axis = self.y_axis
+            self.status.initialized = True
+            self.status.controller = self.controller
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
-            self.status.info=getLineInfo()+ str(e)
-            self.status.initialized=False
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
+            self.status.info = getLineInfo() + str(e)
+            self.status.initialized = False
             return self.status
 
     def close(self):
@@ -229,21 +229,20 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             QThread.msleep(000)
             self.data_grabed_signal.emit(data)
 
-
-    def average_data(self,Naverage):
-        data=[] #list of image (at most 3 for red, green and blue channels)
-        data_tmp=np.zeros_like(self.image)
+    def average_data(self, Naverage):
+        data = []  # list of image (at most 3 for red, green and blue channels)
+        data_tmp = np.zeros_like(self.image)
         for ind in range(Naverage):
-            data_tmp+=self.set_Mock_data()
-        data_tmp=data_tmp/Naverage
+            data_tmp += self.set_Mock_data()
+        data_tmp = data_tmp / Naverage
 
         data_tmp = data_tmp * (data_tmp >= self.settings.child('threshold').value())
         for ind in range(self.settings.child(('Nimagespannel')).value()):
-            datatmptmp=[]
+            datatmptmp = []
             for indbis in range(self.settings.child(('Nimagescolor')).value()):
                 datatmptmp.append(data_tmp)
-            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind),data=datatmptmp, dim='Data2D'))
-        #data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
+            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D'))
+        # data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
         return data
 
     def stop(self):

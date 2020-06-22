@@ -228,9 +228,9 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
     @pyqtSlot(ScanParameters)
     def update_scanner(self, scan_parameters):
         self.scan_parameters = scan_parameters
-        self.x_axis = self.scan_parameters.axis_2D_1
+        self.x_axis = self.scan_parameters.axes_unique[0]
         self.Nx = self.x_axis.size
-        self.y_axis = self.scan_parameters.axis_2D_2
+        self.y_axis = self.scan_parameters.axes_unique[1]
         self.Ny = self.y_axis.size
 
 

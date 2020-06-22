@@ -15,7 +15,7 @@ ylim = [-5, 5]
 dxmax = np.abs((np.max(xlim) - np.min(xlim)))
 dymax = np.abs((np.max(ylim) - np.min(ylim)))
 
-Npts = 1000
+Npts = 256
 x0s = np.random.rand(Nstruct) * dxmax - np.max(xlim)
 y0s = np.random.rand(Nstruct) * dymax - np.max(ylim)
 dx = np.random.rand(Nstruct)
@@ -24,7 +24,7 @@ amp = np.random.rand(Nstruct) * 10
 slope = np.random.rand(Nstruct) / 10
 xaxis = np.linspace(*xlim, Npts)
 yaxis = np.linspace(*ylim, Npts)
-x_axis1D = np.linspace(-5, 5, 501)
+
 
 def random_hypergaussians2D(xy, coeff=1):
     x, y = xy
@@ -32,22 +32,15 @@ def random_hypergaussians2D(xy, coeff=1):
         x = [x]
     if not hasattr(y, '__len__'):
         y = [y]
-    signal = np.zeros((len(x), len(y)))
+    signal = np.zeros((len(y), len(x)))
     for ind in range(Nstruct):
         signal += amp[ind] * utils.gauss2D(x, x0s[ind], coeff*dx[ind], y, y0s[ind], coeff*dy[ind], 2)
-    signal += 0.1*np.random.rand(len(x), len(y))
+    signal += 0.1*np.random.rand(len(y), len(x))
     return signal
 
 
 def random_hypergaussians2D_signal(xy, coeff=1.0):
     return random_hypergaussians2D(xy, coeff)[0, 0]
-
-
-def random_hypergaussians1D(x, coeff=1):
-    signal = 0.
-    for ind in range(Nstruct):
-        signal += amp[ind] * utils.gauss1D(x, x0s[ind], coeff*dx[ind], 2)
-    return signal
 
 
 def diverging2D(xy, coeff=1.0):
@@ -56,23 +49,17 @@ def diverging2D(xy, coeff=1.0):
         x = [x]
     if not hasattr(y, '__len__'):
         y = [y]
-    signal = np.zeros((len(x), len(y)))
+    signal = np.zeros((len(y), len(x)))
     for ind in range(Nstruct):
         signal += amp[ind] * (coeff*slope[ind])**2 / ((coeff*slope[ind])**2 +
                                                       (np.sqrt((x - x0s[ind])**2+(y - y0s[ind])**2)**2))
-        signal += 0.1 * np.random.rand(len(x), len(y))
+        signal += 0.1 * np.random.rand(len(y), len(x))
     return signal
 
 def diverging2D_signal(xy, coeff=1.0):
     return diverging2D(xy, coeff)[0, 0]
 
-def diverging1D(x, coeff=1.0):
-    signal = 0
-    for ind in range(Nstruct):
-        signal += amp[ind] * (coeff*slope[ind])**2 / ((coeff*slope[ind])**2 + (x - x0s[ind])**2)
-    return signal
-
-class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
+class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
     """
         =============== =================
         **Attributes**  **Type**
@@ -83,7 +70,8 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
     """
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
-        {'title': 'Show Scanner:', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
+        {'title': 'Show Scanner', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
+        {'title': 'Show Navigator', 'name': 'show_navigator', 'type': 'bool_push', 'value': False},
         {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'],},
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
     ]
@@ -95,6 +83,14 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
         self.ind_data = 0
         self.ind_grab = 0
         self.scan_parameters = None
+        fun_type = self.settings.child(('fun_type')).value()
+        coeff = self.settings.child(('width_coeff')).value()
+        if fun_type == 'Gaussians':
+            self.datas = random_hypergaussians2D((xaxis, yaxis), coeff)
+        else:
+            self.datas = diverging2D((xaxis, yaxis), coeff)
+        self.x_axis = xaxis
+        self.y_axis = yaxis
 
     def commit_settings(self, param):
         """
@@ -111,6 +107,22 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
         """
         if param.name() == 'wait_time':
             self.emit_status(utils.ThreadCommand('update_main_settings', [['wait_time'], param.value(), 'value']))
+        elif param.name() == 'show_scanner':
+            self.emit_status(utils.ThreadCommand('show_scanner', [param.value()]))
+            QtWidgets.QApplication.processEvents()
+        elif param.name() == 'show_navigator':
+            self.emit_status(utils.ThreadCommand('show_navigator', [param.value()]))
+
+    @pyqtSlot(ScanParameters)
+    def update_scanner(self, scan_parameters):
+        self.scan_parameters = scan_parameters
+        self.x_axis = self.scan_parameters.axes_unique[0]
+        self.Nx = self.x_axis.size
+        self.y_axis = self.scan_parameters.axes_unique[1]
+        self.Ny = self.y_axis.size
+        self.datas = np.zeros((self.Nx, self.Ny))
+        self.ind_grab = 0
+
 
 
     def ini_detector(self, controller=None):
@@ -140,10 +152,15 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
                                                                       'value']))
 
         # initialize viewers with the future type of data
-        self.data_grabed_signal.emit(
-            [utils.DataFromPlugins(name='Mock1', data=[np.array(0)], dim='Data0D', labels=['RandomGaussians'])])
+        self.data_grabed_signal_temp.emit(
+            [utils.DataFromPlugins(name='MockScanner', data=[self.datas],
+                                   dim='Data2D', labels=['RandomGaussians'],
+                                   x_axis=utils.Axis(data=xaxis),
+                                   y_axis=utils.Axis(data=yaxis))])
 
         self.status.initialized = True
+        self.status.x_axis = self.x_axis
+        self.status.y_axis = self.y_axis
         self.status.controller = self.controller
         return self.status
 
@@ -159,32 +176,40 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
         """
         coeff = self.settings.child(('width_coeff')).value()
         fun_type = self.settings.child(('fun_type')).value()
-        if 'positions' in kwargs:
-            positions = kwargs['positions']
 
-            if len(positions) == 2:
-                if fun_type == 'Gaussians':
-                    data = random_hypergaussians2D_signal(positions, coeff)
-                else:
-                    data = diverging2D_signal(positions, coeff)
-            else:
-                if fun_type == 'Gaussians':
-                    data = random_hypergaussians1D(positions, coeff)[0]
-                else:
-                    data = diverging1D(positions[0], coeff)
-        else:
-            if fun_type == 'Gaussians':
-                data = random_hypergaussians1D(np.roll(x_axis1D, -self.ind_data)[0], coeff)
-            else:
-                data = diverging1D(np.roll(x_axis1D, -self.ind_data)[0], coeff)
+        self.datas = np.zeros((self.Ny, self.Nx))
+        self.stop_flag = False
 
-        self.data_grabed_signal.emit([utils.DataFromPlugins(name='MockAdaptive', data=[np.array([data])],
-                                                            dim='Data0D', )])
+        if self.scan_parameters is not None:
+            for ind in range(self.scan_parameters.Nsteps):
+                if self.stop_flag:
+                    break
+                positions = (self.x_axis[self.scan_parameters.axes_indexes[ind, 0]],
+                             self.y_axis[self.scan_parameters.axes_indexes[ind, 1]])
+
+                if fun_type == 'Gaussians':
+                    self.datas[self.scan_parameters.axes_indexes[ind, 1],
+                    self.scan_parameters.axes_indexes[ind, 0]] = random_hypergaussians2D_signal(positions, coeff)
+                else:
+                    self.datas[self.scan_parameters.axes_indexes[ind, 1],
+                               self.scan_parameters.axes_indexes[ind, 0]] = diverging2D_signal(positions, coeff)
+                if ind % 100 == 0:  #refresh plot every 100 grabed points
+                    self.data_grabed_signal_temp.emit([utils.DataFromPlugins(name='MockScanner', data=[self.datas],
+                                                                    dim='Data2D',
+                                                                    x_axis=utils.Axis(data=self.x_axis),
+                                                                    y_axis=utils.Axis(data=self.y_axis))])
+                    QtWidgets.QApplication.processEvents()
+                    QThread.msleep(100)
+
+        self.data_grabed_signal.emit([utils.DataFromPlugins(name='MockScanner', data=[self.datas],
+                                                            dim='Data2D',
+                                                            x_axis=utils.Axis(data=self.x_axis),
+                                                            y_axis=utils.Axis(data=self.y_axis))])
         self.ind_data += 1
 
     def stop(self):
         """
             not implemented.
         """
-
+        self.stop_flag = True
         return ""
