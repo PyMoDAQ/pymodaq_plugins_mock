@@ -16,6 +16,18 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     1D viewer plugin simulating a photon spectrometer controlling the laser source, the exposure and the calibration axis
     Produces one data signal with two hypergaussians whose parameters are fully controllable or
     produces 2 data signals, each beeing a fully controllable hypergaussian
+    Features specific methods that should be present for spectrometer features using Pymodaq_spectrometer package:
+
+    get_laser_wl: emit the value of the currently selected laser (if available)
+    set_laser_wl: try to set the selected laser wavelength (if applicable), emit the value of the new one
+
+    get_spectro_wl: emit the value of the central frequency
+    set_spectro_wl: set the newly central frequency
+
+    get_exposure_ms: emit the value of the exposure time in ms
+    set_exposure_ms: set the new exposure time in ms
+
+
     """
     params = comon_parameters + [
         {'name': 'rolling', 'type': 'int', 'value': 0, 'min': 0},
@@ -23,7 +35,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
          'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
         {'name': 'Mock1', 'type': 'group', 'children': [
             {'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
-            {'name': 'x0', 'type': 'float', 'value': 500, 'default': 50},
+            {'name': 'x0', 'type': 'float', 'value': 500, 'default': 500},
             {'name': 'dx', 'type': 'float', 'value': 0.3, 'default': 20},
             {'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
             {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
@@ -156,6 +168,10 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         QtWidgets.QApplication.processEvents()
         self.emit_status(ThreadCommand('laser_wl', [self.settings.child(('laser_wl')).value()]))
 
+
+    def get_exposure_ms(self):
+        self.emit_status(ThreadCommand('exposure_ms', [self.settings.child(('exposure_ms')).value()]))
+
     def set_exposure_ms(self, exposure):
         self.settings.child(("exposure_ms")).setValue(exposure)
         QtWidgets.QApplication.processEvents()
@@ -229,17 +245,17 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        Naverage=1
-        data_tot=self.set_Mock_data()
-        for ind in range(Naverage-1):
-            data_tmp=self.set_Mock_data()
-            QThread.msleep(100)
+        Naverage = 1
+        data_tot = self.set_Mock_data()
+        for ind in range(Naverage - 1):
+            data_tmp = self.set_Mock_data()
+            QThread.msleep(self.settings.child(('exposure_ms')).value())
 
-            for ind,data in enumerate(data_tmp):
-                data_tot[ind]+=data
+            for ind, data in enumerate(data_tmp):
+                data_tot[ind] += data
 
-        data_tot=[data/Naverage for data in data_tot]
-
+        data_tot = [data / Naverage for data in data_tot]
+        QThread.msleep(self.settings.child(('exposure_ms')).value())
         self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot, dim='Data1D')])
 
     def stop(self):
