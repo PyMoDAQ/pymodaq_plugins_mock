@@ -195,7 +195,9 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
             elif param.name() == 'exposure':
                 self.controller.SetExposureTime(self.settings.child('camera_settings','exposure').value()/1000) #temp should be in s
                 (err, timings) = self.controller.GetAcquisitionTimings()
-                self.settings.child('camera_settings','exposure').setValue(timings['exposure']*1000)
+                self.settings.child('camera_settings', 'exposure').setValue(timings['exposure']*1000)
+                QtWidgets.QApplication.processEvents()
+                self.get_exposure_ms()
 
             elif param.name() == 'grating':
                 index_grating = self.grating_list.index(param.value())
@@ -235,6 +237,16 @@ class DAQ_AndorSDK2(DAQ_Viewer_base):
 
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
+
+
+    def get_exposure_ms(self):
+        #for compatibility with PyMoDAQ Spectro module
+        self.emit_status(ThreadCommand('exposure_ms', [self.settings.child('camera_settings', 'exposure').value()]))
+
+    def set_exposure_ms(self, exposure):
+        self.settings.child('camera_settings', 'exposure').setValue(exposure)
+        QtWidgets.QApplication.processEvents()
+        self.emit_status(ThreadCommand('exposure_ms', [self.settings.child('camera_settings', 'exposure').value()]))
 
 
     def emit_data(self):
