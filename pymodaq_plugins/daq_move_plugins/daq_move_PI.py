@@ -77,11 +77,11 @@ class DAQ_Move_PI(DAQ_Move_base):
            {'title': 'Use Joystick:', 'name': 'use_joystick', 'type': 'bool', 'value': False},
              {'title': 'Closed loop?:', 'name': 'closed_loop', 'type': 'bool', 'value': True},
            {'title': 'Controller ID:', 'name': 'controller_id', 'type': 'str', 'value': '', 'readonly': True},
-           {'title': 'Stage address:', 'name': 'axis_address', 'type': 'list'},
+           #{'title': 'Stage address:', 'name': 'axis_address', 'type': 'list'},
           {'title': 'MultiAxes:', 'name': 'multiaxes', 'type': 'group','visible':is_multiaxes, 'children':[
                     {'title': 'is Multiaxes:', 'name': 'ismultiaxes', 'type': 'bool', 'value': is_multiaxes, 'default': False},
                     {'title': 'Status:', 'name': 'multi_status', 'type': 'list', 'value': 'Master', 'values': ['Master','Slave']},
-                    {'title': 'Axis:', 'name': 'axis', 'type': 'list',  'values':stage_names},
+                    {'title': 'Axis:', 'name': 'axis', 'type': 'list',  'values': stage_names},
 
                     ]}]+comon_parameters
 
@@ -137,12 +137,12 @@ class DAQ_Move_PI(DAQ_Move_base):
 
 
                 pass
-            elif param.name() == 'axis_address':
+            elif param.name() == 'axis':
                 self.settings.child(('closed_loop')).setValue(self.controller.qSVO(param.value())[param.value()])
-                self.set_referencing(self.settings.child(('axis_address')).value())
+                self.set_referencing(self.settings.child('multiaxes', 'axis').value())
 
             elif param.name()=='closed_loop':
-                axe=self.settings.child(('axis_address')).value()
+                axe=self.settings.child('multiaxes', 'axis').value()
                 if self.controller.qSVO(axe)[axe] != self.settings.child(('closed_loop')).value():
                     self.controller.SVO(axe,param.value())
 
@@ -306,7 +306,7 @@ class DAQ_Move_PI(DAQ_Move_base):
                     self.controller.ConnectDaisyChainDevice(self.settings.child('dc_options','index_in_chain').value()+1,self.settings.child('dc_options','daisy_id').value())
 
             self.settings.child(('controller_id')).setValue(self.controller.qIDN())
-            self.settings.child(('axis_address')).setLimits(self.controller.axes)
+            self.settings.child('multiaxes', 'axis').setLimits(self.controller.axes)
 
             self.set_referencing(self.controller.axes[0])
 
@@ -398,8 +398,8 @@ class DAQ_Move_PI(DAQ_Move_base):
             --------
             DAQ_Move_base.get_position_with_scaling, daq_utils.ThreadCommand
         """
-        pos_dict = self.controller.qPOS(self.settings.child(('axis_address')).value())
-        pos = pos_dict[self.settings.child(('axis_address')).value()]
+        pos_dict = self.controller.qPOS(self.settings.child('multiaxes', 'axis').value())
+        pos = pos_dict[self.settings.child('multiaxes', 'axis').value()]
         pos = self.get_position_with_scaling(pos)
         self.current_position = pos
         self.emit_status(ThreadCommand('check_position', [pos]))
@@ -425,7 +425,7 @@ class DAQ_Move_PI(DAQ_Move_base):
         self.target_position=position
 
         position=self.set_position_with_scaling(position)
-        out=self.controller.MOV(self.settings.child(('axis_address')).value(),position)
+        out=self.controller.MOV(self.settings.child('multiaxes', 'axis').value(),position)
 
         self.poll_moving()
 
@@ -451,7 +451,7 @@ class DAQ_Move_PI(DAQ_Move_base):
         position = self.set_position_relative_with_scaling(position)
 
         if self.controller.HasMVR():
-            out = self.controller.MVR(self.settings.child(('axis_address')).value(),position)
+            out = self.controller.MVR(self.settings.child('multiaxes', 'axis').value(),position)
         else:
             self.move_Abs(self.target_position)
         self.poll_moving()
@@ -463,11 +463,11 @@ class DAQ_Move_PI(DAQ_Move_base):
             --------
             DAQ_Move_PI.set_referencing, DAQ_Move_base.poll_moving
         """
-        self.set_referencing(self.settings.child(('axis_address')).value())
+        self.set_referencing(self.settings.child('multiaxes', 'axis').value())
         if self.controller.HasGOH():
-            self.controller.GOH(self.settings.child(('axis_address')).value())
+            self.controller.GOH(self.settings.child('multiaxes', 'axis').value())
         elif self.controller.HasFRF():
-            self.controller.FRF(self.settings.child(('axis_address')).value())
+            self.controller.FRF(self.settings.child('multiaxes', 'axis').value())
         else:
             self.move_Abs(0)
         self.poll_moving()
