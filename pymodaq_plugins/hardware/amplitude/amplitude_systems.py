@@ -2,6 +2,7 @@ from serial import Serial
 from serial.tools.list_ports import comports
 import crcmod
 
+from pymodaq.daq_utils import daq_utils as utils
 
 class AmplitudeSystemsCRC16:
 
@@ -17,8 +18,19 @@ class AmplitudeSystemsCRC16:
 
         self.crc16 = crcmod.Crc(0x18005, initCrc=0x0000)
 
-        ## Get Status commands 0x53 0x30
+        ## set actuator 1st command 0x43
+        self.actuators = [
+            dict(id=0, name='Open Shutter', command=0x30,),
+            dict(id=1, name='Close Shutter', command=0x31, ),
+            dict(id=2, name='Trigger INT', command=0x32, ),
+            dict(id=3, name='Trigger EXT', command=0x33, ),
+            dict(id=4, name='Gate INT', command=0x34, ),
+            dict(id=5, name='Gate EXT', command=0x35, ),
+            dict(id=6, name='Laser ON', command=0x36, ),
+            dict(id=7, name='Laser OFF', command=0x37, ),
+        ]
 
+        ## Get Status commands 0x53 0x30
         self.status = [dict(name='Temp Amp', value=0, byte=0, bit=0x00),
                        dict(name='Temp Osc', value=0, byte=0, bit=0x01),
                        dict(name='Supply Connection', value=0, byte=0, bit=0x03),
@@ -45,35 +57,59 @@ class AmplitudeSystemsCRC16:
                        ]
 
 
-        ##Get diag 1rt command 0x56
-        self.diagnostics = [dict(name='Frequency Mod #1', command=0x30, read=4, unit='Hz', divider=1),
-                            dict(name='Osc current', command=0x31, read=2, unit='mA', divider=1),
-                            dict(name='Amp current', command=0x32, read=2, unit='A', divider=10),
-                            dict(name='Delay Mod #1', command=0x33, read=2, unit='ns', divider=100),
-                            dict(name='Width Mod #1', command=0x34, read=4, unit='ns', divider=100),
-                            dict(name='Osc Temperature', command=0x35, read=2, unit='Hz', divider=1),
-                            dict(name='Amp Temperature', command=0x36, read=2, unit='Hz', divider=1),
-                            dict(name='Diode Runtime', command=0x37, read=2, unit='Hz', divider=1),
-                            dict(name='Pump Module Temperature', command=0x38, read=2, unit='Hz', divider=1),
-                            dict(name='Osc Diode Power', command=0x39, read=2, unit='Hz', divider=1),
-                            dict(name='Amp Diode Power', command=0x3A, read=2, unit='', divider=1),
-                            dict(name='Osc Laser Power', command=0x3B, read=2, unit='', divider=1),
-                            dict(name='Amp Laser Power', command=0x3C, read=2, unit='', divider=1),
-                            dict(name='S/N', command=0x3D, read=3, unit='', divider=1),
-                            dict(name='HW/SW version', command=0x3E, read=2, unit='', divider=1),
-                            dict(name='ID (Broadcast)', command=0x3F, read=1, unit='', divider=1),
-                            dict(name='Frequency Mod #2', command=0x40, read=4, unit='', divider=1),
-                            dict(name='Delay Mod #2', command=0x41, read=4, unit='', divider=1),
-                            dict(name='Width Mod #2', command=0x42, read=4, unit='', divider=1),
-                            dict(name='Preamp current', command=0x43, read=2, unit='', divider=1),
-                            dict(name='Preamp Diode Power', command=0x44, read=2, unit='', divider=1),
-                            dict(name='Preamp Temperature', command=0x45, read=2, unit='', divider=1),
-                            dict(name='Preamp Laser Power', command=0x46, read=2, unit='', divider=1),
-                            dict(name='Controller Temperature', command=0x47, read=2, unit='', divider=1),
-                            dict(name='TPD', command=0x48, read=1, unit='', divider=1),
-                            dict(name='Delay Mod #1 coarse', command=0x49, read=4, unit='', divider=1),
-                            ]
-
+        ##Get parameter 1rt command 0x56. set parameter: 1rst command 0x54 
+        self.diagnostics = [
+            dict(id=0, name='Frequency Mod #1', read_command=0x30, write_command=0x30, reply=4, unit='kHz',
+                 divider=1000, readonly=False, value=-1),
+            dict(id=1, name='Osc current', read_command=0x31, write_command=0x31, reply=2, unit='mA', divider=1,
+                 readonly=False, value=-1),
+            dict(id=2, name='Amp current', read_command=0x32, write_command=0x32, reply=2, unit='A', divider=10,
+                 readonly=False, value=-1),
+            dict(id=3, name='Delay Mod #1', read_command=0x33, write_command=0x33, reply=2, unit='ns', divider=100,
+                 readonly=False, value=-1),
+            dict(id=4, name='Width Mod #1', read_command=0x34, write_command=0x34, reply=4, unit='ns', divider=100,
+                 readonly=False, value=-1),
+            dict(id=5, name='Osc Temperature', read_command=0x35, reply=2, unit='°C', divider=10, readonly=True,
+                 value=-1),
+            dict(id=6, name='Amp Temperature', read_command=0x36, reply=2, unit='°C', divider=10, readonly=True,
+                 value=-1),
+            dict(id=7, name='Diode Runtime', read_command=0x37, reply=2, unit='Hours', divider=1, readonly=True,
+                 value=-1),
+            dict(id=8, name='Pump Module Temperature', read_command=0x38, reply=2, unit='°C', divider=10, readonly=True,
+                 value=-1),
+            dict(id=9, name='Osc Diode Power', read_command=0x39, reply=2, unit='mW', divider=1, readonly=True,
+                 value=-1),
+            dict(id=10, name='Amp Diode Power', read_command=0x3A, reply=2, unit='W', divider=1, readonly=True,
+                 value=-1),
+            dict(id=11, name='Osc Laser Power', read_command=0x3B, reply=2, unit='mW', divider=1000, readonly=True,
+                 value=-1),
+            dict(id=12, name='Amp Laser Power', read_command=0x3C, reply=2, unit='W', divider=1000, readonly=True,
+                 value=-1),
+            dict(id=13, name='S/N', read_command=0x3D, reply=3, unit='', divider=1, readonly=True, value=-1),
+            dict(id=14, name='HW/SW version', read_command=0x3E, reply=2, unit='', divider=1, readonly=True, value=-1),
+            dict(id=15, name='ID (Broadcast)', read_command=0x3F, reply=1, unit='', divider=1, readonly=True, value=-1),
+            dict(id=16, name='Frequency Mod #2', read_command=0x40, write_command=0x35, reply=4, unit='kHz',
+                 divider=1000,
+                 readonly=False, value=-1),
+            dict(id=17, name='Delay Mod #2', read_command=0x41, write_command=0x37, reply=4, unit='ns', divider=100,
+                 readonly=False, value=-1),
+            dict(id=18, name='Width Mod #2', read_command=0x42, write_command=0x36, reply=4, unit='ns', divider=100,
+                 readonly=False, value=-1),
+            dict(id=19, name='Preamp current', read_command=0x43, write_command=0x38, reply=2, unit='mA', divider=1,
+                 readonly=False, value=-1),
+            dict(id=20, name='Preamp Diode Power', read_command=0x44, reply=2, unit='mW', divider=1, readonly=True,
+                 value=-1),
+            dict(id=21, name='Preamp Temperature', read_command=0x45, reply=2, unit='°C', divider=10, readonly=True,
+                 value=-1),
+            dict(id=22, name='Preamp Laser Power', read_command=0x46, reply=2, unit='mW', divider=100, readonly=True,
+                 value=-1),
+            dict(id=23, name='Controller Temperature', read_command=0x47, reply=2, unit='°C', divider=10, readonly=True,
+                 value=-1),
+            dict(id=24, name='TPD', read_command=0x48, reply=1, unit='', divider=1, readonly=True, value=-1),
+            dict(id=25, name='Delay Mod #1 coarse', read_command=0x49, write_command=0x3B, reply=4, unit='ns',
+                 divider=100,
+                 readonly=False, value=-1),
+            ]
 
     @property
     def timeout(self):
@@ -108,16 +144,56 @@ class AmplitudeSystemsCRC16:
         """
         Send the "Get Status" command
         The serial port should return 4 bytes encoding the controller status, see self.status
+
+        returns the dicts that have their value changeed
         """
 
         self._write_command(bytearray([0x53, 0x30]))
-        status = self._controller.read(4)  #read 4 bytes
+        status = self._read_reply(4)  #read 4 bytes
+        status_changed = []
         for dic in self.status:
-            dic['value'] = (status[dic['byte']] >> dic['bit']) & 0x01 # check if  corresponding bit in each byte is 0 or 1
-        return self.status
+            val = (status[dic['byte']] >> dic['bit']) & 0x01  # check if  corresponding bit in each byte is 0 or 1
+            if dic['value'] != val:
+                dic['value'] = val
+                status_changed.append(dic)
+        return status_changed
+
+    def get_diag(self, diag_id):
+        diag = utils.find_dict_in_list_from_key_val(self.diagnostics, 'id', diag_id)
+        reply = None
+        if diag is not None:
+            self._write_command([0x56, diag['read_command']])
+
+            reply = self._read_reply(diag['reply'])
+            diag['value'] = reply
+        return reply
+
+    def set_diag(self, diag_id, value):
+        diag = utils.find_dict_in_list_from_key_val(self.diagnostics, 'id', diag_id)
+        reply = None
+        if diag is not None:
+            if not diag['readonly']:
+                assert len(value) == diag['reply']
+                self._write_command([0x54, diag['write_command']], data=value)
+
+            reply = self._read_reply(diag['reply'])
+            diag['value'] = reply
+        return reply
+
+    def set_actuator(self, actuator_id):
+        act = utils.find_dict_in_list_from_key_val(self.actuators, 'id', actuator_id)
+        reply = None
+        if act is not None:
+            self._write_command([0x43, act['command']])
+            self.get_status()
 
     def calc_crc(self, buffer):
         return bytearray(self.crc16.new(buffer).digest())
+
+    def _read_reply(self, Nbytes):
+        #TODO check if the reply contains also the SYNC, STX, COMMAND DATA and CRC...
+        reply_bytes = self._controller.read(Nbytes)
+        return int.from_bytes(reply_bytes, 'big')
 
     def _write_command(self, command, data=[]):
         message = bytearray([self.SYNC, self.STX])
@@ -129,3 +205,10 @@ class AmplitudeSystemsCRC16:
 
         self._controller.write(message)
 
+
+if __name__ == '__main__':
+    laser = AmplitudeSystemsCRC16(sourceID=0, destID=0x0A)
+    com_port = 'COM1'
+    laser.init_communication(com_port)
+
+    pass
