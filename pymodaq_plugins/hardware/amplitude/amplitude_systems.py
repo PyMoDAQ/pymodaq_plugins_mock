@@ -127,13 +127,15 @@ class AmplitudeSystemsCRC16:
 
     def init_communication(self, com_port):
         if com_port in self.com_ports:
-            self._controller = Serial(com_port)
+            self._controller = Serial()
             # set attributes
             self._controller.baudrate = 115200
             self._controller.bytesize = 8
             self._controller.stopbits = 1
             self._controller.parity = 'N'
-            self.timeout = 200
+            self.timeout = 200 / 1000
+            self._controller.port = com_port
+            self._controller.open()
         else:
             raise IOError('{:s} is not a valid port'.format(com_port))
 
@@ -148,7 +150,7 @@ class AmplitudeSystemsCRC16:
         returns the dicts that have their value changeed
         """
 
-        self._write_command(bytearray([0x53, 0x30]))
+        ret= self._write_command(bytearray([0x53, 0x30]))
         status = self._read_reply(4)  #read 4 bytes
         status_changed = []
         for dic in self.status:
@@ -162,7 +164,7 @@ class AmplitudeSystemsCRC16:
         diag = utils.find_dict_in_list_from_key_val(self.diagnostics, 'id', diag_id)
         reply = None
         if diag is not None:
-            self._write_command([0x56, diag['read_command']])
+            ret = self._write_command([0x56, diag['read_command']])
 
             reply = self._read_reply(diag['reply'])
             diag['value'] = reply
@@ -190,6 +192,12 @@ class AmplitudeSystemsCRC16:
     def calc_crc(self, buffer):
         return bytearray(self.crc16.new(buffer).digest())
 
+
+    def echo_string(self, string):
+        string = string[:min((7, len(string)))]
+        ret = self._write_command([0x41, 0x30], data=string.encode())
+        self._read_reply(len(string))
+
     def _read_reply(self, Nbytes):
         #TODO check if the reply contains also the SYNC, STX, COMMAND DATA and CRC...
         reply_bytes = self._controller.read(Nbytes)
@@ -199,16 +207,17 @@ class AmplitudeSystemsCRC16:
         message = bytearray([self.SYNC, self.STX])
         length = 4 + len(command) + len(data) + 2 #length of the message, excluding the sync byte and including the 2 CRC bytes
         message.append(length)
+        message.extend([self.sourceID, self.destID])
         message.extend(command)
         message.extend(data)
         message.extend(self.calc_crc(message[1:]))
-
-        self._controller.write(message)
+        ret = self._controller.write(message)
+        return ret
 
 
 if __name__ == '__main__':
     laser = AmplitudeSystemsCRC16(sourceID=0, destID=0x0A)
-    com_port = 'COM1'
+    com_port = 'COM6'
     laser.init_communication(com_port)
-
+    laser.echo_string('hello')
     pass
