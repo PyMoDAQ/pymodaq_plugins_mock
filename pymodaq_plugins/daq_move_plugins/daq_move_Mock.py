@@ -173,8 +173,8 @@ class DAQ_Move_Mock(DAQ_Move_base):
             hardware.set_position_with_scaling, DAQ_Move_base.poll_moving
 
         """
-        position=self.check_bound(self.current_position+position)-self.current_position
-        self.target_position=position+self.current_position
+        position = self.check_bound(self.current_position+position)-self.current_position
+        self.target_position = position + self.current_position
 
 
 
