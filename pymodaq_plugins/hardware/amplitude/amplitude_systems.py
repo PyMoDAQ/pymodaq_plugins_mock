@@ -88,7 +88,7 @@ class AmplitudeSystemsCRC16:
         dict(id=12, name='Amp Laser Power', read_command=0x3C, reply=2, unit='W', divider=1000, readonly=True,
              value=-1),
         dict(id=13, name='S/N', read_command=0x3D, reply=3, unit='', divider=1, readonly=True, value=-1),
-        dict(id=14, name='HW/SW version', read_command=0x3E, reply=2, unit='', divider=1, readonly=True, value=-1),
+        dict(id=14, name='HW/SW version', read_command=0x3E, reply=3, unit='', divider=1, readonly=True, value=-1),
         dict(id=15, name='ID (Broadcast)', read_command=0x3F, reply=1, unit='', divider=1, readonly=True, value=-1),
         dict(id=16, name='Frequency Mod #2', read_command=0x40, write_command=0x35, reply=4, unit='kHz',
              divider=1000,
@@ -158,10 +158,12 @@ class AmplitudeSystemsCRC16:
             self.set_actuator(1)
 
     def get_sn(self):
-        return self.get_diag(13)
+        return int.from_bytes(self.get_diag_from_id(13)[0], 'big')
 
     def get_version(self):
-        return self.get_diag(14)
+
+        version = self.get_diag_from_id(14)[0]
+        return f'v {version[0]}.{version[1]} {version[2].to_bytes(1,"big").decode()}'
 
     @classmethod
     def get_ressources(cls):
@@ -207,7 +209,7 @@ class AmplitudeSystemsCRC16:
         return status_changed
 
     def get_diag_from_name(self, name):
-        diag = utils.find_dict_in_list_from_key_val(self.diagnostics, 'name', name)[id]
+        diag = utils.find_dict_in_list_from_key_val(self.diagnostics, 'name', name)
         return self.get_diag(diag)
 
     def get_diag_from_id(self, diag_id):
@@ -259,14 +261,14 @@ class AmplitudeSystemsCRC16:
         reply_bytes = self._controller.read(Nbytes)
         crc = self.calc_crc(reply_bytes[1:-2])
         if crc != reply_bytes[-2:]:
-            self._controller.flush()
+            #self._controller.flush()
             raise IOError(f'Invalid message from controller: {reply_bytes}')
         if reply_bytes[3] != self.destID:
-            self._controller.flush()
+            #self._controller.flush()
             raise IOError(f'Source of the reply is not correct. Should be {self.destID} but is {reply_bytes[3]}')
 
         if reply_bytes[4] != self.sourceID:
-            self._controller.flush()
+            #self._controller.flush()
             raise IOError(f'Destination of this reply is not meant for this module. Should be {self.sourceID} but is {reply_bytes[4]}')
         commands = reply_bytes[5:7]
         data = reply_bytes[7:-2]

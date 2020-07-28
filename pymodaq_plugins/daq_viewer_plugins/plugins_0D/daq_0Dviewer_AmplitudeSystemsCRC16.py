@@ -28,7 +28,7 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
                 {'title': 'COM port:','name': 'com_port', 'type': 'list',
                  'values': AmplitudeSystemsCRC16.get_ressources()},
                 {'title': 'Serial number:', 'name': 'serial_number', 'type': 'int', 'value': 0},
-                {'title': 'Version:', 'name': 'version', 'type': 'int', 'value': 0},
+                {'title': 'Version:', 'name': 'version', 'type': 'str', 'value': ''},
 
                 {'title': 'Update all Diags', 'name': 'update_diags', 'type': 'action'},
 
@@ -81,7 +81,9 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
                 self.controller.init_communication(self.settings.child(('com_port')).value())
 
             self.settings.child(('serial_number')).setValue(self.controller.get_sn())
+            QThread.msleep(250)
             self.settings.child(('version')).setValue(self.controller.get_version())
+            QThread.msleep(250)
             self.update_all_diags()
 
             self.status_timer = QTimer()
@@ -108,12 +110,15 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
 
     def update_all_diags(self):
         for diag in self.controller.diagnostics:
-            self.update_diag(diag['id'])
+            try:
+                self.update_diag(diag['id'])
+            except Exception as e:
+                print(e)
 
 
     def update_diag(self, id):
         data, diag = self.controller.get_diag_from_id(id)
-        self.settings.child(('diagnostics', f'diag_{id}')).setValue(data / diag['divider'])
+        self.settings.child('diagnostics', f'diag_{id}').setValue(diag['value'] / diag['divider'])
 
 
     def reset(self):
@@ -126,12 +131,16 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
         selected_channels = self.settings.child(('channels')).value()['selected']
         for channel in selected_channels:
             data, diag = self.controller.get_diag_from_name(channel)
-            self.settings.child(('diagnostics', f'diag_{diag["id"]}')).setValue(data / diag['divider'])
-            data_tot.append(np.array([data / diag['divider']]))
+            data = int.from_bytes(data, 'big') / diag['divider']
+            self.settings.child('diagnostics', f'diag_{diag["id"]}').setValue(data)
+            data_tot.append(np.array([data]))
 
         self.data_grabed_signal.emit(
                 [DataFromPlugins(name='AmplitudeSystems', data=data_tot, dim='Data0D', labels=selected_channels)])
 
+
+    def stop(self):
+        pass
 
     def commit_settings(self, param):
         """
@@ -150,7 +159,7 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
             if 'diag_' in param.name():
                 id = int(param.name().split('diag_')[1])
                 diag = self.controller.get_diag_from_id(id)
-                self.controller.set_diag(id, param.value() * diag['divider'])
+                self.controller.set_diag(id, int(param.value() * diag['divider']).to_bytes(diag['reply'], 'big'))
                 QThread.msleep(200)
                 self.update_diag(id)
 
@@ -163,6 +172,6 @@ class DAQ_0DViewer_AmplitudeSystemsCRC16(DAQ_Viewer_base):
         """
             close the current instance of the visa session.
         """
-        self.controller.close()
+        self.controller.close_communication()
 
 
