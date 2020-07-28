@@ -1,3 +1,11 @@
+"""
+Wrapper around the serial communication protocol for Amplitude Systems lasers
+
+It requires:
+pyserial package: pip install pyserial
+crcmod package: pip install crcmod (used to certify the message send and received)
+
+"""
 from serial import Serial
 from serial.tools.list_ports import comports
 import crcmod
@@ -138,12 +146,23 @@ class AmplitudeSystemsCRC16:
 
     @property
     def timeout(self):
-        return self._timeout
+        """
+        return serial timeout in ms
+        """
+        return self._controller.timeout * 1000
 
     @timeout.setter
     def timeout(self, to):
-        self._timeout = to
-        self._controller.timeout = to
+        """
+        Set the serial timeout in ms
+        """
+        self._controller.timeout = to / 1000
+
+    def get_laser(self):
+        return bool(utils.find_dict_in_list_from_key_val(self.status, 'id', 17)['value'])
+
+    def get_shutter(self):
+        return bool(utils.find_dict_in_list_from_key_val(self.status, 'id', 20)['value'])
 
     def set_laser(self, status):
         if status:
@@ -179,7 +198,7 @@ class AmplitudeSystemsCRC16:
             self._controller.bytesize = 8
             self._controller.stopbits = 1
             self._controller.parity = 'N'
-            self.timeout = 200 / 1000
+            self.timeout = 200
             self._controller.port = com_port
             self._controller.open()
             logger.debug(f'Serial communication with port {com_port} is a success')
@@ -188,8 +207,10 @@ class AmplitudeSystemsCRC16:
 
     def close_communication(self):
         logger.debug(f'Serial communication closed')
-        self._controller.close()
-
+        try:
+            self._controller.close()
+        except:
+            pass
     def get_status(self):
         """
         Send the "Get Status" command
@@ -242,6 +263,7 @@ class AmplitudeSystemsCRC16:
         reply = None
         if act is not None:
             ret = self._write_command([0x43, act['command']])
+            reply = self._read_reply(self.message_len_without_data)
             self.get_status()
 
     def calc_crc(self, buffer):
@@ -259,22 +281,25 @@ class AmplitudeSystemsCRC16:
 
     def _read_reply(self, Nbytes):
         reply_bytes = self._controller.read(Nbytes)
-        crc = self.calc_crc(reply_bytes[1:-2])
-        if crc != reply_bytes[-2:]:
-            #self._controller.flush()
-            raise IOError(f'Invalid message from controller: {reply_bytes}')
-        if reply_bytes[3] != self.destID:
-            #self._controller.flush()
-            raise IOError(f'Source of the reply is not correct. Should be {self.destID} but is {reply_bytes[3]}')
+        if len(reply_bytes) != 0:
+            crc = self.calc_crc(reply_bytes[1:-2])
+            if crc != reply_bytes[-2:]:
+                self._controller.flush()
+                raise IOError(f'Invalid message from controller: {reply_bytes}')
+            if reply_bytes[3] != self.destID:
+                self._controller.flush()
+                raise IOError(f'Source of the reply is not correct. Should be {self.destID} but is {reply_bytes[3]}')
 
-        if reply_bytes[4] != self.sourceID:
-            #self._controller.flush()
-            raise IOError(f'Destination of this reply is not meant for this module. Should be {self.sourceID} but is {reply_bytes[4]}')
-        commands = reply_bytes[5:7]
-        data = reply_bytes[7:-2]
-        logger.debug(f'Reply commands: {commands}')
-        logger.debug(f'Reply data: {data}')
-        return commands, data
+            if reply_bytes[4] != self.sourceID:
+                self._controller.flush()
+                raise IOError(f'Destination of this reply is not meant for this module. Should be {self.sourceID} but is {reply_bytes[4]}')
+            commands = reply_bytes[5:7]
+            data = reply_bytes[7:-2]
+            logger.debug(f'Reply commands: {commands}')
+            logger.debug(f'Reply data: {data}')
+            return commands, data
+        else:
+            raise TimeoutError('Read operation on the device returned from a timeout')
 
 
 
@@ -289,6 +314,7 @@ class AmplitudeSystemsCRC16:
         message.extend(data)
         message.extend(self.calc_crc(message[1:]))
         ret = self._controller.write(message)
+        self._controller.flush()
         return ret
 
 
