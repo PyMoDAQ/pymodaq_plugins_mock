@@ -33,7 +33,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             {'name': 'y0', 'type': 'float', 'value': 100 , 'default':100, 'min':0},
             {'name': 'dx', 'type': 'float', 'value': 20 , 'default':20, 'min':1},
             {'name': 'dy', 'type': 'float', 'value': 40 , 'default':40, 'min':1},
-            {'name': 'n', 'type': 'float', 'value': 1 , 'default':1, 'min':1},
+            {'name': 'n', 'type': 'int', 'value': 1 , 'default':1, 'min':1},
             {'name': 'amp_noise', 'type': 'float', 'value': 4 , 'default':0.1, 'min':0},
             {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': []},
                 ]

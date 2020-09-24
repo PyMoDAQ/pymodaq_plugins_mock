@@ -37,14 +37,14 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             {'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
             {'name': 'x0', 'type': 'float', 'value': 500, 'default': 500},
             {'name': 'dx', 'type': 'float', 'value': 0.3, 'default': 20},
-            {'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
+            {'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
             {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
         ]},
         {'name': 'Mock2', 'type': 'group', 'children': [
             {'name': 'Amp', 'type': 'int', 'value': 10},
             {'name': 'x0', 'type': 'float', 'value': 520},
             {'name': 'dx', 'type': 'float', 'value': 0.7},
-            {'name': 'n', 'type': 'float', 'value': 2, 'default': 2, 'min': 1},
+            {'name': 'n', 'type': 'int', 'value': 2, 'default': 2, 'min': 1},
             {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}, ]},
 
         {'name': 'x_axis', 'type': 'group', 'children': [

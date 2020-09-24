@@ -1280,7 +1280,7 @@ class AndorSDK():
         self.SetTemperature(Tset)
         self.CoolerON()
 
-        while self.GetTemperature() is not 'DRV_TEMP_STABILIZED':
+        while self.GetTemperature() != 'DRV_TEMP_STABILIZED':
             time.sleep(10)
 
     def Demo_ImagePrepare(self):
@@ -1307,7 +1307,7 @@ class AndorSDK():
             self.StartAcquisition()
 
             # Check for status
-            while self.GetStatus() is not 'DRV_IDLE':
+            while self.GetStatus() != 'DRV_IDLE':
                 print( "Data not yet acquired, waiting 0.5s")
                 time.sleep(0.5)
 
@@ -1341,7 +1341,7 @@ class AndorSDK():
             self.StartAcquisition()
 
             # Check for status
-            while self.GetStatus() is not 'DRV_IDLE':
+            while self.GetStatus() != 'DRV_IDLE':
                 print( "Data not yet acquired, waiting 0.5s")
                 time.sleep(0.5)
 

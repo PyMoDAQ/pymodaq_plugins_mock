@@ -170,7 +170,9 @@ class DAQ_0DViewer_Kinesis_KPA101(DAQ_Viewer_base):
         """
         status = self.controller.Status
         data = [np.array([status.PositionDifference.X]), np.array([status.PositionDifference.Y])]
-        self.data_grabed_signal.emit([OrderedDict(name='KPA101', data=data, type='Data0D', labels=['X (V)', 'Y (V)'],)])
+        data_intens = [np.array([status.Sum])]
+        self.data_grabed_signal.emit([OrderedDict(name='KPA101 Positions', data=data, type='Data0D', labels=['X (V)', 'Y (V)'],),
+                                      OrderedDict(name='KPA101 Intensity', data=data_intens, type='Data0D', labels=['Intensity'],)])
 
 
     def stop(self):

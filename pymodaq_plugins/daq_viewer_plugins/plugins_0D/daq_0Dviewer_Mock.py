@@ -24,7 +24,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                 {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
                 {'name': 'x0', 'type': 'float', 'value': 50 , 'default':50, 'min':0},
                 {'name': 'dx', 'type': 'float', 'value': 20 , 'default':20, 'min':1},
-                {'name': 'n', 'type': 'float', 'value': 1 , 'default':1, 'min':1},
+                {'name': 'n', 'type': 'int', 'value': 1 , 'default':1, 'min':1},
                 {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
                 ]},
              {'name': 'Mock2', 'type': 'group', 'children':[
@@ -32,7 +32,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                     {'name': 'Amp', 'type': 'int', 'value': 10 , 'default':10, 'min':1},
                     {'name': 'x0', 'type': 'float', 'value': 100 , 'default':100, 'min':0},
                     {'name': 'dx', 'type': 'float', 'value': 30 , 'default':30, 'min':1},
-                    {'name': 'n', 'type': 'float', 'value': 2 , 'default':2, 'min':1},
+                    {'name': 'n', 'type': 'int', 'value': 2 , 'default':2, 'min':1},
                     {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
                 ]}]
 
