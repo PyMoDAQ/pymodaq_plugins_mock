@@ -28,7 +28,7 @@ class DAQ_0DViewer_TCPServer(DAQ_Viewer_TCP_server):
     # params=DAQ_TCP_server.params
     def __init__(self, parent=None, params_state=None):
         super().__init__(parent, params_state,
-                         grabber_type='0')  # initialize base class with commom attributes and methods
+                         grabber_type='0D')  # initialize base class with commom attributes and methods
         # server=DAQ_TCP_server(parent,params_state)
         # server.data_grabed_signal.connect(self.data_ready)
         # self.server_thread=QThread()
