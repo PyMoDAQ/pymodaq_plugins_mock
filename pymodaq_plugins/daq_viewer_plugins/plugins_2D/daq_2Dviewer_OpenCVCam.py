@@ -384,7 +384,7 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
                 else:
                     self.controller = controller
             else:
-                self.controller = cv2.VideoCapture(self.settings.child(('camera_index')).value(), cv2.CAP_DSHOW)
+                self.controller = cv2.VideoCapture(self.settings.child(('camera_index')).value())
 
             #self.get_active_properties() #to add settable settings to the param list (but driver builtin settings window is prefered (OpenCVProp['CV_CAP_PROP_SETTINGS'])
 
@@ -486,7 +486,7 @@ class DAQ_2DViewer_OpenCVCam(DAQ_Viewer_base):
             set_Mock_data
         """
         if not self.controller.isOpened():
-            self.controller.open(self.settings.child(('camera_index')).value(), cv2.CAP_DSHOW)
+            self.controller.open(self.settings.child(('camera_index')).value())
 
         ret, frame = self.controller.read()
         # print(ret)
