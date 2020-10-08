@@ -19,6 +19,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
     """
     params = comon_parameters+[
              {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
+             {'title': 'Separated viewers', 'name': 'sep_viewers', 'type': 'bool', 'value': False},
              {'name': 'Mock1', 'type': 'group', 'children': [
                 {'name': 'Npts', 'type': 'int', 'value': 200 , 'default':200, 'min':10},
                 {'name': 'Amp', 'type': 'int', 'value': 20 , 'default':20, 'min':1},
@@ -34,12 +35,13 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                     {'name': 'dx', 'type': 'float', 'value': 30 , 'default':30, 'min':1},
                     {'name': 'n', 'type': 'int', 'value': 2 , 'default':2, 'min':1},
                     {'name': 'amp_noise', 'type': 'float', 'value': 0.1 , 'default':0.1, 'min':0}
-                ]}]
+             ]}]
 
-    def __init__(self,parent=None,params_state=None): #init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super(DAQ_0DViewer_Mock,self).__init__(parent,params_state)
-        self.x_axis=None
-        self.ind_data=0
+    def __init__(self, parent=None,
+                 params_state=None):  # init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
+        super(DAQ_0DViewer_Mock, self).__init__(parent, params_state)
+        self.x_axis = None
+        self.ind_data = 0
 
 
     def commit_settings(self,param):
@@ -131,20 +133,23 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             =============== ======== ===============================================
 
         """
-        data_tot=[]
-        data_tot_bis=[]
-        for ind,data in enumerate(self.data_mock):
-            data=np.roll(data,self.ind_data)
-            if Naverage>1:
-                data_tot.append(np.array([np.mean(data[0:Naverage-1])]))
-                data_tot_bis.append(np.array([1-np.mean(data[0:Naverage-1])]))
+        data_tot = []
+
+        for ind, data in enumerate(self.data_mock):
+            data = np.roll(data, self.ind_data)
+            if Naverage > 1:
+                data_tot.append(np.array([np.mean(data[0:Naverage - 1])]))
             else:
                 data_tot.append(np.array([data[0]]))
-                data_tot_bis.append(np.array([1-data[0]]))
 
-        #self.data_grabed_signal.emit([OrderedDict(name='Mock1',data=data_tot, type='Data0D'), OrderedDict(name='Mock2',data=data_tot_bis, type='Data0D')])
-        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1',data=data_tot, dim='Data0D',)])
-        self.ind_data+=1
+        if self.settings.child(('sep_viewers')).value():
+            dat = [DataFromPlugins(name=f'Mock_{ind:03}', data=[data], dim='Data0D',
+                                   labels=[f'mock data {ind:03}']) for ind, data in enumerate(data_tot)]
+            self.data_grabed_signal.emit(dat)
+        else:
+            self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot,
+                                                          dim='Data0D', labels=['dat0', 'data1'])])
+        self.ind_data += 1
 
     def stop(self):
         """
