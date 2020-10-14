@@ -187,215 +187,6 @@ class ScalableGroupCounter( pTypes.GroupParameter):
         self.addChild(child)
 registerParameterType('groupcounter', ScalableGroupCounter, override=True)
 
-class NiDAQmx():
-    import PyDAQmx
-
-    def __init__(self, source_type = DAQ_NIDAQ_source(0).name,  voltage_settings=dict(vmin=-10, vmax=+10)):
-        super().__init__()
-        self.devices = []
-        self.channels = []
-        self._selected_channels = []
-        self._source_type = source_type
-        self._device = None
-        self._task = None
-        self.update_NIDAQ_devices()
-        self.update_NIDAQ_channels()
-
-        self.voltage_settings = voltage_settings
-
-    @property
-    def source_type(self):
-        return self._source_type
-
-    @source_type.setter
-    def source_type(self, source_type):
-        raise IOError('Not possible to change the source type after initialization')
-
-    @property
-    def selected_channels(self):
-        return self._selected_channels
-
-    @selected_channels.setter
-    def selected_channels(self, selected_channels):
-        """
-
-        Parameters
-        ----------
-        selected_channels: list
-                           list of dictionnaries [dict(ch_name='ai0',termination=, ch_type=DAQ_analog_types(0).name), .
-
-        """
-        assert(isinstance(selected_channels, list))
-        for sel in selected_channels:
-            assert(isinstance(sel, dict))
-            if sel['ch_name'] not in self.channels:
-                raise IOError(f'your selected channel: {str(sel)} is not known or connected')
-        self._selected_channels = selected_channels
-
-    @property
-    def device(self):
-        return self._device
-
-    @device.setter
-    def device(self, device):
-        if device not in self.devices:
-            raise IOError(f'your device: {device} is not known or connected')
-        self._device = device
-
-    @property
-    def channel_type(self):
-        return self._channel_type
-
-    @channel_type.setter
-    def channel_type(self, channel_type):
-        if channel_type not in DAQ_NIDAQ_source.names():
-            raise IOError(f'your channel type: {channel_type} is not known or handled by this wrapper')
-        self._channel_type = channel_type
-        self.update_NIDAQ_channels()
-
-    def update_NIDAQ_devices(self):
-        self.devices = self.get_NIDAQ_devices()
-
-    @classmethod
-    def get_NIDAQ_devices(cls):
-        """Get list of NI connected devices
-
-        Returns
-        -------
-        list
-            list of devices as strings to be used in subsequent commands
-        """
-        try:
-            buff=cls.PyDAQmx.create_string_buffer(128)
-            cls.PyDAQmx.DAQmxGetSysDevNames(buff,len(buff));
-            devices=buff.value.decode().split(',')
-            return devices
-        except: return []
-
-    def update_NIDAQ_channels(self):
-        self.channels = self.get_NIDAQ_channels(self.devices, self.source_type)
-
-    @classmethod
-    def get_NIDAQ_channels(cls,devices=[],type_signal=None):
-        """Get the list of available channels for all NiDAq connected devices
-
-        Parameters
-        ----------
-        devices: list
-                 list of strings, each one being a connected device
-        type_signal: str
-                     One of the entries of DAQ_NIDAQ_source enum
-
-        Returns
-        -------
-
-        See Also
-        --------
-        DAQ_NIDAQ_source
-
-        """
-        if devices is None:
-            devices = cls.update_NIDAQ_devices()
-
-        if type_signal is None:
-            type_signal = DAQ_NIDAQ_source(0).name
-        channels_tot = []
-        if devices != []:
-
-            for device in devices:
-                buff = cls.PyDAQmx.create_string_buffer(256)
-                if type_signal == DAQ_NIDAQ_source(0).name: #analog input
-                    cls.PyDAQmx.DAQmxGetDevAIPhysicalChans(device,buff,len(buff))
-
-                elif type_signal == DAQ_NIDAQ_source(1).name: #counter
-                    cls.PyDAQmx.DAQmxGetDevCIPhysicalChans(device, buff, len(buff))
-
-                elif type_signal == DAQ_NIDAQ_source(2).name:  # analog output
-                    cls.PyDAQmx.DAQmxGetDevAOPhysicalChans(device, buff, len(buff))
-
-                channels = buff.value.decode()[:].split(',')
-                if channels != ['']:
-                    channels_tot.extend(channels)
-
-        return channels_tot
-
-    def update_task(self):
-        """
-        Update the current module task from settings parameters.
-
-        See Also
-        --------
-        DAQ_NIDAQ_source, daq_utils.ThreadCommand
-        """
-        try:
-            if self._task is not None:
-                if isinstance(self._task, self.PyDAQmx.Task):
-                    self._task.ClearTask()
-                else: self._task = None
-
-            self._task = self.PyDAQmx.Task()
-
-
-            if self.source_type == 'Analog_Input': #analog input
-                for ind_channel, channel_dict in enumerate(self.selected_channels):
-                    ai_type = channel_dict['ch_type']
-                    channel = channel_dict['ch_name']
-                    termination = DAQ_termination[channel_dict['termination']].value
-
-                    if ai_type == "Voltage":
-                        err_code = self._task.CreateAIVoltageChan(channel, "",
-                                     termination,
-                                     self.voltage_settings['vmin'],
-                                     self.voltage_settings['vmax'],
-                                     self.PyDAQmx.DAQmx_Val_Volts, None)
-
-                    elif ai_type == "Current":
-                        err_code = self._task.CreateAICurrentChan(channel, "",
-                                      termination,
-                                      self.voltage_settings['vmin'],
-                                      self.voltage_settings['vmax'],self.PyDAQmx.DAQmx_Val_Amps,
-                                      self.PyDAQmx.DAQmx_Val_Internal,
-                                      0., None)
-
-                    elif ai_type == "Thermocouple":
-                        err_code = self._task.CreateAIThrmcplChan(channel, "",
-                                      self.settings.child('ai_settings', 'ai_channels' , channels_name[ind_channel],  'thermoc_settings', 'T_min').value(),
-                                      self.settings.child('ai_settings', 'ai_channels' , channels_name[ind_channel],  'thermoc_settings', 'T_max').value(),
-                                      self.PyDAQmx.DAQmx_Val_DegC,
-                                      DAQ_thermocouples[self.settings.child('ai_settings', 'ai_channels' , channels_name[ind_channel], 'thermoc_settings', 'thermoc_type').value()].value,
-                                      self.PyDAQmx.DAQmx_Val_BuiltIn, 0., "")
-
-                    if err_code is None:
-                        err_code=self._task.CfgSampClkTiming(None,self.settings.child('ai_settings','frequency').value(),self.PyDAQmx.DAQmx_Val_Rising,
-                                                            self.PyDAQmx.DAQmx_Val_FiniteSamps,self.settings.child('ai_settings','Nsamples').value())
-
-                        if err_code is not None:
-                            status=self._task.GetErrorString(err_code)
-                            raise Exception(status)
-                    else:
-                        status=self._task.GetErrorString(err_code)
-                        raise Exception(status)
-
-            elif self.settings.child(('NIDAQ_type')).value() == 'Counter': #counter
-                channels = [child.opts['title'] for child in self.settings.child('counter_settings', 'counter_channels').children()]
-                channels_name = [child.name() for child in self.settings.child('counter_settings', 'counter_channels').children()]
-                for ind_channel, channel in enumerate(channels):
-                    if self.settings.child('counter_settings', 'counter_channels', channels_name[ind_channel], 'edge').value()=="Rising":
-                        edge=self.PyDAQmx.DAQmx_Val_Rising
-                    else:
-                        edge=self.PyDAQmx.DAQmx_Val_Falling
-                    err_code=self._task.CreateCICountEdgesChan(channel,"",edge,0,self.PyDAQmx.DAQmx_Val_CountUp)
-                    if err_code is not None:
-                        status=self._task.GetErrorString(err_code);raise Exception(status)
-
-            self.status.initialized = True
-            self.status.controller = self._task
-        except Exception as e:
-            self.status.info = str(e)
-            self.status.initialized = True
-            self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
-
-
 class DAQ_NIDAQmx(DAQ_Viewer_base):
     """
         ==================== ========================
@@ -536,7 +327,7 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             if devices != []:
                 channels_tot = []
                 for device in devices:
-                    buff = self.PyDAQmx.create_string_buffer(256)
+                    buff = self.PyDAQmx.create_string_buffer(1024)
                     if type_signal == DAQ_NIDAQ_source(0).name: #analog input
                         self.PyDAQmx.DAQmxGetDevAIPhysicalChans(device,buff,len(buff))
 
@@ -557,6 +348,11 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
         except Exception as e:
             self.emit_status(ThreadCommand('Update_Status',[str(e),"log"]))
 
+    @classmethod
+    def DAQmxGetErrorString(cls, error_code):
+        buffer = PyDAQmx.create_string_buffer(1024)
+        cls.PyDAQmx.DAQmxGetErrorString(error_code, buffer, len(buffer))
+        return buffer.value.decode()
 
     def refresh_hardware(self):
         """
@@ -623,10 +419,10 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                                                             self.PyDAQmx.DAQmx_Val_FiniteSamps,self.settings.child('ai_settings','Nsamples').value())
 
                         if err_code is not None:
-                            status=self.task.GetErrorString(err_code)
+                            status=self.DAQmxGetErrorString(err_code)
                             raise Exception(status)
                     else:
-                        status=self.task.GetErrorString(err_code)
+                        status=self.DAQmxGetErrorString(err_code)
                         raise Exception(status)
 
             elif self.settings.child(('NIDAQ_type')).value() == 'Counter': #counter
@@ -639,7 +435,7 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                         edge=self.PyDAQmx.DAQmx_Val_Falling
                     err_code=self.task.CreateCICountEdgesChan(channel,"",edge,0,self.PyDAQmx.DAQmx_Val_CountUp)
                     if err_code is not None:
-                        status=self.task.GetErrorString(err_code);raise Exception(status)
+                        status=self.DAQmxGetErrorString(err_code);raise Exception(status)
 
             self.status.initialized = True
             self.status.controller = self.task
