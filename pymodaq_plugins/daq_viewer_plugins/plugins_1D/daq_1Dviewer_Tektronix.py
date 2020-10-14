@@ -99,7 +99,7 @@ class DAQ_1DViewer_Tektronix(DAQ_Viewer_base):
 
     def load_setup(self):
         l = self.controller.query('SET?')
-        dico = dict([e.split(' ') for e in l.split(';')[1:]])
+        dico = dict([e.split(' ') for e in l.split(';')[1:] if len(e.split(' ')) == 2])
         self.dico = dico
 
     def get_setup_dict(self, force_load=False):
