@@ -1,0 +1,5 @@
+#keithley instruments
+
+
+#keithley
+SUBSYSTEMS=="usb", ACTION=="add", ATTR{manufacturer}=="Keithley Instruments", GROUP="dialout", MODE="0660"

@@ -3,6 +3,8 @@ from pymodaq.daq_utils.daq_utils import DataFromPlugins
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq_plugins.hardware.keithley2110.keithley2110_VISADriver import Keithley2110VISADriver as Keithley2110
+from pymodaq_plugins.hardware.keithley2110.keithley2110_VISADriver import listDevices as listKeithley
+import numpy as np
 
 class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
     """
@@ -16,8 +18,11 @@ class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
         *ind_data*      int
         =============== =================
     """
+    aviable_devices=listKeithley()
+
     params = comon_parameters+[
-        {'title': 'Keithley2210 Parameters',  'name': 'K2110Params', 'type': 'group', 'children': [
+        {'title': 'Device', 'name': 'device', 'type': 'list', 'values': aviable_devices},
+        {'title': 'Keithley2210 Parameters',  'name': 'KeithleyParams', 'type': 'group', 'children': [
             {'title': 'Mode', 'name': 'mode', 'type': 'list', 'values': ['VDC', 'VAC', 'R2W', 'R4W'], 'value': 'VDC'}
 
         ]}
@@ -50,22 +55,26 @@ class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
         """
 
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
+
+
         if self.settings.child(('controller_status')).value() == "Slave":
             if controller is None: 
                 raise Exception('no controller has been defined externally while this detector is a slave one')
             else:
                 self.controller = controller
         else:
-            try:
-                self.controller = Keithley2110('K2110')
-            except Exception as e:
-                raise Exception('No controller could be defined because an error occurred\
-                 while connecting to the instrument. Error: {}'.format(str(e)))
+            if self.settings.child(('device')).value() != 'no devices':
+                try:
+                    self.controller=Keithley2110(self.settings.child(('device')).value())
 
-        self.controller.set_mode(self.settings.child('K2110Params', 'mode').value())
+                except Exception as e:
+                    raise Exception('No controller could be defined because an error occurred\
+                     while connecting to the instrument. Error: {}'.format(str(e)))
+
+        self.controller.set_mode(self.settings.child('KeithleyParams', 'mode').value())
 
         # initialize viewers with the future type of data
-        self.data_grabed_signal.emit([DataFromPlugins(name='Keithley2110', data=[0], dim='Data0D', labels=['Meas', 'Time'])])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Keithley2110', data=[np.array([0])], dim='Data0D', labels=['Meas', 'Time'])])
 
         self.status.initialized = True
         self.status.controller = self.controller
@@ -91,7 +100,7 @@ class DAQ_0DViewer_Keithley2110(DAQ_Viewer_base):
 
         """
         data = self.controller.read()
-        self.data_grabed_signal.emit([utils.DataFromPlugins(name='K2110', data=[[data]], dim='Data0D',)])
+        self.data_grabed_signal.emit([DataFromPlugins(name='K2110', data=[np.array([data])], dim='Data0D',)])
         self.ind_data += 1
 
     def stop(self):

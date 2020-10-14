@@ -1,4 +1,18 @@
-import pyvisa as visa
+try:
+    # use PyVISA-py
+    import visa
+    pyvisa_backend = '@py'
+except:
+    # use pyvisa
+    import pyvisa as visa
+    pyvisa_backend = '@ni'
+
+def listDevices():
+    rm = visa.ResourceManager()
+    devices=rm.list_resources()
+    if len(devices) == 0:
+        devices = ('no devices')
+    return(list(devices))
 
 
 class Keithley2110VISADriver:
@@ -8,16 +22,16 @@ class Keithley2110VISADriver:
         Please refer to the instrument reference manual available at:
         https://download.tek.com/manual/2110-901-01(C-Aug2013)(Ref).pdf
     """
-    def __init__(self, rsrc_name, pyvisa_backend='@ni'):
+    def __init__(self,rsrc_name) -> object:
         """
         Parameters
         ----------
         rsrc_name   (string)        VISA Resource name
         pyvisa_backend  (string)    Expects a pyvisa backend identifier or a path to the visa backend dll (ref. to pyvisa)
         """
-        rm = visa.highlevel.ResourceManager(pyvisa_backend)
-        self._instr = rm.open_resource(rsrc_name)
 
+        rm = visa.ResourceManager()
+        self._instr = rm.open_resource(rsrc_name)
         self._instr.read_termination = '\n'
         self._instr.write_termination = '\n'
 
@@ -75,8 +89,9 @@ class Keithley2110VISADriver:
 
 
 if __name__ == "__main__":
+    devices=listDevices()
     try:
-        k2110 = Keithley2110VISADriver("K2110")
+        k2110 = Keithley2110VISADriver('ASRL/dev/ttyS4::INSTR')
         k2110.reset()
         k2110.set_mode('Ohm2')
         k2110.set_mode('R4W', range=10, resolution='MAX')
