@@ -46,7 +46,7 @@ class DAQ_Move_OrsaySTEM(DAQ_Move_base):
             ============== ================================================ ==========================================================================================
 
         """
-        super(DAQ_Move_OrsaySTEM, self).__init__(parent, params_state)
+        super().__init__(parent, params_state)
 
 
     def ini_stage(self, controller=None):

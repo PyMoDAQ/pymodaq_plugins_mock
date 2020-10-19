@@ -38,7 +38,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
 
         """
 
-        super(DAQ_Move_Mock,self).__init__(parent,params_state)
+        super().__init__(parent,params_state)
 
 
     def check_position(self):

@@ -57,7 +57,7 @@ class DAQ_Move_Kinesis(DAQ_Move_base):
 
 
     def __init__(self,parent=None,params_state=None):
-        super(DAQ_Move_Kinesis,self).__init__(parent,params_state)
+        super().__init__(parent,params_state)
 
 
         self.controller=None

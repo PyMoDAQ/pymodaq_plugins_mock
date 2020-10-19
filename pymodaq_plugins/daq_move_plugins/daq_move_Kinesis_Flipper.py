@@ -60,13 +60,12 @@ class DAQ_Move_Kinesis_Flipper(DAQ_Move_base):
                         
                         ]}]+comon_parameters
 
-
-    def __init__(self,parent=None,params_state=None):
-        super(DAQ_Move_Kinesis_Flipper,self).__init__(parent,params_state)
+    def __init__(self, parent=None, params_state=None):
+        super().__init__(parent, params_state)
         self.settings.child(('epsilon')).setValue(1)
-        self.settings.child('bounds','is_bounds').setValue(True)
-        self.settings.child('bounds','max_bound').setValue(1)
-        self.settings.child('bounds','min_bound').setValue(0)
+        self.settings.child('bounds', 'is_bounds').setValue(True)
+        self.settings.child('bounds', 'max_bound').setValue(1)
+        self.settings.child('bounds', 'min_bound').setValue(0)
 
         try:
             #Kinesis_path=os.environ['Kinesis'] #environement variable pointing to 'C:\\Program Files\\Thorlabs\\Kinesis'

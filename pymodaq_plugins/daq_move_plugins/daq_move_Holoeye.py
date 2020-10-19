@@ -64,7 +64,7 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
                         
                         ]}]+comon_parameters
 
-    def __init__(self,parent=None,params_state=None):
+    def __init__(self, parent=None, params_state=None):
         """
             Initialize the the class
 
@@ -77,12 +77,12 @@ class DAQ_Move_Holoeye(DAQ_Move_base):
 
         """
 
-        super(DAQ_Move_Holoeye,self).__init__(parent,params_state)
+        super().__init__(parent, params_state)
         self.settings.child(('scaling')).hide()
-        self.calibration=None 
-        self.data_uchar=None
+        self.calibration = None
+        self.data_uchar = None
 
-    def ini_stage(self,controller=None):
+    def ini_stage(self, controller=None):
         """
             Initialize the controller and stages (axes) with given parameters.
 

@@ -48,7 +48,7 @@ class DAQ_Move_Conex(DAQ_Move_base):
 
 
     def __init__(self,parent=None,params_state=None):
-        super(DAQ_Move_Conex,self).__init__(parent,params_state)
+        super().__init__(parent,params_state)
         self.settings.child(('epsilon')).setValue(0.0001)
 
         #to be adjusted on the different computers

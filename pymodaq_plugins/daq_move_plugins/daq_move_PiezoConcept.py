@@ -40,7 +40,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
                         ]}]+comon_parameters
 
     def __init__(self,parent=None,params_state=None):
-        super(DAQ_Move_PiezoConcept, self).__init__(parent, params_state)
+        super().__init__(parent, params_state)
 
         self.controller=None
         self.settings.child(('epsilon')).setValue(1)
