@@ -2,7 +2,7 @@ import os, fnmatch
 import importlib
 from pymodaq.daq_utils import daq_utils as utils
 
-logger = utils.set_logger('viewerND_plugins', add_to_console=True)
+logger = utils.set_logger('viewerND_plugins', add_to_console=False)
 
 path = os.path.abspath(__file__)
 (path, tail) = os.path.split(path)

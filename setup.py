@@ -82,7 +82,7 @@ setup(
     #           'style': helpers.StyleCommand},
     packages=find_packages(),
     package_data={'': ['*.dll']},
-
+    entry_points={'pymodaq.plugins': 'default = pymodaq_plugins'},
     install_requires=[
         'pymodaq>=2.0',
         ],

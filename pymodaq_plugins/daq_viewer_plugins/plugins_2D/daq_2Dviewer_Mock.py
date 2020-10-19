@@ -142,8 +142,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             self.x_axis = self.get_xaxis()
             self.y_axis = self.get_yaxis()
 
-            # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit(self.average_data(1))
+            # initialize viewers with the future type of data but with 0value data
+            self.data_grabed_signal_temp.emit(self.average_data(1, True))
                                                #OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
 
             self.status.x_axis = self.x_axis
@@ -229,14 +229,14 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             QThread.msleep(000)
             self.data_grabed_signal.emit(data)
 
-    def average_data(self, Naverage):
+    def average_data(self, Naverage, init=False):
         data = []  # list of image (at most 3 for red, green and blue channels)
         data_tmp = np.zeros_like(self.image)
         for ind in range(Naverage):
             data_tmp += self.set_Mock_data()
         data_tmp = data_tmp / Naverage
 
-        data_tmp = data_tmp * (data_tmp >= self.settings.child('threshold').value())
+        data_tmp = data_tmp * (data_tmp >= self.settings.child('threshold').value()) * (init is False)
         for ind in range(self.settings.child(('Nimagespannel')).value()):
             datatmptmp = []
             for indbis in range(self.settings.child(('Nimagescolor')).value()):

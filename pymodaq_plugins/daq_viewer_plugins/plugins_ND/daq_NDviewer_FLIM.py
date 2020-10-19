@@ -55,7 +55,7 @@ stage_params = [{'title': 'Stage Settings:', 'name': 'stage_settings', 'type': '
                     ]}]
 
 
-class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
+class DAQ_NDViewer_FLIM(DAQ_1DViewer_TH260):
     """
         ==================== ==================
         **Atrributes**        **Type**
@@ -76,7 +76,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
     def __init__(self, parent=None, params_state=None):
 
-        super(DAQ_2DViewer_FLIM, self).__init__(parent, params_state) #initialize base class with commom attributes and methods
+        super().__init__(parent, params_state) #initialize base class with commom attributes and methods
         self.settings.child('acquisition', 'acq_type').setOpts(limits=['Counting', 'Histo', 'T3', 'FLIM'])
         self.settings.child('acquisition', 'acq_type').setValue('Histo')
 
@@ -91,7 +91,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
     def commit_settings(self, param):
 
         if param.name() not in custom_tree.iter_children(self.settings.child(('stage_settings'))):
-            super(DAQ_2DViewer_FLIM, self).commit_settings(param)
+            super().commit_settings(param)
 
         else:
             if param.name() == 'time_interval':
@@ -115,7 +115,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         try:
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-                super(DAQ_2DViewer_FLIM, self).emit_data()
+                super().emit_data()
 
             elif mode == 'FLIM':
                 self.stop_scanner.emit()
@@ -138,7 +138,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         try:
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-                super(DAQ_2DViewer_FLIM, self).emit_data_tmp()
+                super().emit_data_tmp()
 
             elif mode == 'FLIM':
 
@@ -211,7 +211,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         """
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
-            self.status = super(DAQ_2DViewer_FLIM, self).ini_detector(controller)
+            self.status = super().ini_detector(controller)
 
             self.ini_stage()
             self.status.x_axis = self.x_axis
@@ -287,7 +287,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
         """
 
         """
-        super(DAQ_2DViewer_FLIM, self).close()
+        super().close()
         self.stage.close_communication()
 
     def set_acq_mode(self, mode='FLIM', update=False):
@@ -311,7 +311,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
         if mode != self.actual_mode or update:
             if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-                super(DAQ_2DViewer_FLIM, self).set_acq_mode(mode, update)
+                super().set_acq_mode(mode, update)
 
             elif mode == 'FLIM':
 
@@ -348,7 +348,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
             self.acq_done = False
             mode = self.settings.child('acquisition', 'acq_type').value()
             if mode == 'Counting' or mode == 'Histo' or mode == 'T3':
-                super(DAQ_2DViewer_FLIM, self).grab_data(Naverage, **kwargs)
+                super().grab_data(Naverage, **kwargs)
 
             elif mode == 'FLIM':
                 self.ind_reading = 0
@@ -445,7 +445,7 @@ class DAQ_2DViewer_FLIM(DAQ_1DViewer_TH260):
 
 
     def stop(self):
-        super(DAQ_2DViewer_FLIM, self).stop()
+        super().stop()
         self.stop_scanner.emit()
         try:
             self.move_at_navigator(0, 0)
