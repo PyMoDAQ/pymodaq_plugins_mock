@@ -37,7 +37,7 @@ class DAQ_Move_PI(DAQ_Move_base):
     devices = []
     #GCS_path = "C:\\Program Files (x86)\\PI\\GCSTranslator"
 
-    dll_name=''
+    dll_name = ''
     for GCS_path_tmp in GCS_paths:
         try:
             #check for installed dlls
@@ -227,11 +227,11 @@ class DAQ_Move_PI(DAQ_Move_base):
         self.enumerate_devices()
 
     def check_dll_exist(self, dll_name):
-        files=os.listdir(os.path.split(self.settings.child(('gcs_lib')).value())[0])
-        machine=''
+        files = os.listdir(os.path.split(self.settings.child(('gcs_lib')).value())[0])
+        machine = ''
         if '64' in platform.machine():
             machine = '64'
-        res= (False,'')
+        res = (False, '')
         for file in files:
             if 'dll' in file and machine in file and dll_name in file:
                 res = (True, file)
