@@ -295,11 +295,12 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                 list of devices
         """
         try:
-            buff=cls.PyDAQmx.create_string_buffer(128)
-            cls.PyDAQmx.DAQmxGetSysDevNames(buff,len(buff));
-            devices=buff.value.decode().split(',')
+            buff = cls.PyDAQmx.create_string_buffer(128)
+            cls.PyDAQmx.DAQmxGetSysDevNames(buff, len(buff));
+            devices = buff.value.decode().split(',')
             return devices
-        except: return []
+        except:
+            return []
 
 
     def update_NIDAQ_channels(self,devices=None,type_signal=None):
@@ -328,10 +329,10 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                 channels_tot = []
                 for device in devices:
                     buff = self.PyDAQmx.create_string_buffer(1024)
-                    if type_signal == DAQ_NIDAQ_source(0).name: #analog input
-                        self.PyDAQmx.DAQmxGetDevAIPhysicalChans(device,buff,len(buff))
+                    if type_signal == DAQ_NIDAQ_source(0).name:  # analog input
+                        self.PyDAQmx.DAQmxGetDevAIPhysicalChans(device, buff, len(buff))
 
-                    elif type_signal == DAQ_NIDAQ_source(1).name: #counter
+                    elif type_signal == DAQ_NIDAQ_source(1).name:  # counter
                         self.PyDAQmx.DAQmxGetDevCIPhysicalChans(device, buff, len(buff))
 
                     channels = buff.value.decode()[:].split(',')
@@ -386,7 +387,7 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
                 channels_name = [child.name() for child in self.settings.child('ai_settings', 'ai_channels').children()]
 
                 for ind_channel, channel in enumerate(channels):
-                    ai_type = self.settings.child('ai_settings', 'ai_channels' , channels_name[ind_channel], 'ai_type').value()
+                    ai_type = self.settings.child('ai_settings', 'ai_channels', channels_name[ind_channel], 'ai_type').value()
                     termination = DAQ_termination[self.settings.child('ai_settings', 'ai_channels' ,
                                                             channels_name[ind_channel],'termination').value()].value
 
@@ -452,9 +453,9 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             --------
             daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
+        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
-            if self.settings.child(('controller_status')).value()=="Slave":
+            if self.settings.child(('controller_status')).value() == "Slave":
                 if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
@@ -464,9 +465,9 @@ class DAQ_NIDAQmx(DAQ_Viewer_base):
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[str(e),'log']))
-            self.status.info=str(e)
-            self.status.initialized=False
+            self.emit_status(ThreadCommand('Update_Status', [str(e), 'log']))
+            self.status.info = str(e)
+            self.status.initialized = False
             return self.status
 
     def close(self):
