@@ -148,6 +148,7 @@ class Counter(Channel):
         super().__init__(**kwargs)
         self.edge = edge
 
+
 class NiDAQmx:
 
     def __init__(self):
@@ -257,7 +258,7 @@ class NiDAQmx:
 
         return channels_tot
 
-    def update_task(self, channels=[AIChannel()], clock_settings=ClockSettings()):
+    def update_task(self, channels=[], clock_settings=ClockSettings()):
         """
 
         """
