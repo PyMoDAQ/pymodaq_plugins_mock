@@ -1,5 +1,5 @@
 from plugin_info import SHORT_PLUGIN_NAME, packages_required, package_url, author_email, author, description
-PLUGIN_NAME = f'pymodaq_plugins_{SHORT_PLUGIN_NAME}'
+PLUGIN_NAME = f'pymodaq_plugins'
 
 import importlib
 import sys
