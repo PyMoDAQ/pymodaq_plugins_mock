@@ -20,8 +20,8 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import pymodaq.daq_utils.custom_parameter_tree as custom_tree
 
-from pymodaq_plugins.hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
-from pymodaq_plugins.daq_viewer_plugins.plugins_1D.daq_1Dviewer_TH260 import DAQ_1DViewer_TH260, T3Reader
+from pymodaq_plugins_piezoconcept.hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
+from pymodaq_plugins_picoquant.daq_viewer_plugins.plugins_1D.daq_1Dviewer_TH260 import DAQ_1DViewer_TH260, T3Reader
 import time
 
 # find available COM ports
