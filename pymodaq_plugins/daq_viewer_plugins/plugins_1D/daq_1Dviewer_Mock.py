@@ -6,7 +6,7 @@ from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.daq_utils.daq_utils import gauss1D
 from pymodaq.daq_viewer.utility_classes import comon_parameters
-from pymodaq_plugins.daq_viewer_plugins.plugins_1D.daq_1Dviewer_Mock_spectro import DAQ_1DViewer_Mock_spectro
+from .daq_1Dviewer_Mock_spectro import DAQ_1DViewer_Mock_spectro
 
 class DAQ_1DViewer_Mock(DAQ_1DViewer_Mock_spectro):
     """
