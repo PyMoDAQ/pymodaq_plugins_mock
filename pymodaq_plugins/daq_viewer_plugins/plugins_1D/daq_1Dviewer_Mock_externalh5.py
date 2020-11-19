@@ -4,12 +4,9 @@ import os
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
-from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, get_new_file_name, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
-from pyqtgraph.parametertree import Parameter, ParameterTree
-import pyqtgraph.parametertree.parameterTypes as pTypes
-import pymodaq.daq_utils.custom_parameter_tree as custom_tree
+import pymodaq.daq_utils.parameter.custom_parameter_tree as custom_tree
 from pymodaq.daq_utils.h5modules import H5Saver
 
 class DAQ_1DViewer_Mock_externalh5(DAQ_Viewer_base):

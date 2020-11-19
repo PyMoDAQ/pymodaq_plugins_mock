@@ -3,12 +3,9 @@ from PyQt5 import QtWidgets
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict
-from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
-from pyqtgraph.parametertree import Parameter, ParameterTree
-import pyqtgraph.parametertree.parameterTypes as pTypes
-import pymodaq.daq_utils.custom_parameter_tree as custom_tree
+from pymodaq.daq_utils.parameter import ioxml
 
 
 class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
@@ -57,15 +54,14 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     ]
     hardware_averaging = False
 
-    def __init__(self,parent=None,params_state=None): #init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super().__init__(parent,params_state)
+    def __init__(self, parent=None,
+                 params_state=None):  # init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
+        super().__init__(parent, params_state)
 
+        self.x_axis = Axis(label='photon wavelength', units='nm')
+        self.ind_data = 0
 
-        self.x_axis=Axis(label='photon wavelength', units='nm')
-        self.ind_data=0
-
-
-    def commit_settings(self,param):
+    def commit_settings(self, param):
         """
             Setting the mock data
 
@@ -78,7 +74,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        if param.name() in custom_tree.iter_children(self.settings.child(('x_axis')), []):
+        if param.name() in ioxml.iter_children(self.settings.child(('x_axis')), []):
             if param.name() == 'x0':
                 self.get_spectro_wl()
 
@@ -87,8 +83,6 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         else:
             self.set_Mock_data()
-
-
 
     def set_Mock_data(self):
         """
@@ -103,32 +97,35 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
                 The computed data_mock list.
         """
         ind = -1
-        self.data_mock=[]
+        self.data_mock = []
         data = np.zeros(self.x_axis['data'].shape)
-        for param in self.settings.children():#
+        for param in self.settings.children():  #
             if 'Mock' in param.name():
-                ind+=1
+                ind += 1
 
-
-                data_tmp=param.child(('Amp')).value()*gauss1D(self.x_axis['data'],param.child(('x0')).value(),param.child(('dx')).value(),param.child(('n')).value())
+                data_tmp = param.child(('Amp')).value() * gauss1D(self.x_axis['data'], param.child(('x0')).value(),
+                                                                  param.child(('dx')).value(),
+                                                                  param.child(('n')).value())
                 if ind == 0:
                     data_tmp = data_tmp * np.sin(self.x_axis['data'] / 4) ** 2
-                data_tmp+=param.child(('amp_noise')).value()*np.random.rand((len(self.x_axis['data'])))
-                data_tmp=self.settings.child(('exposure_ms')).value()/1000*np.roll(data_tmp,self.ind_data*self.settings.child(('rolling')).value())
+                data_tmp += param.child(('amp_noise')).value() * np.random.rand((len(self.x_axis['data'])))
+                data_tmp = self.settings.child(('exposure_ms')).value() / 1000 * np.roll(data_tmp,
+                                                                                         self.ind_data * self.settings.child(
+                                                                                             ('rolling')).value())
                 if self.settings.child(('multi')).value():
                     self.data_mock.append(data_tmp)
                 else:
-                    data+=data_tmp
+                    data += data_tmp
         if not self.settings.child(('multi')).value():
             self.data_mock.append(data)
-        self.ind_data+=1
+        self.ind_data += 1
         return self.data_mock
 
     def set_x_axis(self):
         Npts = self.settings.child('x_axis', 'Npts').value()
         x0 = self.settings.child('x_axis', 'x0').value()
         dx = self.settings.child('x_axis', 'dx').value()
-        self.x_axis['data'] = linspace_step(x0 - (Npts-1) * dx / 2, x0 + (Npts-1) * dx / 2, dx)
+        self.x_axis['data'] = linspace_step(x0 - (Npts - 1) * dx / 2, x0 + (Npts - 1) * dx / 2, dx)
         self.emit_x_axis()
 
     def set_spectro_wl(self, spectro_wl):
@@ -143,7 +140,6 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         QtWidgets.QApplication.processEvents()
         self.emit_status(ThreadCommand('spectro_wl', [self.settings.child('x_axis', 'x0').value()]))
         self.set_x_axis()
-
 
     def get_spectro_wl(self):
         """
@@ -168,7 +164,6 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         QtWidgets.QApplication.processEvents()
         self.emit_status(ThreadCommand('laser_wl', [self.settings.child(('laser_wl')).value()]))
 
-
     def get_exposure_ms(self):
         self.emit_status(ThreadCommand('exposure_ms', [self.settings.child(('exposure_ms')).value()]))
 
@@ -185,32 +180,32 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data, daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False,info="",x_axis=None,y_axis=None,controller=None))
+        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
 
-            if self.settings.child(('controller_status')).value()=="Slave":
-                if controller is None: 
+            if self.settings.child(('controller_status')).value() == "Slave":
+                if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
-                    self.controller=controller
+                    self.controller = controller
             else:
-                self.controller="Mock controller"
+                self.controller = "Mock controller"
             self.set_x_axis()
             self.set_Mock_data()
 
             # initialize viewers with the future type of data
             self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=self.data_mock, dim='Data1D',
-                x_axis= self.x_axis, labels=['Mock1', 'label2']),])
+                                                               x_axis=self.x_axis, labels=['Mock1', 'label2']), ])
 
-            self.status.initialized=True
-            self.status.controller=self.controller
+            self.status.initialized = True
+            self.status.controller = self.controller
             self.status.x_axis = self.x_axis
             return self.status
 
         except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status',[getLineInfo()+ str(e),'log']))
-            self.status.info=getLineInfo()+ str(e)
-            self.status.initialized=False
+            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
+            self.status.info = getLineInfo() + str(e)
+            self.status.initialized = False
             return self.status
 
     def close(self):
@@ -218,9 +213,6 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             Not implemented.
         """
         pass
-
-
-
 
     def grab_data(self, Naverage=1, **kwargs):
         """
@@ -262,5 +254,5 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         """
             not implemented.
         """
-        
+
         return ""
