@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 from os.path import abspath, dirname
 
 
-VERSION = (3, 0, 0, 'final', 0)
+VERSION = (3, 0, 1, 'final', 0)
 
 
 
