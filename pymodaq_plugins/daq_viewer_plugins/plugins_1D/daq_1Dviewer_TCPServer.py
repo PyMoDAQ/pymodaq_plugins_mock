@@ -29,14 +29,6 @@ class DAQ_1DViewer_TCPServer(DAQ_Viewer_TCP_server):
     def __init__(self, parent=None, params_state=None):
         super().__init__(parent, params_state,
                          grabber_type='1D')  # initialize base class with commom attributes and methods
-        # server=DAQ_TCP_server(parent,params_state)
-        # server.data_grabed_signal.connect(self.data_ready)
-        # self.server_thread=QThread()
-        ##server.moveToThread(self.server_thread)
-        # self.command_server[list].connect(server.queue_command)
-
-        # self.server_thread.server=server
-        # self.server_thread.start()
 
         self.x_axis = None
         self.y_axis = None

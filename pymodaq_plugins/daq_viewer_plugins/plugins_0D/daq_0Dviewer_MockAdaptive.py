@@ -26,6 +26,7 @@ xaxis = np.linspace(*xlim, Npts)
 yaxis = np.linspace(*ylim, Npts)
 x_axis1D = np.linspace(-5, 5, 501)
 
+
 def random_hypergaussians2D(xy, coeff=1):
     x, y = xy
     if not hasattr(x, '__len__'):
@@ -34,8 +35,8 @@ def random_hypergaussians2D(xy, coeff=1):
         y = [y]
     signal = np.zeros((len(x), len(y)))
     for ind in range(Nstruct):
-        signal += amp[ind] * utils.gauss2D(x, x0s[ind], coeff*dx[ind], y, y0s[ind], coeff*dy[ind], 2)
-    signal += 0.1*np.random.rand(len(x), len(y))
+        signal += amp[ind] * utils.gauss2D(x, x0s[ind], coeff * dx[ind], y, y0s[ind], coeff * dy[ind], 2)
+    signal += 0.1 * np.random.rand(len(x), len(y))
     return signal
 
 
@@ -46,7 +47,7 @@ def random_hypergaussians2D_signal(xy, coeff=1.0):
 def random_hypergaussians1D(x, coeff=1):
     signal = 0.
     for ind in range(Nstruct):
-        signal += amp[ind] * utils.gauss1D(x, x0s[ind], coeff*dx[ind], 2)
+        signal += amp[ind] * utils.gauss1D(x, x0s[ind], coeff * dx[ind], 2)
     return signal
 
 
@@ -58,19 +59,22 @@ def diverging2D(xy, coeff=1.0):
         y = [y]
     signal = np.zeros((len(x), len(y)))
     for ind in range(Nstruct):
-        signal += amp[ind] * (coeff*slope[ind])**2 / ((coeff*slope[ind])**2 +
-                                                      (np.sqrt((x - x0s[ind])**2+(y - y0s[ind])**2)**2))
+        signal += amp[ind] * (coeff * slope[ind]) ** 2 / (
+            (coeff * slope[ind]) ** 2 + (np.sqrt((x - x0s[ind]) ** 2 + (y - y0s[ind]) ** 2) ** 2))
         signal += 0.1 * np.random.rand(len(x), len(y))
     return signal
+
 
 def diverging2D_signal(xy, coeff=1.0):
     return diverging2D(xy, coeff)[0, 0]
 
+
 def diverging1D(x, coeff=1.0):
     signal = 0
     for ind in range(Nstruct):
-        signal += amp[ind] * (coeff*slope[ind])**2 / ((coeff*slope[ind])**2 + (x - x0s[ind])**2)
+        signal += amp[ind] * (coeff * slope[ind]) ** 2 / ((coeff * slope[ind]) ** 2 + (x - x0s[ind]) ** 2)
     return signal
+
 
 class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
     """
@@ -84,7 +88,7 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Show Scanner:', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
-        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'],},
+        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'], },
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
     ]
 
@@ -111,7 +115,6 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
         """
         if param.name() == 'wait_time':
             self.emit_status(utils.ThreadCommand('update_main_settings', [['wait_time'], param.value(), 'value']))
-
 
     def ini_detector(self, controller=None):
         """

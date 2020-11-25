@@ -34,8 +34,8 @@ def random_hypergaussians2D(xy, coeff=1):
         y = [y]
     signal = np.zeros((len(y), len(x)))
     for ind in range(Nstruct):
-        signal += amp[ind] * utils.gauss2D(x, x0s[ind], coeff*dx[ind], y, y0s[ind], coeff*dy[ind], 2)
-    signal += 0.1*np.random.rand(len(y), len(x))
+        signal += amp[ind] * utils.gauss2D(x, x0s[ind], coeff * dx[ind], y, y0s[ind], coeff * dy[ind], 2)
+    signal += 0.1 * np.random.rand(len(y), len(x))
     return signal
 
 
@@ -51,13 +51,15 @@ def diverging2D(xy, coeff=1.0):
         y = [y]
     signal = np.zeros((len(y), len(x)))
     for ind in range(Nstruct):
-        signal += amp[ind] * (coeff*slope[ind])**2 / ((coeff*slope[ind])**2 +
-                                                      (np.sqrt((x - x0s[ind])**2+(y - y0s[ind])**2)**2))
+        signal += amp[ind] * (coeff * slope[ind]) ** 2 / ((coeff * slope[ind]) ** 2 + (np.sqrt(
+            (x - x0s[ind]) ** 2 + (y - y0s[ind]) ** 2) ** 2))
         signal += 0.1 * np.random.rand(len(y), len(x))
     return signal
 
+
 def diverging2D_signal(xy, coeff=1.0):
     return diverging2D(xy, coeff)[0, 0]
+
 
 class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
     """
@@ -72,7 +74,7 @@ class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Show Scanner', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
         {'title': 'Show Navigator', 'name': 'show_navigator', 'type': 'bool_push', 'value': False},
-        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'],},
+        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'], },
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
     ]
 
@@ -122,8 +124,6 @@ class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
         self.Ny = self.y_axis.size
         self.datas = np.zeros((self.Nx, self.Ny))
         self.ind_grab = 0
-
-
 
     def ini_detector(self, controller=None):
         """
@@ -189,15 +189,16 @@ class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
 
                 if fun_type == 'Gaussians':
                     self.datas[self.scan_parameters.axes_indexes[ind, 1],
-                    self.scan_parameters.axes_indexes[ind, 0]] = random_hypergaussians2D_signal(positions, coeff)
+                               self.scan_parameters.axes_indexes[ind, 0]] = random_hypergaussians2D_signal(positions,
+                                                                                                           coeff)
                 else:
                     self.datas[self.scan_parameters.axes_indexes[ind, 1],
                                self.scan_parameters.axes_indexes[ind, 0]] = diverging2D_signal(positions, coeff)
-                if ind % 100 == 0:  #refresh plot every 100 grabed points
+                if ind % 100 == 0:  # refresh plot every 100 grabed points
                     self.data_grabed_signal_temp.emit([utils.DataFromPlugins(name='MockScanner', data=[self.datas],
-                                                                    dim='Data2D',
-                                                                    x_axis=utils.Axis(data=self.x_axis),
-                                                                    y_axis=utils.Axis(data=self.y_axis))])
+                                                                             dim='Data2D',
+                                                                             x_axis=utils.Axis(data=self.x_axis),
+                                                                             y_axis=utils.Axis(data=self.y_axis))])
                     QtWidgets.QApplication.processEvents()
                     QThread.msleep(100)
 

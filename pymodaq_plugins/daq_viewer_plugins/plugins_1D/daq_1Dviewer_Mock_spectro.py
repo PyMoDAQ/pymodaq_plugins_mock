@@ -5,7 +5,7 @@ import numpy as np
 from easydict import EasyDict as edict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, gauss1D, linspace_step, DataFromPlugins, Axis
 from pymodaq.daq_viewer.utility_classes import comon_parameters
-from pymodaq.daq_utils.parameter import ioxml
+from pymodaq.daq_utils.parameter.utils import iter_children
 
 
 class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
@@ -27,27 +27,27 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
     """
     params = comon_parameters + [
-        {'name': 'rolling', 'type': 'int', 'value': 0, 'min': 0},
-        {'name': 'multi', 'type': 'bool', 'value': False,
+        {'title': 'Rolling?:', 'name': 'rolling', 'type': 'int', 'value': 0, 'min': 0},
+        {'title': 'Multi pannel?:', 'name': 'multi', 'type': 'bool', 'value': False,
          'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
-        {'name': 'Mock1', 'type': 'group', 'children': [
-            {'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
-            {'name': 'x0', 'type': 'float', 'value': 500, 'default': 500},
-            {'name': 'dx', 'type': 'float', 'value': 0.3, 'default': 20},
-            {'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
-            {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
+        {'title': 'Mock1:', 'name': 'Mock1', 'type': 'group', 'children': [
+            {'title': 'Amp:', 'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
+            {'title': 'x0:', 'name': 'x0', 'type': 'float', 'value': 500, 'default': 500},
+            {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 0.3, 'default': 20},
+            {'title': 'n:', 'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
+            {'title': 'noise:', 'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
         ]},
-        {'name': 'Mock2', 'type': 'group', 'children': [
-            {'name': 'Amp', 'type': 'int', 'value': 10},
-            {'name': 'x0', 'type': 'float', 'value': 520},
-            {'name': 'dx', 'type': 'float', 'value': 0.7},
-            {'name': 'n', 'type': 'int', 'value': 2, 'default': 2, 'min': 1},
-            {'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}, ]},
+        {'title': 'Mock2:', 'name': 'Mock2', 'type': 'group', 'children': [
+            {'title': 'Amp?:', 'name': 'Amp', 'type': 'int', 'value': 10},
+            {'title': 'x0:', 'name': 'x0', 'type': 'float', 'value': 520},
+            {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 0.7},
+            {'title': 'n:', 'name': 'n', 'type': 'int', 'value': 2, 'default': 2, 'min': 1},
+            {'title': 'noise:', 'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}, ]},
 
-        {'name': 'x_axis', 'type': 'group', 'children': [
-            {'name': 'Npts', 'type': 'int', 'value': 513, },
-            {'name': 'x0', 'type': 'float', 'value': 515, },
-            {'name': 'dx', 'type': 'float', 'value': 0.1, },
+        {'title': 'xaxis:', 'name': 'x_axis', 'type': 'group', 'children': [
+            {'title': 'Npts:', 'name': 'Npts', 'type': 'int', 'value': 513, },
+            {'title': 'x0:', 'name': 'x0', 'type': 'float', 'value': 515, },
+            {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 0.1, },
         ]},
         {'title': 'Laser Wavelength', 'name': 'laser_wl', 'type': 'list', 'value': 515, 'values': [405, 515, 632.8]},
         {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'float', 'value': 100}
@@ -74,7 +74,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        if param.name() in ioxml.iter_children(self.settings.child(('x_axis')), []):
+        if param.name() in iter_children(self.settings.child(('x_axis')), []):
             if param.name() == 'x0':
                 self.get_spectro_wl()
 
@@ -89,7 +89,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             For each parameter of the settings tree :
                 * compute linspace numpy distribution with local parameters values
                 * shift right the current data of ind_data position
-                * add computed results to the data_mock list 
+                * add computed results to the data_mock list
 
             Returns
             -------
@@ -217,14 +217,12 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     def grab_data(self, Naverage=1, **kwargs):
         """
             | Start new acquisition
-            | 
 
             For each integer step of naverage range:
                 * set mock data
                 * wait 100 ms
                 * update the data_tot array
 
-            | 
             | Send the data_grabed_signal once done.
 
             =============== ======== ===============================================

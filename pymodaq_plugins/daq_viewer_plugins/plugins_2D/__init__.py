@@ -10,5 +10,3 @@ for path in Path(__file__).parent.iterdir():
     except Exception as e:
         logger.warning("{:} plugin couldn't be loaded due to some missing packages or errors: {:}".format(path.stem, str(e)))
         pass
-
-

@@ -8,6 +8,4 @@ for path in Path(__file__).parent.iterdir():
         if '__init__' not in str(path):
             importlib.import_module('.' + path.stem, __package__)
     except Exception as e:
-        logger.warning("{:} plugin couldn't be loaded due to some missing packages or errors: {:}".format(path.stem, str(e)))
-        pass
-
+        logger.warning(f"{path.stem} plugin couldn't be loaded due to some missing packages or errors: {str(e)}")
