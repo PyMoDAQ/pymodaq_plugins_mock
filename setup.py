@@ -42,10 +42,9 @@ setupOpts = dict(
 setup(
     version=version.get_version(),
     packages=find_packages(),
-    package_data={'': ['*.dll']},
     entry_points={'pymodaq.plugins': f'default = {PLUGIN_NAME}'},
     install_requires=[
-        'pymodaq>=2.0',
+        'pymodaq >= 2.0.0',
         ]+packages_required,
     **setupOpts
 )
