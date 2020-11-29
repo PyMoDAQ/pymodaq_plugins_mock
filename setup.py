@@ -44,7 +44,6 @@ setup(
     packages=find_packages(),
     entry_points={'pymodaq.plugins': f'default = {PLUGIN_NAME}'},
     install_requires=[
-        'pymodaq >= 2.0.0',
         ]+packages_required,
     **setupOpts
 )
