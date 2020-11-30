@@ -21,6 +21,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Separated viewers', 'name': 'sep_viewers', 'type': 'bool', 'value': False},
+        {'title': 'Show in LCD', 'name': 'lcd', 'type': 'bool', 'value': False},
         {'name': 'Mock1', 'name': 'Mock1', 'type': 'group', 'children': [
             {'title': 'Npts', 'name': 'Npts', 'type': 'int', 'value': 200, 'default': 200, 'min': 10},
             {'title': 'Amp', 'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20, 'min': 1},
@@ -43,6 +44,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         super(DAQ_0DViewer_Mock, self).__init__(parent, params_state)
         self.x_axis = None
         self.ind_data = 0
+        self.lcd_init = False
 
     def commit_settings(self, param):
         """
@@ -67,7 +69,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             and add computed results to the data_mock list.
         """
         self.data_mock = []
-        for param in self.settings.children():  # the first one is ROIselect only valid in the 2D case
+        for param in self.settings.children():
             if 'Mock' in param.name():
                 x = np.linspace(0, param.children()[0].value() - 1, param.children()[0].value())
                 self.data_mock.append(
@@ -145,10 +147,18 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             dat = [DataFromPlugins(name=f'Mock_{ind:03}', data=[data], dim='Data0D',
                                    labels=[f'mock data {ind:03}']) for ind, data in enumerate(data_tot)]
             self.data_grabed_signal.emit(dat)
+
         else:
             self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot,
                                                           dim='Data0D', labels=['dat0', 'data1'])])
         self.ind_data += 1
+        if self.settings.child('lcd').value():
+            if not self.lcd_init:
+                self.emit_status(ThreadCommand('init_lcd', [dict(labels=['dat0', 'data1'], Nvals=2, digits=6)]))
+                QtWidgets.QApplication.processEvents()
+                self.lcd_init = True
+
+            self.emit_status(ThreadCommand('lcd', [data_tot]))
 
     def stop(self):
         """
