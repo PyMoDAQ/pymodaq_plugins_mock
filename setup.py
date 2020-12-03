@@ -47,4 +47,3 @@ setup(
         ]+packages_required,
     **setupOpts
 )
-

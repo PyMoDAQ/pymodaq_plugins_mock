@@ -28,7 +28,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
     """
     params = comon_parameters + [
         {'title': 'Rolling?:', 'name': 'rolling', 'type': 'int', 'value': 0, 'min': 0},
-        {'title': 'Multi pannel?:', 'name': 'multi', 'type': 'bool', 'value': False,
+        {'title': 'Multi Channels?:', 'name': 'multi', 'type': 'bool', 'value': False,
          'tip': 'if true, plugin produces multiple curves (2) otherwise produces one curve with 2 peaks'},
         {'title': 'Mock1:', 'name': 'Mock1', 'type': 'group', 'children': [
             {'title': 'Amp:', 'name': 'Amp', 'type': 'int', 'value': 20, 'default': 20},
@@ -50,7 +50,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 0.1, },
         ]},
         {'title': 'Laser Wavelength', 'name': 'laser_wl', 'type': 'list', 'value': 515, 'values': [405, 515, 632.8]},
-        {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'float', 'value': 100}
+        {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'int', 'value': 100}
     ]
     hardware_averaging = False
 
@@ -99,24 +99,27 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         ind = -1
         self.data_mock = []
         data = np.zeros(self.x_axis['data'].shape)
+        exposure_factor = self.settings.child('exposure_ms').value() / \
+            self.settings.child('exposure_ms').opts['default']
+
         for param in self.settings.children():  #
             if 'Mock' in param.name():
                 ind += 1
 
-                data_tmp = param.child(('Amp')).value() * gauss1D(self.x_axis['data'], param.child(('x0')).value(),
-                                                                  param.child(('dx')).value(),
-                                                                  param.child(('n')).value())
+                data_tmp = exposure_factor * \
+                    param.child('Amp').value() * gauss1D(self.x_axis['data'], param.child('x0').value(),
+                                                           param.child('dx').value(),
+                                                           param.child('n').value())
                 if ind == 0:
                     data_tmp = data_tmp * np.sin(self.x_axis['data'] / 4) ** 2
-                data_tmp += param.child(('amp_noise')).value() * np.random.rand((len(self.x_axis['data'])))
-                data_tmp = self.settings.child(('exposure_ms')).value() / 1000 * np.roll(data_tmp,
-                                                                                         self.ind_data * self.settings.child(
-                                                                                             ('rolling')).value())
-                if self.settings.child(('multi')).value():
+                data_tmp += param.child('amp_noise').value() * np.random.rand((len(self.x_axis['data'])))
+                data_tmp = self.settings.child('exposure_ms').value() /\
+                    1000 * np.roll(data_tmp, self.ind_data * self.settings.child('rolling').value())
+                if self.settings.child('multi').value():
                     self.data_mock.append(data_tmp)
                 else:
                     data += data_tmp
-        if not self.settings.child(('multi')).value():
+        if not self.settings.child('multi').value():
             self.data_mock.append(data)
         self.ind_data += 1
         return self.data_mock
@@ -160,7 +163,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         Method related to spectrometer module, mandatory if laser can be set
         Set the "laser" position
         """
-        self.settings.child(("laser_wl")).setValue(laser_wl)
+        self.settings.child("laser_wl").setValue(laser_wl)
         QtWidgets.QApplication.processEvents()
         self.emit_status(ThreadCommand('laser_wl', [self.settings.child(('laser_wl')).value()]))
 
@@ -168,7 +171,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         self.emit_status(ThreadCommand('exposure_ms', [self.settings.child(('exposure_ms')).value()]))
 
     def set_exposure_ms(self, exposure):
-        self.settings.child(("exposure_ms")).setValue(exposure)
+        self.settings.child("exposure_ms").setValue(exposure)
         QtWidgets.QApplication.processEvents()
         self.emit_status(ThreadCommand('exposure_ms', [self.settings.child(('exposure_ms')).value()]))
 
@@ -183,7 +186,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
 
-            if self.settings.child(('controller_status')).value() == "Slave":
+            if self.settings.child('controller_status').value() == "Slave":
                 if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
@@ -239,13 +242,13 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         data_tot = self.set_Mock_data()
         for ind in range(Naverage - 1):
             data_tmp = self.set_Mock_data()
-            QThread.msleep(self.settings.child(('exposure_ms')).value())
+            QThread.msleep(self.settings.child('exposure_ms').value())
 
             for ind, data in enumerate(data_tmp):
                 data_tot[ind] += data
 
         data_tot = [data / Naverage for data in data_tot]
-        QThread.msleep(self.settings.child(('exposure_ms')).value())
+        QThread.msleep(self.settings.child('exposure_ms').value())
         self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot, dim='Data1D')])
 
     def stop(self):
