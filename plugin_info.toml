@@ -1,0 +1,12 @@
+[plugin-info]
+## To modify by developper(s) of the plugin
+SHORT_PLUGIN_NAME = ''
+package-url = 'https://github.com/CEMES-CNRS/pymodaq_plugins'
+description = 'Set of base PyMoDAQ plugins including Mock ones for development'
+
+author = 'Sébastien Weber'
+author-email = 'sebastien.weber@cemes.fr'
+
+[plugin-install]
+#packages required for your plugin:
+packages-required = [] #list of required packages within quotes, eg: ["pyvisa", "numpy==1.19.3"] ...
