@@ -50,7 +50,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 0.1, },
         ]},
         {'title': 'Laser Wavelength', 'name': 'laser_wl', 'type': 'list', 'value': 515, 'values': [405, 515, 632.8]},
-        {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'int', 'value': 100}
+        {'title': 'Exposure (ms)', 'name': 'exposure_ms', 'type': 'int', 'value': 100, 'default': 100}
     ]
     hardware_averaging = False
 
