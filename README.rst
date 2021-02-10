@@ -21,7 +21,6 @@ Authors
 
 * _S. J. Weber
 
-
 Instruments
 ===========
 Below is the list of instruments included in this plugin
@@ -50,7 +49,7 @@ Viewer2D
 ++++++++
 
 * Mock detector to test PyMoDAQ functionnalities
-*TCP server to communicate with other DAQ_Viewer or third party applications
+* TCP server to communicate with other DAQ_Viewer or third party applications
 
 ViewerND
 ++++++++
