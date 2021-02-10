@@ -1,4 +1,5 @@
-# PyMoDAQ Plugins
+PyMoDAQ Plugins
+###############
 
 .. image:: https://img.shields.io/pypi/v/pymodaq_plugins.svg
    :target: https://pypi.org/project/pymodaq_plugins/
@@ -8,18 +9,46 @@
    :target: https://pymodaq.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://github.com/CEMES-CNRS/pymodaq_plugins/workflows/Upload%20Python%20Package/badge.svg
-    :target: https://github.com/CEMES-CNRS/pymodaq_plugins/actions?query=workflow%3A%22Upload+Python+Package%22
+.. image:: https://github.com/CEMES-CNRS/pymodaq_plugins/workflows/Upload+Python+Package/badge.svg
+    :target: https://github.com/CEMES-CNRS/pymodaq_plugins
 
-![Upload Python Package](https://github.com/CEMES-CNRS/pymodaq_plugins/workflows/Upload%20Python%20Package/badge.svg)
+Plugins initially developed with PyMoDAQ. Includes Mock plugins that are plugins of virtual instruments dedicated
+to code testing for new functionalities or development.
 
-.. figure:: http://pymodaq.cnrs.fr/en/latest/_static/splash.png
-   :alt: shortcut
 
-PyMoDAQ, Modular Data Acquisition with Python, is a set of **python** modules used to perform automated measurements. 
+Authors
+=======
 
-This repository contains various Mock hardware plugins compatible with PyMoDAQ
+* S. J. Weber
 
-GitHub repo: https://github.com/CEMES-CNRS
 
-Documentation: http://pymodaq.cnrs.fr/
+Actuators
+=========
+
+* Mock actuator to test PyMoDAQ functionnalities
+* TCP server to communicate with other DAQ_Move or third party applications
+
+Viewer0D
+========
+
+* Mock detector to test PyMoDAQ functionnalities
+* Mock detector to test PyMoDAQ adaptive scan mode
+* TCP server to communicate with other DAQ_Viewer or third party applications
+
+Viewer1D
+========
+
+* Mock detector to test PyMoDAQ functionnalities",
+* Mock detector to test pymodaq_spectro functionalities",
+* TCP server to communicate with other DAQ_Viewer or third party applications"
+
+Viewer2D
+========
+
+* Mock detector to test PyMoDAQ functionnalities",
+*TCP server to communicate with other DAQ_Viewer or third party applications
+
+ViewerND
+========
+
+* Mock actuator to test PyMoDAQ functionnalities"
