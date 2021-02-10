@@ -42,17 +42,17 @@ Viewer0D
 Viewer1D
 ++++++++
 
-* Mock detector to test PyMoDAQ functionnalities",
-* Mock detector to test pymodaq_spectro functionalities",
-* TCP server to communicate with other DAQ_Viewer or third party applications"
+* Mock detector to test PyMoDAQ functionnalities
+* Mock detector to test pymodaq_spectro functionalities
+* TCP server to communicate with other DAQ_Viewer or third party applications
 
 Viewer2D
 ++++++++
 
-* Mock detector to test PyMoDAQ functionnalities",
+* Mock detector to test PyMoDAQ functionnalities
 *TCP server to communicate with other DAQ_Viewer or third party applications
 
 ViewerND
 ++++++++
 
-* Mock actuator to test PyMoDAQ functionnalities"
+* Mock actuator to test PyMoDAQ functionnalities
