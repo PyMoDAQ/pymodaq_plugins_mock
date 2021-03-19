@@ -19,7 +19,7 @@ to code testing for new functionalities or development.
 Authors
 =======
 
-* _S. J. Weber
+* Sebastien J. Weber
 
 Instruments
 ===========
