@@ -144,7 +144,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
         ## TODO for your custom plugin
         self.controller.move_at(position)
-        self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+        #self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
         ##############################
 
 
@@ -164,7 +164,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
         ## TODO for your custom plugin
         self.controller.move_at(self.target_position)
-        self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
+        #self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
         ##############################
 
         self.poll_moving()
@@ -179,7 +179,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
         ## TODO for your custom plugin
         self.controller.move_at(0)
-        self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
+        #self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
         ##############################
 
 
@@ -194,7 +194,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
       ## TODO for your custom plugin
       self.controller.stop()
-      self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+      #self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
       self.move_done() #to let the interface know the actuator stopped
       ##############################
 

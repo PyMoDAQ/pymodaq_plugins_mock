@@ -129,7 +129,10 @@ class ActuatorWrapperWithTau(ActuatorWrapper):
         """
         self._target_value = value
         self._init_value = self._current_value
-        self._alpha = math.fabs(math.log(self._espilon / math.fabs(self._init_value - self._target_value)))
+        if self._init_value != self._target_value:
+            self._alpha = math.fabs(math.log(self._espilon / math.fabs(self._init_value - self._target_value)))
+        else:
+            self._alpha = math.fabs(math.log(self._espilon / 10))
         self._start_time = perf_counter()
         self._moving = True
 
