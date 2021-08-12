@@ -49,10 +49,10 @@ Viewer1D
 Viewer2D
 ++++++++
 
-* Mock detector to test PyMoDAQ functionnalities
-* TCP server to communicate with other DAQ_Viewer or third party applications
+* **Mock 2D** detector to test PyMoDAQ functionnalities
+* **TCP server** to communicate with other DAQ_Viewer or third party applications
 
 ViewerND
 ++++++++
 
-* Mock actuator to test PyMoDAQ functionnalities
+* **Mock ND** detector to test PyMoDAQ functionnalities
