@@ -5,9 +5,10 @@ import pymodaq.daq_utils.daq_utils as mylib
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
+from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis, my_moment
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq_plugins.hardware.pid_controller import PIDMock
+from scipy.ndimage.measurements import center_of_mass
 
 class DAQ_2DViewer_MockPID(DAQ_Viewer_base):
     """
@@ -124,7 +125,6 @@ class DAQ_2DViewer_MockPID(DAQ_Viewer_base):
         """
 
         image = self.controller.set_Mock_data()
-
         QThread.msleep(100)
         self.data_grabed_signal.emit([DataFromPlugins(name='Mock2DPID', data=[image], dim='Data2D')])
 
