@@ -29,6 +29,9 @@ class DAQ_2DViewer_MockPID(DAQ_Viewer_base):
         {'title': 'dx:', 'name': 'dx', 'type': 'float', 'value': 20, 'default': 20, 'min': 1},
         {'title': 'dy:', 'name': 'dy', 'type': 'float', 'value': 40, 'default': 40, 'min': 1},
         {'title': 'Noise level:', 'name': 'noise', 'type': 'float', 'value': 4, 'default': 0.1, 'min': 0},
+        {'title': 'x0:', 'name': 'x0', 'type': 'float', 'value': 128, 'visible': False},
+        {'title': 'y0:', 'name': 'y0', 'type': 'float', 'value': 128, 'visible': False},
+        {'title': 'Threshold', 'name': 'threshold', 'type': 'float', 'value': 4.}
     ]
 
     def __init__(self, parent=None, params_state=None):
@@ -63,6 +66,10 @@ class DAQ_2DViewer_MockPID(DAQ_Viewer_base):
             self.controller.wh = (self.controller.wh[0], param.value())
         elif param.name() == 'noise':
             self.controller.noise = param.value()
+        elif param.name() == 'x0':
+            self.controller.current_positions['H'] = param.value()
+        elif param.name() == 'y0':
+            self.controller.current_positions['V'] = param.value()
 
     def ini_detector(self, controller=None):
         """
@@ -125,10 +132,38 @@ class DAQ_2DViewer_MockPID(DAQ_Viewer_base):
         """
 
         image = self.controller.set_Mock_data()
+        data = image - self.settings.child('threshold').value()
+        data[data < 0] = 0
+        y, x = center_of_mass(data)
         QThread.msleep(100)
-        self.data_grabed_signal.emit([DataFromPlugins(name='Mock2DPID', data=[image], dim='Data2D')])
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock2DPID', data=[image], dim='Data2D'),
+                                      DataFromPlugins(name='Mock0DPID', data=[np.array([x]), np.array([y])],
+                                                      dim='Data0D',
+                                                      labels=['x0', 'y0']),])
 
 
     def stop(self):
 
         return ""
+
+def main():
+    import sys
+    from pymodaq.daq_utils.gui_utils import DockArea
+    from pymodaq.daq_viewer.daq_viewer_main import DAQ_Viewer
+    app = QtWidgets.QApplication(sys.argv)
+    win = QtWidgets.QMainWindow()
+    area = DockArea()
+    win.setCentralWidget(area)
+    win.resize(1000, 500)
+    win.setWindowTitle('PyMoDAQ Viewer')
+    prog = DAQ_Viewer(area, title="Testing", DAQ_type='DAQ2D')
+    prog.detector = 'MockPID'
+    prog.init_det()
+    prog.settings.child('detector_settings', 'x0').show()
+    prog.settings.child('detector_settings', 'y0').show()
+    win.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
