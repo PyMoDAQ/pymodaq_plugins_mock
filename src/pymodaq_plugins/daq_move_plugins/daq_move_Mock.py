@@ -1,5 +1,5 @@
 from pymodaq.daq_move.utility_classes import DAQ_Move_base  # base class
-from pymodaq.daq_move.utility_classes import comon_parameters  # common set of parameters for all actuators
+from pymodaq.daq_move.utility_classes import comon_parameters_fun  # common set of parameters for all actuators
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
 
@@ -14,19 +14,10 @@ class DAQ_Move_Mock(DAQ_Move_base):
         =============== ==============
     """
     _controller_units = 'whatever'
-    is_multiaxes = True
+    is_multiaxes = False
     stage_names = []
 
-    params = [  # elements to be added in order to control your custom stage
-
-        {'title': 'MultiAxes:', 'name': 'multiaxes', 'type': 'group', 'visible': is_multiaxes, 'children': [
-            {'title': 'is Multiaxes:', 'name': 'ismultiaxes', 'type': 'bool', 'value': is_multiaxes,
-                'default': False},
-            {'title': 'Status:', 'name': 'multi_status', 'type': 'list', 'value': 'Master',
-                'values': ['Master', 'Slave']},
-            {'title': 'Axis:', 'name': 'axis', 'type': 'list', 'values': stage_names},
-
-        ]}] + comon_parameters
+    params = comon_parameters_fun(is_multiaxes, stage_names)
 
     def __init__(self, parent=None, params_state=None):
         """
