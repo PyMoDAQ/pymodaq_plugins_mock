@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QThread
+from qtpy.QtCore import QThread
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 import numpy as np
 from easydict import EasyDict as edict

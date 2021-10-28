@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal, QThread
+from qtpy import QtWidgets
+from qtpy.QtCore import Signal, QThread
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base

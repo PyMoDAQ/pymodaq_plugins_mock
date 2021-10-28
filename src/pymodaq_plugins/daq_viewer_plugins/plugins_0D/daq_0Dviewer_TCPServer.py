@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSignal
+from qtpy.QtCore import Signal
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_TCP_server
@@ -9,7 +9,7 @@ class DAQ_0DViewer_TCPServer(DAQ_Viewer_TCP_server):
     """
         ================= ==============================
         **Attributes**      **Type**
-        *command_server*    instance of pyqtSignal
+        *command_server*    instance of Signal
         *x_axis*            1D numpy array
         *y_axis*            1D numpy array
         *data*              double precision float array
@@ -23,7 +23,7 @@ class DAQ_0DViewer_TCPServer(DAQ_Viewer_TCP_server):
 
     # params = DAQ_TCP_server.params
 
-    command_server = pyqtSignal(list)
+    command_server = Signal(list)
 
     # params=DAQ_TCP_server.params
     def __init__(self, parent=None, params_state=None):

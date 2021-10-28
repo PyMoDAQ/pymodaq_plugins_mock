@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal, QThread, pyqtSlot
+from qtpy import QtWidgets
+from qtpy.QtCore import Signal, QThread, Slot
 from pymodaq.daq_utils import daq_utils as utils
 import numpy as np
 from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
@@ -115,7 +115,7 @@ class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
         elif param.name() == 'show_navigator':
             self.emit_status(utils.ThreadCommand('show_navigator', [param.value()]))
 
-    @pyqtSlot(ScanParameters)
+    @Slot(ScanParameters)
     def update_scanner(self, scan_parameters):
         self.scan_parameters = scan_parameters
         self.x_axis = self.scan_parameters.axes_unique[0]
