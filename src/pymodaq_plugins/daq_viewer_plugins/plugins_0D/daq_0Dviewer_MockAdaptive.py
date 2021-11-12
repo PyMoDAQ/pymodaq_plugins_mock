@@ -88,7 +88,7 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Show Scanner:', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
-        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'], },
+        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'limits': ['Gaussians', 'Lorentzians'], },
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
     ]
 

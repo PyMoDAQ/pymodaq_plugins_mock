@@ -74,7 +74,7 @@ class DAQ_2DViewer_MockScanner(DAQ_Viewer_base):
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Show Scanner', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
         {'title': 'Show Navigator', 'name': 'show_navigator', 'type': 'bool_push', 'value': False},
-        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'values': ['Gaussians', 'Lorentzians'], },
+        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'limits': ['Gaussians', 'Lorentzians'], },
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
     ]
 
