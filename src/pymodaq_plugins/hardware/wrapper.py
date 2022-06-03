@@ -50,8 +50,6 @@ class ActuatorWrapper:
         pass
 
 
-
-
 class ActuatorWrapperWithTau(ActuatorWrapper):
 
     units = '°K'

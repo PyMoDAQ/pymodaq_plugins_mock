@@ -8,6 +8,14 @@ from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import gauss1D
 from pymodaq.daq_viewer.utility_classes import comon_parameters
 from pymodaq.daq_utils.scanner import ScanParameters
+from PIL import Image
+from pathlib import Path
+
+here = Path(__file__).parent
+# %%
+with Image.open(str(here.parent.parent.joinpath('hardware', 'CNRS_degrade.png'))) as im:
+    im = im.convert("L")
+    data_CNRS = np.array(im)
 
 Nstruct = 10
 xlim = [-5, 5]
@@ -88,8 +96,10 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Show Scanner:', 'name': 'show_scanner', 'type': 'bool_push', 'value': False, },
-        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'limits': ['Gaussians', 'Lorentzians'], },
+        {'title': 'Function type:', 'name': 'fun_type', 'type': 'list', 'limits': ['Gaussians', 'Lorentzians', 'CNRS'],
+         'value': 'CNRS'},
         {'title': 'Width coefficient', 'name': 'width_coeff', 'type': 'float', 'value': 1., 'min': 0},
+        {'title': 'Noise level', 'name': 'noise', 'type': 'float', 'value': 0.5, 'min': 0},
     ]
 
     def __init__(self, parent=None,
@@ -168,11 +178,18 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
             if len(positions) == 2:
                 if fun_type == 'Gaussians':
                     data = random_hypergaussians2D_signal(positions, coeff)
+                elif fun_type == 'CNRS':
+                    ind_x = max((0, int(min([positions[0], data_CNRS.shape[1]-1]))))
+                    ind_y = max((0, int(min([positions[1], data_CNRS.shape[0] - 1]))))
+                    ind_y = data_CNRS.shape[0] - 1 - ind_y
+                    data = data_CNRS[ind_y, ind_x]
                 else:
                     data = diverging2D_signal(positions, coeff)
             else:
                 if fun_type == 'Gaussians':
                     data = random_hypergaussians1D(positions, coeff)[0]
+                elif fun_type == 'CNRS':
+                    data = data_CNRS[270, int(positions[0])]
                 else:
                     data = diverging1D(positions[0], coeff)
         else:
@@ -181,7 +198,9 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
             else:
                 data = diverging1D(np.roll(x_axis1D, -self.ind_data)[0], coeff)
 
-        self.data_grabed_signal.emit([utils.DataFromPlugins(name='MockAdaptive', data=[np.array([data])],
+        data = np.array([data + self.settings['noise'] * np.random.rand()])
+
+        self.data_grabed_signal.emit([utils.DataFromPlugins(name='MockAdaptive', data=[data],
                                                             dim='Data0D', )])
         self.ind_data += 1
 
