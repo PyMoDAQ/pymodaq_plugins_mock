@@ -1,5 +1,5 @@
-from pymodaq.daq_move.utility_classes import DAQ_Move_base  # base class
-from pymodaq.daq_move.utility_classes import comon_parameters_fun  # common set of parameters for all actuators
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base  # base class
+from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  # common set of parameters for all actuators
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
 
@@ -51,7 +51,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
         # print('Pos from controller is {}'.format(pos))
         # pos=self.get_position_with_scaling(pos)
         # self.current_position=pos
-        self.emit_status(ThreadCommand('check_position', [pos]))
+        self.emit_value(pos)
         return pos
 
     def close(self):
@@ -145,7 +145,6 @@ class DAQ_Move_Mock(DAQ_Move_base):
         self.target_position = position
 
         self.current_position = position  # +np.random.rand()-0.5
-        self.poll_moving()
 
     def move_Rel(self, position):
         """
@@ -166,7 +165,6 @@ class DAQ_Move_Mock(DAQ_Move_base):
         self.target_position = position + self.current_position
 
         self.current_position = self.target_position  # +np.random.rand()-0.5
-        self.poll_moving()
 
     def move_Home(self):
         """

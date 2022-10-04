@@ -2,11 +2,11 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Signal, QThread, Slot
 from pymodaq.daq_utils import daq_utils as utils
 import numpy as np
-from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
+from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import gauss1D
-from pymodaq.daq_viewer.utility_classes import comon_parameters
+from pymodaq.control_modules.viewer_utility_classes import comon_parameters
 from pymodaq.daq_utils.scanner import ScanParameters
 
 Nstruct = 10
