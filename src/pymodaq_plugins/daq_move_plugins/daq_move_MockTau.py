@@ -20,7 +20,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
     stage_names = []  # "list of strings of the multiaxes
 
     params = [
-        {'title': 'Com port:', 'name': 'comport', 'type': 'str', 'value': 'COM28', 'tip': 'The serial COM port'},
         {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': 2000, 'tip': 'Characteristic evolution time'}
         ] + [   ## TODO for your custom plugin
                  # elements to be added here as dicts in order to control your custom stage
@@ -49,7 +48,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
         super().__init__(parent, params_state)
 
-
     def check_position(self):
         """Get the current position from the hardware with scaling conversion.
 
@@ -64,7 +62,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         pos = self.get_position_with_scaling(pos)
         self.emit_status(ThreadCommand('check_position',[pos]))
         return pos
-
 
     def close(self):
         """
@@ -114,10 +111,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
             else:  # Master stage
                 self.controller = ActuatorWrapperWithTau()
                 ## TODO for your custom plugin
-
-                comport = self.settings.child('comport').value()
-
-                self.controller.open_communication(comport)  # any object that will control the stages
                 #####################################
 
             self.status.info = "Controller initialized"
@@ -179,9 +172,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
         ## TODO for your custom plugin
         self.controller.move_at(0)
-        #self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
-        ##############################
-
+        # self.emit_status(ThreadCommand('Update_Status',['Some info you want to log']))
 
     def stop_motion(self):
       """

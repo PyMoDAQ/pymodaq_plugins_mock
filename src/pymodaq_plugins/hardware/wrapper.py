@@ -4,8 +4,6 @@ Demo Wrapper to illustrate the plugin developpement. This Mock wrapper will emul
 
 from time import perf_counter, sleep
 import math
-from serial.tools import list_ports
-ports = [port.name for port in list_ports.comports()]
 
 class ActuatorWrapper:
     units = 'mm'
@@ -62,23 +60,6 @@ class ActuatorWrapperWithTau(ActuatorWrapper):
         self._init_value = None
         self._start_time = 0
         self._moving = False
-
-    def open_communication(self, com_port):
-        """
-        fake instrument opening communication. just checking the COM port exist
-        Parameters
-        ----------
-        com_port: (str) the COM port identifier, eg 'COM1'
-
-        Returns
-        -------
-        bool: True is instrument is opened else False
-        """
-        self._com_port = com_port
-        if com_port in ports:
-            return True
-        else:
-            return False
 
     @property
     def epsilon(self):
