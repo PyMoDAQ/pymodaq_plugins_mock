@@ -1,12 +1,10 @@
 from qtpy import QtWidgets
-from qtpy.QtCore import Signal, QThread
+
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 import numpy as np
-from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base, main
-from easydict import EasyDict as edict
-from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import gauss1D
-from pymodaq.daq_viewer.utility_classes import comon_parameters
+from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, comon_parameters, main
+
+from pymodaq.daq_utils.math_utils import gauss1D
 
 
 class DAQ_0DViewer_Mock(DAQ_Viewer_base):
@@ -32,6 +30,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         ]}]
 
     def ini_attributes(self):
+        self.controller: str = None
         self.x_axis = None
         self.ind_data = 0
         self.lcd_init = False
@@ -61,12 +60,13 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         self.data_mock = []
         for param in self.settings.children():
             if 'Mock' in param.name():
-                x = np.linspace(0, param.children()[0].value() - 1, param.children()[0].value())
+                x = np.linspace(0, param['Npts'] - 1, param['Npts'])
                 self.data_mock.append(
-                    param.children()[1].value() * gauss1D(
-                        x, param.children()[2].value(), param.children()[3].value(),
-                        param.children()[4].value()) + param.children()[5].value() * np.random.rand(
-                        (param.children()[0].value())))
+                    param['Amp'] * gauss1D(x,
+                                                          param['x0'],
+                                                          param['dx'],
+                                                          param['n']) + \
+                    param['amp_noise'] * np.random.rand((param['Npts'] )))
 
     def ini_detector(self, controller=None):
         """Detector communication initialization
@@ -83,8 +83,9 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        self.controller = self.ini_detector_init(old_controller=controller,
-                                                 new_controller='Mock controller')
+        self.ini_detector_init(old_controller=controller,
+                               new_controller='Mock controller')
+
         self.set_Mock_data()
         self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
                                                                 self.settings.child(('wait_time')).value(), 'value']))

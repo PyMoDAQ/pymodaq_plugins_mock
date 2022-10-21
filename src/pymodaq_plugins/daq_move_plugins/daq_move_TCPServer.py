@@ -1,4 +1,4 @@
-from pymodaq.daq_move.utility_classes import DAQ_Move_TCP_server as MoveTCPServer
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_TCP_server as MoveTCPServer
 
 
 class DAQ_Move_TCPServer(MoveTCPServer):

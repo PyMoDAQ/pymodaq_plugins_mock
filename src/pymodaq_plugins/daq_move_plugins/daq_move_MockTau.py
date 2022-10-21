@@ -1,9 +1,6 @@
-from pymodaq.daq_move.utility_classes import DAQ_Move_base, main, comon_parameters_fun  # base class
-from pymodaq.daq_move.utility_classes import comon_parameters  # common set of parameters for all actuators
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
-from easydict import EasyDict as edict  # type of dict
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
+from ..hardware.wrapper import ActuatorWrapperWithTau
 
-from pymodaq_plugins.hardware.wrapper import ActuatorWrapper, ActuatorWrapperWithTau
 
 class DAQ_Move_MockTau(DAQ_Move_base):
     """
@@ -22,6 +19,9 @@ class DAQ_Move_MockTau(DAQ_Move_base):
     params = [
         {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': 2000, 'tip': 'Characteristic evolution time'}
         ] + comon_parameters_fun(is_multiaxes, axes_names)
+
+    def ini_attributes(self):
+        self.controller: ActuatorWrapperWithTau = None
 
     def get_actuator_value(self):
         # TODO for your custom plugin
@@ -70,11 +70,11 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         """
 
         position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
+        self.target_value = position
         position = self.set_position_with_scaling(position)  # apply scaling if the user specified one
 
         ## TODO for your custom plugin
         self.controller.move_at(position)
-        self.target_position = position
 
     def move_rel(self, position):
         """ Move the actuator to the relative target actuator value defined by position
@@ -83,11 +83,10 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         ----------
         position: (flaot) value of the relative target positioning
         """
-        position = self.check_bound(self.current_position+position)-self.current_position
-        self.target_position = position + self.current_position
-
-        ## TODO for your custom plugin
-        self.controller.move_at(self.target_position)
+        position = self.check_bound(self.current_value+position)-self.current_value
+        self.target_value = position + self.current_value
+        self.set_position_relative_with_scaling(position)
+        self.controller.move_at(self.target_value)
 
     def move_home(self):
         """
@@ -108,11 +107,8 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         --------
         move_done
       """
-
-      ## TODO for your custom plugin
       self.controller.stop()
-      #self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
-      self.move_done() #to let the interface know the actuator stopped
+      self.move_done()
 
 
 if __name__ == '__main__':
