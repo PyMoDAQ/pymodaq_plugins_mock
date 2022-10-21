@@ -2,7 +2,7 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Signal, QThread
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins
 import numpy as np
-from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
+from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base, main
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import gauss1D
@@ -10,14 +10,6 @@ from pymodaq.daq_viewer.utility_classes import comon_parameters
 
 
 class DAQ_0DViewer_Mock(DAQ_Viewer_base):
-    """
-        =============== =================
-        **Attributes**  **Type**
-        *params*        dictionnary list
-        *x_axis*        1D numpy array
-        *ind_data*      int
-        =============== =================
-    """
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Separated viewers', 'name': 'sep_viewers', 'type': 'bool', 'value': False},
@@ -39,9 +31,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             {'title': 'amp_noise', 'name': 'amp_noise', 'type': 'float', 'value': 0.1, 'default': 0.1, 'min': 0}
         ]}]
 
-    def __init__(self, parent=None,
-                 params_state=None):  # init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super(DAQ_0DViewer_Mock, self).__init__(parent, params_state)
+    def ini_attributes(self):
         self.x_axis = None
         self.ind_data = 0
         self.lcd_init = False
@@ -79,27 +69,22 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                         (param.children()[0].value())))
 
     def ini_detector(self, controller=None):
+        """Detector communication initialization
+
+        Parameters
+        ----------
+        controller: (object)
+            custom object of a PyMoDAQ plugin (Slave case). None if only one actuator/detector by controller
+            (Master case)
+
+        Returns
+        -------
+        info: str
+        initialized: bool
+            False if initialization failed otherwise True
         """
-            Initialisation procedure of the detector.
-
-            Returns
-            -------
-            ???
-                the initialized status.
-
-            See Also
-            --------
-            set_Mock_data
-        """
-
-        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        if self.settings.child(('controller_status')).value() == "Slave":
-            if controller is None:
-                raise Exception('no controller has been defined externally while this detector is a slave one')
-            else:
-                self.controller = controller
-        else:
-            self.controller = "Mock controller"
+        self.controller = self.ini_detector_init(old_controller=controller,
+                                                 new_controller='Mock controller')
         self.set_Mock_data()
         self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
                                                                 self.settings.child(('wait_time')).value(), 'value']))
@@ -108,9 +93,9 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         self.data_grabed_signal.emit(
             [DataFromPlugins(name='Mock1', data=[np.array(0)], dim='Data0D', labels=['Mock1', 'label2'])])
 
-        self.status.initialized = True
-        self.status.controller = self.controller
-        return self.status
+        initialized = True
+        info = 'RAS'
+        return info, initialized
 
     def close(self):
         """
@@ -166,3 +151,6 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         """
 
         return ""
+
+if __name__ == '__main__':
+    main(__file__)

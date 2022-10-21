@@ -6,7 +6,7 @@ from pymodaq.daq_viewer.utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
-from pymodaq.daq_viewer.utility_classes import comon_parameters
+from pymodaq.daq_viewer.utility_classes import comon_parameters, main
 
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
@@ -266,3 +266,6 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         """
         self.live = False
         return ""
+
+if __name__ == '__main__':
+    main(__file__)

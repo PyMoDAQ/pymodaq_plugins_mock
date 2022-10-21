@@ -50,7 +50,7 @@ class ActuatorWrapper:
 
 class ActuatorWrapperWithTau(ActuatorWrapper):
 
-    units = '°K'
+    units = '°'
 
     def __init__(self):
         super().__init__()
@@ -68,7 +68,6 @@ class ActuatorWrapperWithTau(ActuatorWrapper):
     @epsilon.setter
     def epsilon(self, eps):
         self._espilon = eps
-
 
     @property
     def is_moving(self):
