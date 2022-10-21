@@ -5,7 +5,7 @@ import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import gauss1D
+from pymodaq.daq_utils.math_utils import gauss1D
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
 
 
@@ -71,12 +71,13 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         self.data_mock = []
         for param in self.settings.children():
             if 'Mock' in param.name():
-                x = np.linspace(0, param.children()[0].value() - 1, param.children()[0].value())
+                x = np.linspace(0, param['Npts'] - 1, param['Npts'])
                 self.data_mock.append(
-                    param.children()[1].value() * gauss1D(
-                        x, param.children()[2].value(), param.children()[3].value(),
-                        param.children()[4].value()) + param.children()[5].value() * np.random.rand(
-                        (param.children()[0].value())))
+                    param['Amp'] * gauss1D(x,
+                                                          param['x0'],
+                                                          param['dx'],
+                                                          param['n']) + \
+                    param['amp_noise'] * np.random.rand((param['Npts'] )))
 
     def ini_detector(self, controller=None):
         """
@@ -93,7 +94,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         """
 
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        if self.settings.child(('controller_status')).value() == "Slave":
+        if self.settings.child('controller_status').value() == "Slave":
             if controller is None:
                 raise Exception('no controller has been defined externally while this detector is a slave one')
             else:

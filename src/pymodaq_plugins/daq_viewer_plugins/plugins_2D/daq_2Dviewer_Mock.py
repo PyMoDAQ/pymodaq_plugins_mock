@@ -1,4 +1,4 @@
-from qtpy.QtCore import QThread
+from qtpy.QtCore import QThread, Slot, QRectF
 from qtpy import QtWidgets
 import numpy as np
 import pymodaq.daq_utils.daq_utils as mylib
@@ -7,7 +7,7 @@ from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo, DataFromPlugins, Axis
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
-
+from pymodaq.daq_utils.array_manipulation import crop_array_to_axis, crop_vector_to_axis
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
     """
@@ -27,6 +27,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         {'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1, 'default': 1, 'min': 0,
          'max': 3},
         {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1, 'default': 0, 'min': 0},
+        {'title': 'Use ROISelect', 'name': 'use_roi_select', 'type': 'bool', 'value': False},
         {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
         {'title': 'rolling', 'name': 'rolling', 'type': 'int', 'value': 1, 'min': 0},
         {'title': 'Nx', 'name': 'Nx', 'type': 'int', 'value': 100, 'default': 100, 'min': 1},
@@ -38,19 +39,27 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         {'title': 'dy', 'name': 'dy', 'type': 'float', 'value': 40, 'default': 40, 'min': 1},
         {'title': 'n', 'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
         {'title': 'amp_noise', 'name': 'amp_noise', 'type': 'float', 'value': 4, 'default': 0.1, 'min': 0},
+
         {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': []},
     ]
 
     def __init__(self, parent=None,
                  params_state=None):  # init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super(DAQ_2DViewer_Mock, self).__init__(parent, params_state)
+        super().__init__(parent, params_state)
         self.x_axis = None
         self.y_axis = None
         self.live = False
         self.ind_commit = 0
         self.ind_data = 0
+        self._ROI = dict(position=[10, 10], size=[5, 5])
 
-    def commit_settings(self, param):
+    @Slot(QRectF)
+    def ROISelect(self, roi_pos_size: QRectF):
+        self._ROI['position'] = int(roi_pos_size.left()), int(roi_pos_size.top())
+        self._ROI['size'] = int(roi_pos_size.width()), int(roi_pos_size.height())
+
+    def commit_settings(self
+                        , param):
         """
             Activate parameters changes on the hardware.
 
@@ -83,50 +92,35 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             -------
                 The computed data mock.
         """
+        x_axis = np.linspace(0, self.settings.child('Nx').value(), self.settings.child('Nx').value(),
+                             endpoint=False)
+        y_axis = np.linspace(0, self.settings.child('Ny').value(), self.settings.child('Ny').value(),
+                             endpoint=False)
+        data_mock = self.settings.child('Amp').value() * (
+            mylib.gauss2D(x_axis, self.settings.child('x0').value(), self.settings.child('dx').value(),
+                          y_axis, self.settings.child('y0').value(), self.settings.child('dy').value(),
+                          self.settings.child('n').value())) + self.settings.child('amp_noise').value() * \
+                    np.random.rand(len(y_axis), len(x_axis))
 
-        if self.settings.child('ROIselect', 'use_ROI').value():
-            x_axis = np.linspace(self.settings.child('ROIselect', 'x0').value(),
-                                 self.settings.child('ROIselect', 'x0').value() + self.settings.child('ROIselect',
-                                                                                                      'width').value(),
-                                 self.settings.child('ROIselect', 'width').value(), endpoint=False)
-            y_axis = np.linspace(self.settings.child('ROIselect', 'y0').value(),
-                                 self.settings.child('ROIselect', 'y0').value() + self.settings.child('ROIselect',
-                                                                                                      'height').value(),
-                                 self.settings.child('ROIselect', 'height').value(), endpoint=False)
-            data_mock = self.settings.child(('Amp')).value() * (
-                mylib.gauss2D(x_axis, self.settings.child(('x0')).value(), self.settings.child(('dx')).value(),
-                              y_axis, self.settings.child(('y0')).value(), self.settings.child(('dy')).value(),
-                              self.settings.child(('n')).value())) + self.settings.child(
-                ('amp_noise')).value() * np.random.rand(len(y_axis), len(x_axis))
+        for indy in range(data_mock.shape[0]):
+            data_mock[indy, :] = data_mock[indy, :] * np.sin(x_axis / 4) ** 2
+        data_mock = np.roll(data_mock, self.ind_data * self.settings.child('rolling').value(), axis=1)
 
-            for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(x_axis / 8) ** 2
-            data_mock = np.roll(data_mock, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
+        if self.settings['use_roi_select']:
+            x_axis, y_axis, data = \
+                crop_array_to_axis(x_axis, y_axis, data_mock,
+                                   (self._ROI['position'][0], self._ROI['position'][0] + self._ROI['size'][0],
+                                    self._ROI['position'][1], self._ROI['position'][1] + self._ROI['size'][1]))
+
 
             try:
-                self.image[self.settings.child('ROIselect', 'y0').value():
-                           self.settings.child('ROIselect', 'y0').value() + self.settings.child(
-                    'ROIselect', 'height').value(),
-                    self.settings.child('ROIselect', 'x0').value():
-                    self.settings.child('ROIselect', 'x0').value() + self.settings.child('ROIselect', 'width').value()
-                ] = data_mock
+                self.image[self._ROI['position'][1]:self._ROI['position'][1] + self._ROI['size'][1]+1,
+                     self._ROI['position'][0]:self._ROI['position'][0] + self._ROI['size'][0]+1] = data
 
             except Exception as e:
                 self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
         else:
-            x_axis = np.linspace(0, self.settings.child(('Nx')).value(), self.settings.child(('Nx')).value(),
-                                 endpoint=False)
-            y_axis = np.linspace(0, self.settings.child(('Ny')).value(), self.settings.child(('Ny')).value(),
-                                 endpoint=False)
-            data_mock = self.settings.child(('Amp')).value() * (
-                mylib.gauss2D(x_axis, self.settings.child(('x0')).value(), self.settings.child(('dx')).value(),
-                              y_axis, self.settings.child(('y0')).value(), self.settings.child(('dy')).value(),
-                              self.settings.child(('n')).value())) + self.settings.child(
-                ('amp_noise')).value() * np.random.rand(len(y_axis), len(x_axis))
 
-            for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(x_axis / 4) ** 2
-            data_mock = np.roll(data_mock, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
             self.image = data_mock
 
         self.ind_data += 1
