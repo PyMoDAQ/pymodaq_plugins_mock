@@ -9,8 +9,8 @@ PyMoDAQ Plugins
    :target: https://pymodaq.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://github.com/CEMES-CNRS/pymodaq_plugins/workflows/Upload%20Python%20Package/badge.svg
-    :target: https://github.com/CEMES-CNRS/pymodaq_plugins
+.. image:: https://github.com/PyMoDAQ/pymodaq_plugins/workflows/Upload%20Python%20Package/badge.svg
+    :target: https://github.com/PyMoDAQ/pymodaq_plugins
 
 Plugins initially developed with PyMoDAQ. Includes Mock plugins that are plugins of virtual instruments dedicated
 to code testing for new functionalities or development.
