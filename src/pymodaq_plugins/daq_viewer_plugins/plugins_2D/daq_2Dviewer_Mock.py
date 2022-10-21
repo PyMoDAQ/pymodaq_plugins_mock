@@ -1,7 +1,7 @@
 from qtpy.QtCore import QThread, Slot, QRectF
 from qtpy import QtWidgets
 import numpy as np
-import pymodaq.daq_utils.daq_utils as mylib
+import pymodaq.daq_utils.math_utils as mutils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 from easydict import EasyDict as edict
 from collections import OrderedDict
@@ -97,7 +97,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         y_axis = np.linspace(0, self.settings.child('Ny').value(), self.settings.child('Ny').value(),
                              endpoint=False)
         data_mock = self.settings.child('Amp').value() * (
-            mylib.gauss2D(x_axis, self.settings.child('x0').value(), self.settings.child('dx').value(),
+            mutils.gauss2D(x_axis, self.settings.child('x0').value(), self.settings.child('dx').value(),
                           y_axis, self.settings.child('y0').value(), self.settings.child('dy').value(),
                           self.settings.child('n').value())) + self.settings.child('amp_noise').value() * \
                     np.random.rand(len(y_axis), len(x_axis))
