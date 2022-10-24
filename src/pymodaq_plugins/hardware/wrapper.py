@@ -4,10 +4,7 @@ Demo Wrapper to illustrate the plugin developpement. This Mock wrapper will emul
 
 from time import perf_counter, sleep
 import math
-
-from serial.tools import list_ports
 from numpy import random
-ports = [port.name for port in list_ports.comports()]
 
 
 class ActuatorWrapper:
@@ -62,7 +59,8 @@ class ActuatorWrapperWithTau(ActuatorWrapper):
         self._espilon = 1e-2
         self._tau = 3  # s
         self._alpha = None
-        self._init_value = None
+        self._init_value = 0.
+        self._current_value = 0.
         self._start_time = 0
         self._moving = False
 

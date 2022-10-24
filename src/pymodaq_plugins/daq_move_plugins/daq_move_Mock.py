@@ -1,4 +1,4 @@
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base  # base class
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, main  # base class
 from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  # common set of parameters for all actuators
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
@@ -184,3 +184,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
           move_done
         """
         self.move_done()
+
+
+if __name__ == '__main__':
+    main(__file__)

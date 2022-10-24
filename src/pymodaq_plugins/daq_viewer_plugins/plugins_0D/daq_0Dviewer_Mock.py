@@ -88,7 +88,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
 
         self.set_Mock_data()
         self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
-                                                                self.settings.child(('wait_time')).value(), 'value']))
+                                                                self.settings.child('wait_time').value(), 'value']))
 
         # initialize viewers with the future type of data
         self.data_grabed_signal.emit(
