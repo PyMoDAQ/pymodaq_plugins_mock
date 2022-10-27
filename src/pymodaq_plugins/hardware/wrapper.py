@@ -5,9 +5,8 @@ Demo Wrapper to illustrate the plugin developpement. This Mock wrapper will emul
 from time import perf_counter, sleep
 import math
 
-from serial.tools import list_ports
 from numpy import random
-ports = [port.name for port in list_ports.comports()]
+ports = ['COM1', 'COM2']
 
 
 class ActuatorWrapper:
