@@ -1,13 +1,14 @@
 from qtpy import QtWidgets
 from qtpy.QtCore import Signal, QThread, Slot
-from pymodaq.daq_utils import daq_utils as utils
+from pymodaq.utils import daq_utils as utils
+from pymodaq.utils.data import DataFromPlugins
 import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.daq_utils.daq_utils import gauss1D
+from pymodaq.utils.daq_utils import gauss1D
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
-from pymodaq.daq_utils.scanner import ScanParameters
+from pymodaq.utils.scanner import ScanParameters
 from PIL import Image
 from pathlib import Path
 
@@ -200,7 +201,7 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
 
         data = np.array([data + self.settings['noise'] * np.random.rand()])
 
-        self.data_grabed_signal.emit([utils.DataFromPlugins(name='MockAdaptive', data=[data],
+        self.data_grabed_signal.emit([DataFromPlugins(name='MockAdaptive', data=[data],
                                                             dim='Data0D', )])
         self.ind_data += 1
 
