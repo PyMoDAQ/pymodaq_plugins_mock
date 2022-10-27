@@ -11,23 +11,12 @@ from pymodaq.utils.array_manipulation import crop_array_to_axis, crop_vector_to_
 
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
-    """
-        =============== ==================
-        **Attributes**   **Type**
-        *params*         dictionnary list
-        *x_axis*         1D numpy array
-        *y_axis*         1D numpy array
-        =============== ==================
-
-        See Also
-        --------
-        utility_classes.DAQ_Viewer_base
-    """
+    """Virtual instrument generating 2D data"""
 
     params = comon_parameters + [
         {'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1, 'default': 1, 'min': 0,
          'max': 3},
-        {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1, 'default': 0, 'min': 0},
+        {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 2, 'default': 0, 'min': 0},
         {'title': 'Use ROISelect', 'name': 'use_roi_select', 'type': 'bool', 'value': False},
         {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
         {'title': 'rolling', 'name': 'rolling', 'type': 'int', 'value': 1, 'min': 0},
@@ -246,10 +235,10 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             data_tmp += self.set_Mock_data()
         data_tmp = data_tmp / Naverage
 
-        data_tmp = data_tmp * (data_tmp >= self.settings.child('threshold').value()) * (init is False)
-        for ind in range(self.settings.child(('Nimagespannel')).value()):
+        data_tmp = data_tmp * (data_tmp >= self.settings['threshold']) * (init is False)
+        for ind in range(self.settings['Nimagespannel']):
             datatmptmp = []
-            for indbis in range(self.settings.child(('Nimagescolor')).value()):
+            for indbis in range(self.settings['Nimagescolor']):
                 datatmptmp.append(data_tmp)
             data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D'))
         # data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
