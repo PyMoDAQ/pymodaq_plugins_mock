@@ -130,8 +130,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         Npts = self.settings.child('x_axis', 'Npts').value()
         x0 = self.settings.child('x_axis', 'x0').value()
         dx = self.settings.child('x_axis', 'dx').value()
-        self.x_axis['data'] = linspace_step(x0 - (Npts - 1) * dx / 2, x0 + (Npts - 1) * dx / 2, dx)
-        self.emit_x_axis()
+        self.x_axis.data = linspace_step(x0 - (Npts - 1) * dx / 2, x0 + (Npts - 1) * dx / 2, dx)
 
     def set_spectro_wl(self, spectro_wl):
         """
@@ -200,7 +199,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
             # initialize viewers with the future type of data
             self.data_grabed_signal_temp.emit([DataFromPlugins(name='Mock1', data=self.data_mock, dim='Data1D',
-                                                               x_axis=self.x_axis, labels=['Mock1', 'label2']), ])
+                                                               axes=[self.x_axis], labels=['Mock1', 'label2']), ])
 
             self.status.initialized = True
             self.status.controller = self.controller

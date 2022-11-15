@@ -97,7 +97,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         data_mock = np.roll(data_mock, self.ind_data * self.settings.child('rolling').value(), axis=1)
 
         if self.settings['use_roi_select']:
-            x_axis, y_axis, data = \
+            _, _, data = \
                 crop_array_to_axis(x_axis, y_axis, data_mock,
                                    (self._ROI['position'][0], self._ROI['position'][0] + self._ROI['size'][0],
                                     self._ROI['position'][1], self._ROI['position'][1] + self._ROI['size'][1]))
@@ -116,6 +116,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         self.ind_data += 1
 
         QThread.msleep(100)
+        self.x_axis = Axis(label='the x axis', data=x_axis, index=1)
+        self.y_axis = Axis(label='the y axis', data=y_axis, index=0)
 
         return self.image
 
@@ -142,7 +144,10 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             self.y_axis = self.get_yaxis()
 
             # initialize viewers with the future type of data but with 0value data
-            self.data_grabed_signal_temp.emit(self.average_data(1, True))
+            data_averaged = self.average_data(1, True)
+            for data in data_averaged:
+                data.axes = [self.x_axis, self.y_axis]
+            self.data_grabed_signal_temp.emit(data_averaged)
             # OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
 
             self.status.x_axis = self.x_axis

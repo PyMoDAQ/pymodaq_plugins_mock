@@ -93,7 +93,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
 
         # initialize viewers with the future type of data
         self.data_grabed_signal.emit(
-            [DataFromPlugins(name='Mock1', data=[np.array(0)], dim='Data0D', labels=['Mock1', 'label2'])])
+            [DataFromPlugins(name='Mock1', data=[np.array([0])], dim='Data0D', labels=['Mock1', 'label2'])])
 
         initialized = True
         info = 'RAS'
@@ -130,7 +130,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             else:
                 data_tot.append(np.array([data[0]]))
 
-        if self.settings.child(('sep_viewers')).value():
+        if self.settings.child('sep_viewers').value():
             dat = [DataFromPlugins(name=f'Mock_{ind:03}', data=[data], dim='Data0D',
                                    labels=[f'mock data {ind:03}']) for ind, data in enumerate(data_tot)]
             self.data_grabed_signal.emit(dat)

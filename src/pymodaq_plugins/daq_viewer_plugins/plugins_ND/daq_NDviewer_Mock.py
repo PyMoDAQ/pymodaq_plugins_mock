@@ -99,73 +99,39 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
                                      self.settings.child('temp_settings', 'Nt').value(),
                                      endpoint=False)
 
-        if self.settings.child('ROIselect', 'use_ROI').value():
-            self.x_axis = np.linspace(self.settings.child('ROIselect', 'x0').value(),
-                                      self.settings.child('ROIselect', 'x0').value() + self.settings.child('ROIselect',
-                                                                                                           'width').value(),
-                                      self.settings.child('ROIselect', 'width').value(), endpoint=False)
-            self.y_axis = np.linspace(self.settings.child('ROIselect', 'y0').value(),
-                                      self.settings.child('ROIselect', 'y0').value() + self.settings.child('ROIselect',
-                                                                                                           'height').value(),
-                                      self.settings.child('ROIselect', 'height').value(), endpoint=False)
+        self.x_axis = np.linspace(0, self.settings.child('spatial_settings', 'Nx').value(),
+                                  self.settings.child('spatial_settings', 'Nx').value(),
+                                  endpoint=False)
+        self.y_axis = np.linspace(0, self.settings.child('spatial_settings', 'Ny').value(),
+                                  self.settings.child('spatial_settings', 'Ny').value(),
+                                  endpoint=False)
 
-            data_mock = self.settings.child('spatial_settings', 'amp').value() * (
-                utils.gauss2D(self.x_axis, self.settings.child('spatial_settings', 'x0').value(),
-                              self.settings.child('spatial_settings', 'dx').value(),
-                              self.y_axis, self.settings.child('spatial_settings', 'y0').value(),
-                              self.settings.child('spatial_settings', 'dy').value(),
-                              self.settings.child('spatial_settings', 'n').value())) + self.settings.child(
-                ('amp_noise')).value() * np.random.rand(len(self.y_axis), len(self.x_axis))
+        data_mock = self.settings.child('spatial_settings', 'amp').value() * (
+            utils.gauss2D(self.x_axis, self.settings.child('spatial_settings', 'x0').value(),
+                          self.settings.child('spatial_settings', 'dx').value(),
+                          self.y_axis, self.settings.child('spatial_settings', 'y0').value(),
+                          self.settings.child('spatial_settings', 'dy').value(),
+                          self.settings.child('spatial_settings', 'n').value())) + \
+            self.settings.child(('amp_noise')).value() * \
+            np.random.rand(len(self.y_axis), len(self.x_axis))
 
-            for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(
-                    self.x_axis / self.settings.child('spatial_settings', 'lambda').value()) ** 2
-            data_mock = np.roll(data_mock, self.ind_data * self.settings.child('rolling').value(), axis=1)
+        for indy in range(data_mock.shape[0]):
+            data_mock[indy, :] = data_mock[indy, :] * np.sin(
+                self.x_axis / self.settings.child('spatial_settings', 'lambda').value()) ** 2
 
-            try:
-                self.image[
-                    self.settings.child('ROIselect', 'y0').value():
-                    self.settings.child('ROIselect', 'y0').value() + self.settings.child('ROIselect', 'height').value(),
-                    self.settings.child('ROIselect', 'x0').value():
-                    self.settings.child('ROIselect', 'x0').value() + self.settings.child('ROIselect', 'width').value()] \
-                    = data_mock
+        ind = 0
+        for indy in range(data_mock.shape[0]):
+            for indx in range(data_mock.shape[1]):
+                image[indy, indx, :] = data_mock[indy, indx] * \
+                    utils.gauss1D(self.time_axis, self.settings.child('temp_settings', 't0').value(),
+                                  self.settings.child('temp_settings', 'dt').value(),
+                                  self.settings.child('temp_settings', 'n').value()) * \
+                    np.sin(np.roll(self.time_axis, ind) / 4) ** 2
+                ind += 1
 
-            except Exception as e:
-                self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-        else:
-            self.x_axis = np.linspace(0, self.settings.child('spatial_settings', 'Nx').value(),
-                                      self.settings.child('spatial_settings', 'Nx').value(),
-                                      endpoint=False)
-            self.y_axis = np.linspace(0, self.settings.child('spatial_settings', 'Ny').value(),
-                                      self.settings.child('spatial_settings', 'Ny').value(),
-                                      endpoint=False)
+        image = np.roll(image, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
 
-            data_mock = self.settings.child('spatial_settings', 'amp').value() * (
-                utils.gauss2D(self.x_axis, self.settings.child('spatial_settings', 'x0').value(),
-                              self.settings.child('spatial_settings', 'dx').value(),
-                              self.y_axis, self.settings.child('spatial_settings', 'y0').value(),
-                              self.settings.child('spatial_settings', 'dy').value(),
-                              self.settings.child('spatial_settings', 'n').value())) + \
-                self.settings.child(('amp_noise')).value() * \
-                np.random.rand(len(self.y_axis), len(self.x_axis))
-
-            for indy in range(data_mock.shape[0]):
-                data_mock[indy, :] = data_mock[indy, :] * np.sin(
-                    self.x_axis / self.settings.child('spatial_settings', 'lambda').value()) ** 2
-
-            ind = 0
-            for indy in range(data_mock.shape[0]):
-                for indx in range(data_mock.shape[1]):
-                    image[indy, indx, :] = data_mock[indy, indx] * \
-                        utils.gauss1D(self.time_axis, self.settings.child('temp_settings', 't0').value(),
-                                      self.settings.child('temp_settings', 'dt').value(),
-                                      self.settings.child('temp_settings', 'n').value()) * \
-                        np.sin(np.roll(self.time_axis, ind) / 4) ** 2
-                    ind += 1
-
-            image = np.roll(image, self.ind_data * self.settings.child(('rolling')).value(), axis=1)
-
-            self.image = image
+        self.image = image
 
         self.ind_data += 1
 
