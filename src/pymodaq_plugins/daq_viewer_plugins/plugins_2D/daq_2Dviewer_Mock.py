@@ -132,7 +132,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
         try:
 
-            if self.settings.child(('controller_status')).value() == "Slave":
+            if self.settings.child('controller_status').value() == "Slave":
                 if controller is None:
                     raise Exception('no controller has been defined externally while this detector is a slave one')
                 else:
@@ -245,7 +245,8 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             datatmptmp = []
             for indbis in range(self.settings['Nimagescolor']):
                 datatmptmp.append(data_tmp)
-            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D'))
+            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D',
+                                        axes=[self.y_axis, self.x_axis]))
         # data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
         return data
 
