@@ -139,7 +139,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot,
                                                           dim='Data0D', labels=['dat0', 'data1'])])
         self.ind_data += 1
-        if self.settings.child('lcd').value():
+        if self.settings['lcd']:
             if not self.lcd_init:
                 self.emit_status(ThreadCommand('init_lcd', [dict(labels=['dat0', 'data1'], Nvals=2, digits=6)]))
                 QtWidgets.QApplication.processEvents()
