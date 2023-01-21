@@ -136,7 +136,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             self.data_grabed_signal.emit(dat)
 
         else:
-            self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot,
+            self.data_grabed_signal.emit([DataFromPlugins(name='Mock0D', data=data_tot,
                                                           dim='Data0D', labels=['dat0', 'data1'])])
         self.ind_data += 1
         if self.settings['lcd']:

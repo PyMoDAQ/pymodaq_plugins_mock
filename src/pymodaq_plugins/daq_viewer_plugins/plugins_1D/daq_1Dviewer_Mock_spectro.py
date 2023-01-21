@@ -250,7 +250,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         data_tot = [data / Naverage for data in data_tot]
         QThread.msleep(self.settings.child('exposure_ms').value())
-        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1', data=data_tot, dim='Data1D',
+        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1D', data=data_tot, dim='Data1D',
                                                       axes=[Axis(label='1D axis', units='mock_units',
                                                                  data=self.x_axis.data, index=0)])])
 
