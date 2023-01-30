@@ -1,9 +1,10 @@
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, main  # base class
 from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  # common set of parameters for all actuators
+
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
+from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 
-from pymodaq_plugins.hardware.camera_wrapper import Camera
 
 class DAQ_Move_MockCamera(DAQ_Move_base):
     """
@@ -17,6 +18,7 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
     _controller_units = 'whatever'
     is_multiaxes = True
     stage_names = Camera.axes
+    _epsilon = 0.01
 
     params = comon_parameters_fun(is_multiaxes, stage_names)
 
@@ -26,6 +28,7 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
     def get_actuator_value(self):
         axis = self.settings['multiaxes', 'axis']
         pos = self.controller.get_value(axis)
+        pos = self.get_position_with_scaling(pos)
         return pos
 
     def close(self):
@@ -63,16 +66,19 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
         return info, initialized
 
     def move_abs(self, position):
-        position = self.check_bound(position)
+        position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
         self.target_value = position
+        position = self.set_position_with_scaling(position)
         axis = self.settings['multiaxes', 'axis']
         pos = self.controller.set_value(axis, position)
 
     def move_rel(self, position):
         position = self.check_bound(self.current_position + position) - self.current_position
         self.target_value = position + self.current_position
+        position = self.set_position_with_scaling(self.target_value)
+
         axis = self.settings['multiaxes', 'axis']
-        pos = self.controller.set_value(axis, self.target_value)
+        pos = self.controller.set_value(axis, position)
 
     def move_home(self):
         """

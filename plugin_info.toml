@@ -1,7 +1,7 @@
 [plugin-info]
 ## To modify by developper(s) of the plugin
-SHORT_PLUGIN_NAME = ''
-package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins'
+SHORT_PLUGIN_NAME = 'mock'
+package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_mock'
 description = 'Set of base PyMoDAQ plugins including Mock ones for development'
 
 author = 'Sébastien Weber'

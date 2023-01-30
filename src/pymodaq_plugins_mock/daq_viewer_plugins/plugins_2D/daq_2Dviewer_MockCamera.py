@@ -1,6 +1,7 @@
 from qtpy.QtCore import QThread, Slot, QRectF
 from qtpy import QtWidgets
 import numpy as np
+
 import pymodaq.utils.math_utils as mylib
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 from easydict import EasyDict as edict
@@ -13,6 +14,7 @@ from pymodaq.utils.array_manipulation import crop_array_to_axis, crop_vector_to_
 
 from pymodaq_plugins.hardware.camera_wrapper import Camera
 
+
 class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
 
     params = comon_parameters + [
@@ -22,16 +24,18 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1, 'default': 0, 'min': 0},
         {'title': 'Use ROISelect', 'name': 'use_roi_select', 'type': 'bool', 'value': False},
         {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
+
         {'title': 'Values', 'name': 'current_values', 'type': 'group', 'children': [
             {'title': 'X', 'name': 'X', 'type': 'float', 'value': 0.},
             {'title': 'Y', 'name': 'Y', 'type': 'float', 'value': 0.},
             {'title': 'Theta', 'name': 'Theta', 'type': 'float', 'value': 0.},
         ]},
         {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': [
+            {'title': 'Fringes?', 'name': 'fringes', 'type': 'bool', 'value': True},
             {'title': 'Nx', 'name': 'Nx', 'type': 'int', 'value': Camera.Nx, 'min': 1},
             {'title': 'Ny', 'name': 'Ny', 'type': 'int', 'value': Camera.Ny, 'min': 1},
-            {'title': 'Amp', 'name': 'amp', 'type': 'int', 'value': Camera.amp , 'min': 1},
-            {'title': 'x0', 'name': 'x0', 'type': 'slide', 'value': Camera.x0, 'min': 0},
+            {'title': 'Amp', 'name': 'amp', 'type': 'int', 'value': Camera.amp, 'min': 1},
+            {'title': 'x0', 'name': 'x0', 'type': 'slide', 'value': Camera.x0, 'min': 0, 'max': 256},
             {'title': 'y0', 'name': 'y0', 'type': 'float', 'value': Camera.y0, 'min': 0},
             {'title': 'dx', 'name': 'dx', 'type': 'float', 'value': Camera.dx, 'min': 1},
             {'title': 'dy', 'name': 'dy', 'type': 'float', 'value': Camera.dy, 'min': 1},
@@ -70,6 +74,11 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         self.controller.base_Mock_data()
         self.x_axis = Axis(data=self.controller.x_axis)
         self.y_axis = Axis(data=self.controller.y_axis)
+
+        #apply presets to wrapper
+        for settings in self.settings.child('cam_settings').children():
+            if hasattr(self.controller, settings.name()):
+                setattr(self.controller, settings.name(), settings.value())
 
         # initialize viewers with the future type of data but with 0value data
         self.data_grabed_signal_temp.emit(self.average_data(1, True),)

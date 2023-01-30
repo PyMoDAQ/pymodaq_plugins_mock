@@ -1,5 +1,5 @@
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
-from ..hardware.wrapper import ActuatorWrapperWithTau
+from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTau
 
 
 class DAQ_Move_MockTau(DAQ_Move_base):
@@ -13,11 +13,11 @@ class DAQ_Move_MockTau(DAQ_Move_base):
     """
     _controller_units = ActuatorWrapperWithTau.units
 
-    is_multiaxes = False  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
-    axes_names = []  # "list of strings of the multiaxes
-
+    is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
+    axes_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
+    _epsilon = 0.01
     params = [
-        {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': 2000, 'tip': 'Characteristic evolution time'}
+        {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': 500, 'tip': 'Characteristic evolution time'}
         ] + comon_parameters_fun(is_multiaxes, axes_names)
 
     def ini_attributes(self):
@@ -56,7 +56,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
             False if initialization failed otherwise True
         """
         self.controller = self.ini_stage_init(controller, ActuatorWrapperWithTau())
-        self.settings.child('tau').setValue(10000)
         info = "Controller initialized"
         initialized = True
         return info, initialized

@@ -122,45 +122,18 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         return self.image
 
     def ini_detector(self, controller=None):
-        """
-            Initialisation procedure of the detector initializing the status dictionnary.
+        self.ini_detector_init(controller, "Mock controller")
 
-            See Also
-            --------
-            daq_utils.ThreadCommand, get_xaxis, get_yaxis
-        """
-        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        try:
+        self.x_axis = self.get_xaxis()
+        self.y_axis = self.get_yaxis()
 
-            if self.settings.child('controller_status').value() == "Slave":
-                if controller is None:
-                    raise Exception('no controller has been defined externally while this detector is a slave one')
-                else:
-                    self.controller = controller
-            else:
-                self.controller = "Mock controller"
+        # initialize viewers with the future type of data but with 0value data
+        self.data_grabed_signal_temp.emit(self.average_data(1, True))
+        # OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
 
-            self.x_axis = self.get_xaxis()
-            self.y_axis = self.get_yaxis()
-
-            # initialize viewers with the future type of data but with 0value data
-            data_averaged = self.average_data(1, True)
-            for data in data_averaged:
-                data.axes = [self.x_axis, self.y_axis]
-            self.data_grabed_signal_temp.emit(data_averaged)
-            # OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
-
-            self.status.x_axis = self.x_axis
-            self.status.y_axis = self.y_axis
-            self.status.initialized = True
-            self.status.controller = self.controller
-            return self.status
-
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-            self.status.info = getLineInfo() + str(e)
-            self.status.initialized = False
-            return self.status
+        initialized = True
+        info = 'Init'
+        return info, initialized
 
     def close(self):
         """
@@ -169,34 +142,10 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         pass
 
     def get_xaxis(self):
-        """
-            Get the current x_axis from the Mock data setting.
-
-            Returns
-            -------
-            1D numpy array
-                the current x_axis.
-
-            See Also
-            --------
-            set_Mock_data
-        """
         self.set_Mock_data()
         return self.x_axis
 
     def get_yaxis(self):
-        """
-            Get the current y_axis from the Mock data setting.
-
-            Returns
-            -------
-            1D numpy array
-                the current y_axis.
-
-            See Also
-            --------
-            set_Mock_data
-        """
         self.set_Mock_data()
         return self.y_axis
 
@@ -256,6 +205,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         """
         self.live = False
         return ""
+
 
 if __name__ == '__main__':
     main(__file__)
