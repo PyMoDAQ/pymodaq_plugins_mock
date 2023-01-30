@@ -3,7 +3,7 @@ from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  #
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
 
-from pymodaq_plugins.hardware.camera_wrapper import Camera
+from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 
 class DAQ_Move_MockCamera(DAQ_Move_base):
     """

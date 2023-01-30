@@ -1,5 +1,5 @@
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
-from pymodaq_plugins.hardware.wrapper import ActuatorWrapperWithTau
+from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTau
 
 
 class DAQ_Move_MockTau(DAQ_Move_base):

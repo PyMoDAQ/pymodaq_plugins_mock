@@ -10,7 +10,7 @@ from pymodaq.daq_utils.parameter import Parameter
 from pymodaq.daq_utils.parameter.utils import iter_children
 from pymodaq.daq_utils.array_manipulation import crop_array_to_axis, crop_vector_to_axis
 
-from pymodaq_plugins.hardware.camera_wrapper import Camera
+from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 
 class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
 
