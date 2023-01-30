@@ -2,9 +2,8 @@ from setuptools import setup, find_packages
 import toml
 
 config = toml.load('./plugin_info.toml')
-#PLUGIN_NAME = f"pymodaq_plugins_{config['plugin-info']['SHORT_PLUGIN_NAME']}" #for all plugins but this one that is the
-# default
-PLUGIN_NAME = f'pymodaq_plugins'
+SHORT_PLUGIN_NAME = config['plugin-info']['SHORT_PLUGIN_NAME']
+PLUGIN_NAME = f"pymodaq_plugins_{SHORT_PLUGIN_NAME}"
 
 from pathlib import Path
 
@@ -42,8 +41,8 @@ setup(
     packages=find_packages(where='./src'),
     package_dir={'': 'src'},
     include_package_data=True,
-    entry_points={'pymodaq.plugins': f'{PLUGIN_NAME} = {PLUGIN_NAME}',
-                  'pymodaq.pid_models': f"{PLUGIN_NAME} = {PLUGIN_NAME}"},
+    entry_points={'pymodaq.plugins': f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}',
+                  'pymodaq.pid_models': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}"},
     install_requires=['toml', ]+config['plugin-install']['packages-required'],
     **setupOpts
 )
