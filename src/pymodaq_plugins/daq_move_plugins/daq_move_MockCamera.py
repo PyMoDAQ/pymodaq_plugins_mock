@@ -17,6 +17,7 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
     _controller_units = 'whatever'
     is_multiaxes = True
     stage_names = Camera.axes
+    _epsilon = 0.01
 
     params = comon_parameters_fun(is_multiaxes, stage_names)
 
