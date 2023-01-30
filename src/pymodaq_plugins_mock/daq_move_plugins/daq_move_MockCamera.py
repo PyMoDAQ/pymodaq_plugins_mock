@@ -27,6 +27,7 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
     def get_actuator_value(self):
         axis = self.settings['multiaxes', 'axis']
         pos = self.controller.get_value(axis)
+        pos = self.get_position_with_scaling(pos)
         return pos
 
     def close(self):
@@ -64,16 +65,19 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
         return info, initialized
 
     def move_abs(self, position):
-        position = self.check_bound(position)
+        position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
         self.target_value = position
+        position = self.set_position_with_scaling(position)
         axis = self.settings['multiaxes', 'axis']
         pos = self.controller.set_value(axis, position)
 
     def move_rel(self, position):
         position = self.check_bound(self.current_position + position) - self.current_position
         self.target_value = position + self.current_position
+        position = self.set_position_with_scaling(self.target_value)
+
         axis = self.settings['multiaxes', 'axis']
-        pos = self.controller.set_value(axis, self.target_value)
+        pos = self.controller.set_value(axis, position)
 
     def move_home(self):
         """

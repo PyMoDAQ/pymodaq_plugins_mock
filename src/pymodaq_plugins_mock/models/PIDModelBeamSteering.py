@@ -3,9 +3,9 @@ from scipy.ndimage import center_of_mass
 
 
 class PIDModelBeamSteering(PIDModelGeneric):
-    limits = dict(max=dict(state=True, value=100),
-                  min=dict(state=True, value=-100),)
-    konstants = dict(kp=10, ki=0.000, kd=0.1000)
+    limits = dict(max=dict(state=False, value=100),
+                  min=dict(state=False, value=-100),)
+    konstants = dict(kp=0.1, ki=0.000, kd=0.0000)
 
     setpoint_ini = [128, 128]
     setpoints_names = ['Xaxis', 'Yaxis']

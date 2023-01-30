@@ -6,21 +6,19 @@ Created the 24/10/2022
 """
 import numpy as np
 import pymodaq.daq_utils.math_utils as mylib
-from pymodaq.daq_utils.array_manipulation import crop_array_to_axis, crop_vector_to_axis
 
-from pymodaq_plugins.hardware.wrapper import ActuatorWrapperWithTau
 
-class Camera():
-    Nx = 100
-    Ny = 100
-    Ny = 200
+class Camera:
+    Nx = 256
+    Ny = 256
     amp = 20
-    x0 = 50
-    y0 = 100
+    x0 = 128
+    y0 = 128
     dx = 20
     dy = 40
     n = 1
     amp_noise = 4
+    fringes = True
     axes = ['X', 'Y', 'Theta']
 
     def __init__(self):
@@ -38,10 +36,8 @@ class Camera():
             self.base_Mock_data()
 
     def base_Mock_data(self):
-        self.x_axis = np.linspace(0, self.Nx, self.Nx,
-                             endpoint=False)
-        self.y_axis = np.linspace(0, self.Ny, self.Ny,
-                             endpoint=False)
+        self.x_axis = np.linspace(0, self.Nx, self.Nx, endpoint=False)
+        self.y_axis = np.linspace(0, self.Ny, self.Ny, endpoint=False)
         data_mock = self.amp * (
             mylib.gauss2D(self.x_axis, self.x0, self.dx,
                           self.y_axis, self.y0, self.dy,
@@ -49,13 +45,14 @@ class Camera():
                           angle=self._current_value['Theta']))
 
         for indy in range(data_mock.shape[0]):
-            data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis / 4) ** 2
+            if self.fringes:
+                data_mock[indy, :] = data_mock[indy, :] * np.sin(self.x_axis / 4) ** 2
 
         self._image = data_mock
         return self._image
 
     def get_data(self):
-        return np.roll(np.roll(self._image+ self.amp_noise  * np.random.rand(len(self.y_axis),
-                                                                     len(self.x_axis)),
+        return np.roll(np.roll(self._image + self.amp_noise * np.random.rand(len(self.y_axis),
+                                                                             len(self.x_axis)),
                                int(self._current_value['X']), axis=1),
                        int(self._current_value['Y']), axis=0)
