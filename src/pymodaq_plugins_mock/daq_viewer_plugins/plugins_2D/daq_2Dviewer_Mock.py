@@ -3,11 +3,9 @@ from qtpy import QtWidgets
 import numpy as np
 import pymodaq.utils.math_utils as mutils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
-from easydict import EasyDict as edict
-from collections import OrderedDict
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, Axis
-from pymodaq.utils.array_manipulation import crop_array_to_axis, crop_vector_to_axis
+from pymodaq.utils.array_manipulation import crop_array_to_axis
 
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):

@@ -1,18 +1,15 @@
 from qtpy.QtCore import QThread, Slot, QRectF
 from qtpy import QtWidgets
 import numpy as np
-
-import pymodaq.utils.math_utils as mylib
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
-from easydict import EasyDict as edict
-from collections import OrderedDict
+
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, Axis
 from pymodaq.utils.parameter import Parameter
 from pymodaq.utils.parameter.utils import iter_children
-from pymodaq.utils.array_manipulation import crop_array_to_axis, crop_vector_to_axis
 
-from pymodaq_plugins.hardware.camera_wrapper import Camera
+
+from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 
 
 class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):

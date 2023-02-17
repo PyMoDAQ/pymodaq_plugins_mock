@@ -5,7 +5,7 @@ Created the 24/10/2022
 @author: Sebastien Weber
 """
 import numpy as np
-import pymodaq.daq_utils.math_utils as mylib
+import pymodaq.utils.math_utils as mutils
 
 
 class Camera:
@@ -39,7 +39,7 @@ class Camera:
         self.x_axis = np.linspace(0, self.Nx, self.Nx, endpoint=False)
         self.y_axis = np.linspace(0, self.Ny, self.Ny, endpoint=False)
         data_mock = self.amp * (
-            mylib.gauss2D(self.x_axis, self.x0, self.dx,
+            mutils.gauss2D(self.x_axis, self.x0, self.dx,
                           self.y_axis, self.y0, self.dy,
                           self.n,
                           angle=self._current_value['Theta']))
