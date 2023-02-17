@@ -3,7 +3,7 @@ from qtpy import QtWidgets
 import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.utils.daq_utils import ThreadCommand
 from pymodaq.utils.data import DataFromPlugins, Axis
 from pymodaq.utils.parameter import Parameter
 from pymodaq.utils.parameter.utils import iter_children
@@ -49,6 +49,7 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         self.y_axis = None
         self.live = False
         self.ind_commit = 0
+        self._update_axes = True
 
     def commit_settings(self, param: Parameter):
         """
@@ -60,8 +61,8 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
             if hasattr(self.controller, param.name()):
                 setattr(self.controller, param.name(), param.value())
             self.controller.base_Mock_data()
-            self.x_axis = Axis(data=self.controller.x_axis)
-            self.y_axis = Axis(data=self.controller.y_axis)
+            self.x_axis = Axis(data=self.controller.x_axis, label='pixel', index=1)
+            self.y_axis = Axis(data=self.controller.y_axis, label='pixel', index=0)
 
     def ini_detector(self, controller=None):
         self.ini_detector_init(controller, Camera())
@@ -69,8 +70,8 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
                                        [['wait_time'], self.settings['wait_time'], 'value']))
 
         self.controller.base_Mock_data()
-        self.x_axis = Axis(data=self.controller.x_axis)
-        self.y_axis = Axis(data=self.controller.y_axis)
+        self.x_axis = Axis(data=self.controller.x_axis, label='pixel', index=1)
+        self.y_axis = Axis(data=self.controller.y_axis, label='pixel', index=0)
 
         #apply presets to wrapper
         for settings in self.settings.child('cam_settings').children():
@@ -162,10 +163,13 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
             datatmptmp = []
             for indbis in range(self.settings['Nimagescolor']):
                 datatmptmp.append(data_tmp)
-            data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D',
-                                        x_axis=self.x_axis,
-                                        y_axis=self.y_axis))
-        # data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
+            if self._update_axes:
+                data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D',
+                                            axes=[self.x_axis, self.y_axis]))
+            else:
+                data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D'))
+        if self._update_axes:
+            self._update_axes = False
         return data
 
     def stop(self):

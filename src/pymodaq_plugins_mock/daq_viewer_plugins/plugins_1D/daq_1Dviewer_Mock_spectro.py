@@ -62,6 +62,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         self.x_axis: Axis = None
         self.ind_data = 0
+        self._update_x_axis = True
 
     def commit_settings(self, param):
         """
@@ -76,7 +77,7 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
             --------
             set_Mock_data
         """
-        if param.name() in iter_children(self.settings['x_axis'], []):
+        if param.name() in iter_children(self.settings.child('x_axis'), []):
             if param.name() == 'x0':
                 self.get_spectro_wl()
             self.set_x_axis()
@@ -128,7 +129,10 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
         x0 = self.settings['x_axis', 'x0']
         dx = self.settings['x_axis', 'dx']
         self.x_axis = Axis(label='photon wavelength', units='nm',
-                           data=linspace_step(x0 - (Npts - 1) * dx / 2, x0 + (Npts - 1) * dx / 2, dx))
+                           data=linspace_step(x0 - (Npts - 1) * dx / 2, x0 + (Npts - 1) * dx / 2, dx),
+                           index=0)
+        self._update_x_axis = True
+
     def set_spectro_wl(self, spectro_wl):
         """
         Method related to spectrometer module, mandatory
@@ -247,9 +251,12 @@ class DAQ_1DViewer_Mock_spectro(DAQ_Viewer_base):
 
         data_tot = [data / Naverage for data in data_tot]
         QThread.msleep(self.settings.child('exposure_ms').value())
-        self.data_grabed_signal.emit([DataFromPlugins(name='Mock1D', data=data_tot, dim='Data1D',
-                                                      axes=[Axis(label='1D axis', units='mock_units',
-                                                                 data=self.x_axis.data, index=0)])])
+        if not self._update_x_axis:
+            self.data_grabed_signal.emit([DataFromPlugins(name='Mock1D', data=data_tot, dim='Data1D',)])
+        else:
+            self.data_grabed_signal.emit([DataFromPlugins(name='Mock1D', data=data_tot, dim='Data1D',
+                                                          axes=[self.x_axis])])
+            self._update_x_axis = False
 
     def stop(self):
         """
