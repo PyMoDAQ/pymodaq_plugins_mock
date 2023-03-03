@@ -13,7 +13,8 @@ PyMoDAQ Plugins
     :target: https://github.com/PyMoDAQ/pymodaq_plugins
 
 Plugins initially developed with PyMoDAQ. Includes Mock plugins that are plugins of virtual instruments dedicated
-to code testing for new functionalities or development.
+to code testing for new functionalities or development. From version 4.0.0 onwards, these plugins will only work with
+pymodaq > 4.0.0
 
 
 Authors
