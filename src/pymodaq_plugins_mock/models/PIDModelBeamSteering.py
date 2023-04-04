@@ -1,4 +1,4 @@
-from pymodaq.pid.utils import PIDModelGeneric, OutputToActuator, InputFromDetector, main
+from pymodaq.extensions.pid.utils import PIDModelGeneric, OutputToActuator, InputFromDetector, main
 from scipy.ndimage import center_of_mass
 
 
