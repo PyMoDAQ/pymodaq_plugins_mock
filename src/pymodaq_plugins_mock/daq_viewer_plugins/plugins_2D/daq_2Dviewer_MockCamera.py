@@ -19,6 +19,9 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         {'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1, 'default': 1, 'min': 0,
          'max': 3},
         {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 1, 'default': 0, 'min': 0},
+
+        {'title': 'Read only prop:', 'name': 'read_only', 'type': 'bool', 'value': False},
+
         {'title': 'Use ROISelect', 'name': 'use_roi_select', 'type': 'bool', 'value': False},
         {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
 
@@ -63,6 +66,10 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
             self.controller.base_Mock_data()
             self.x_axis = Axis(data=self.controller.x_axis, label='pixel', index=1)
             self.y_axis = Axis(data=self.controller.y_axis, label='pixel', index=0)
+
+        if param.name() == 'read_only':
+            for child in self.settings.child('cam_settings').children():
+                child.setOpts(readonly=param.value())
 
     def ini_detector(self, controller=None):
         self.ini_detector_init(controller, Camera())
