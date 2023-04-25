@@ -14,6 +14,8 @@ from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 
 class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
 
+    live_mode_available = True
+
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
         {'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1, 'default': 1, 'min': 0,
@@ -126,31 +128,25 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         return self.controller.y_axis
 
     def grab_data(self, Naverage=1, **kwargs):
+        """Start a grab from the detector
+
+        Parameters
+        ----------
+        Naverage: int
+            Number of hardware averaging (if hardware averaging is possible, self.hardware_averaging should be set to
+            True in class preamble and you should code this implementation)
+        kwargs: dict
+            others optionals arguments
         """
-            | For each integer step of naverage range set mock data.
-            | Construct the data matrix and send the data_grabed_signal once done.
-
-            =============== ======== ===============================================
-            **Parameters**  **Type**  **Description**
-            *Naverage*      int       The number of images to average.
-                                      specify the threshold of the mean calculation
-            =============== ======== ===============================================
-
-            See Also
-            --------
-            set_Mock_data
-        """
-
-        "live is an attempt to export data as fast as possible"
         if 'live' in kwargs:
             if kwargs['live']:
                 self.live = True
-                self.live = False  # don't want to use that for the moment
+                # self.live = False  # don't want to use that for the moment
 
         if self.live:
             while self.live:
                 data = self.average_data(Naverage)
-                QThread.msleep(100)
+                QThread.msleep(kwargs.get('wait_time', 100))
                 self.data_grabed_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
