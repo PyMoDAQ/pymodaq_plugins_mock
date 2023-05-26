@@ -1,8 +1,8 @@
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
-from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTau
+from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTauMultiAxes
 
 
-class DAQ_Move_MockTau(DAQ_Move_base):
+class DAQ_Move_MockTauMulti(DAQ_Move_base):
     """
         Wrapper object to access the Mock fonctionnalities, similar wrapper for all controllers.
 
@@ -11,22 +11,22 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         *params*          dictionnary
         =============== ==============
     """
-    _controller_units = ActuatorWrapperWithTau.units
+    _controller_units = ActuatorWrapperWithTauMultiAxes.units
 
     is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
-    axes_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
-    _epsilon = 0.01
+    axes_names = ActuatorWrapperWithTauMultiAxes.axes
+    _epsilon = ActuatorWrapperWithTauMultiAxes._epsilon
     params = \
         [
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': 500, 'tip': 'Characteristic evolution time'},
              ] + comon_parameters_fun(is_multiaxes, axes_names, epsilon=_epsilon)
 
     def ini_attributes(self):
-        self.controller: ActuatorWrapperWithTau = None
+        self.controller: ActuatorWrapperWithTauMultiAxes = None
 
     def get_actuator_value(self):
         # TODO for your custom plugin
-        pos = self.controller.get_value()
+        pos = self.controller.get_value(self.settings['multiaxes', 'axis'])
         pos = self.get_position_with_scaling(pos)
         return pos
 
@@ -41,7 +41,8 @@ class DAQ_Move_MockTau(DAQ_Move_base):
             self.controller.tau = param.value() / 1000  # controller need a tau in seconds while the param tau is in ms
         elif param.name() == 'epsilon':
             self.controller.epsilon = param.value()
-
+        elif param.name() == 'do_group':
+            self.controller.move_as_group(True, self.settings['grouping', 'grouped_axes']['selected'])
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
@@ -57,7 +58,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        self.controller = self.ini_stage_init(controller, ActuatorWrapperWithTau())
+        self.controller = self.ini_stage_init(controller, ActuatorWrapperWithTauMultiAxes())
         info = "Controller initialized"
         initialized = True
         return info, initialized
@@ -74,8 +75,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         self.target_value = position
         position = self.set_position_with_scaling(position)  # apply scaling if the user specified one
 
-        ## TODO for your custom plugin
-        self.controller.move_at(position)
+        self.controller.move_at(position, self.settings['multiaxes', 'axis'])
 
     def move_rel(self, position):
         """ Move the actuator to the relative target actuator value defined by position
@@ -87,7 +87,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         position = self.check_bound(self.current_value+position)-self.current_value
         self.target_value = position + self.current_value
         self.set_position_relative_with_scaling(position)
-        self.controller.move_at(self.target_value)
+        self.controller.move_at(self.target_value, self.settings['multiaxes', 'axis'])
 
     def move_home(self):
         """
@@ -98,7 +98,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         """
 
         ## TODO for your custom plugin
-        self.controller.move_at(0)
+        self.controller.move_at(0, self.settings['multiaxes', 'axis'])
 
     def stop_motion(self):
       """
@@ -108,7 +108,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         --------
         move_done
       """
-      self.controller.stop()
+      self.controller.stop(self.settings['multiaxes', 'axis'])
       self.move_done()
 
 
