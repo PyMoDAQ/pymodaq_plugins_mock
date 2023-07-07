@@ -150,11 +150,11 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         self.ind_data += 1
         if self.settings['lcd']:
             if not self.lcd_init:
-                self.emit_status(ThreadCommand('init_lcd', [dict(labels=['dat0', 'data1'], Nvals=2, digits=6)]))
+                self.emit_status(ThreadCommand('init_lcd', dict(labels=['dat0', 'data1'], Nvals=2, digits=6)))
                 QtWidgets.QApplication.processEvents()
                 self.lcd_init = True
 
-            self.emit_status(ThreadCommand('lcd', [data_tot]))
+            self.emit_status(ThreadCommand('lcd', data_tot))
 
     def stop(self):
         """
@@ -162,6 +162,7 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         """
 
         return ""
+
 
 if __name__ == '__main__':
     main(__file__)
