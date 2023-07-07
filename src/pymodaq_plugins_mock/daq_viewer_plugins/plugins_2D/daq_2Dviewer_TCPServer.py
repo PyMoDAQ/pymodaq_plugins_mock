@@ -1,6 +1,6 @@
 from qtpy.QtCore import Signal, Slot
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_TCP_server
-from pymodaq.utils.data import DataFromPlugins, Axis
+from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
 
 
 class DAQ_2DViewer_TCPServer(DAQ_Viewer_TCP_server):
@@ -37,4 +37,5 @@ class DAQ_2DViewer_TCPServer(DAQ_Viewer_TCP_server):
         """
             Send the grabed data signal.
         """
-        self.data_grabed_signal.emit([DataFromPlugins(name='TCP Server 2D', data=data, type='Data2D')])
+        self.dte_signal.emit(DataToExport('TCP2D',
+                                          data=[DataFromPlugins(name='TCP Server 2D', data=data, type='Data2D')]))

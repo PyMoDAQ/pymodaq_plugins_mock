@@ -4,7 +4,7 @@ import numpy as np
 import pymodaq.utils.math_utils as mutils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.data import DataFromPlugins, Axis
+from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
 from pymodaq.utils.array_manipulation import crop_array_to_axis
 
 
@@ -126,8 +126,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         self.y_axis = self.get_yaxis()
 
         # initialize viewers with the future type of data but with 0value data
-        self.data_grabed_signal_temp.emit(self.average_data(1, True))
-        # OrderedDict(name='Mock3', data=[np.zeros((128,))], type='Data1D')])
+        self.dte_signal_temp.emit(self.average_data(1, True))
 
         initialized = True
         info = 'Init'
@@ -173,12 +172,11 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             while self.live:
                 data = self.average_data(Naverage)
                 QThread.msleep(100)
-                self.data_grabed_signal.emit(data)
+                self.dte_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
             data = self.average_data(Naverage)
-            QThread.msleep(000)
-            self.data_grabed_signal.emit(data)
+            self.dte_signal.emit(data)
 
     def average_data(self, Naverage, init=False):
         data = []  # list of image (at most 3 for red, green and blue channels)
@@ -194,8 +192,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
                 datatmptmp.append(data_tmp)
             data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D',
                                         axes=[self.y_axis, self.x_axis]))
-        # data.append(OrderedDict(name='Mock2D_1D',data=[np.mean(data_tmp,axis=0)], type='Data1D'))
-        return data
+        return DataToExport('Mock2D', data=data)
 
     def stop(self):
         """

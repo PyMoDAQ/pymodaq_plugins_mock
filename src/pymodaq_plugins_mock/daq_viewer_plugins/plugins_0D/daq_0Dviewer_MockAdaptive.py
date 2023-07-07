@@ -1,7 +1,7 @@
 from qtpy import QtWidgets
 from qtpy.QtCore import Signal, QThread, Slot
 from pymodaq.utils import daq_utils as utils
-from pymodaq.utils.data import DataFromPlugins
+from pymodaq.utils.data import DataFromPlugins, DataToExport
 import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base
 from easydict import EasyDict as edict
@@ -154,8 +154,9 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
                                                                       'value']))
 
         # initialize viewers with the future type of data
-        self.data_grabed_signal.emit(
-            [utils.DataFromPlugins(name='Mock1', data=[np.array(0)], dim='Data0D', labels=['RandomGaussians'])])
+        self.dte_signal_temp.emit(DataToExport('MockAdaptive',
+                                               data=[DataFromPlugins(name='Mock1', data=[np.array(0)],
+                                                                     dim='Data0D', labels=['RandomGaussians'])]))
 
         self.status.initialized = True
         self.status.controller = self.controller
@@ -201,8 +202,9 @@ class DAQ_0DViewer_MockAdaptive(DAQ_Viewer_base):
 
         data = np.array([data + self.settings['noise'] * np.random.rand()])
 
-        self.data_grabed_signal.emit([DataFromPlugins(name='MockAdaptive', data=[data],
-                                                            dim='Data0D', )])
+        self.dte_signal.emit(DataToExport('MockAdaptive',
+                                          data=[DataFromPlugins(name='MockAdaptive', data=[data],
+                                                                dim='Data0D', )]))
         self.ind_data += 1
 
     def stop(self):

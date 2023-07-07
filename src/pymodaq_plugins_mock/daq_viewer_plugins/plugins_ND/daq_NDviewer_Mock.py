@@ -2,11 +2,11 @@ from qtpy.QtCore import QThread
 from qtpy import QtWidgets
 import numpy as np
 import pymodaq.utils.daq_utils as utils
-from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base
+from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main
 from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.data import Axis, DataFromPlugins, NavAxis
+from pymodaq.utils.data import Axis, DataFromPlugins, NavAxis, DataToExport
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
 
 
@@ -36,14 +36,14 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             {'title': 'dx', 'name': 'dx', 'type': 'float', 'value': 20, 'default': 20, 'min': 1},
             {'title': 'dy', 'name': 'dy', 'type': 'float', 'value': 40, 'default': 40, 'min': 1},
             {'title': 'lambda', 'name': 'lambda', 'type': 'float', 'value': 8, 'default': 1, 'min': 0.1},
-            {'title': 'n', 'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
+            {'title': 'n', 'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
         ]},
         {'title': 'Temporal properties:', 'name': 'temp_settings', 'type': 'group', 'children': [
             {'title': 'Nt', 'name': 'Nt', 'type': 'int', 'value': 150, 'default': 100, 'min': 1},
             {'title': 'amp', 'name': 'amp', 'type': 'int', 'value': 20, 'default': 20, 'min': 1},
             {'title': 't0', 'name': 't0', 'type': 'slide', 'value': 50, 'default': 50, 'min': 0},
             {'title': 'dt', 'name': 'dt', 'type': 'float', 'value': 20, 'default': 20, 'min': 1},
-            {'title': 'n', 'name': 'n', 'type': 'float', 'value': 1, 'default': 1, 'min': 1},
+            {'title': 'n', 'name': 'n', 'type': 'int', 'value': 1, 'default': 1, 'min': 1},
         ]},
 
         {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': []},
@@ -148,33 +148,23 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             daq_utils.ThreadCommand, get_xaxis, get_yaxis
         """
         self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        try:
-
-            if self.settings.child(('controller_status')).value() == "Slave":
-                if controller is None:
-                    raise Exception('no controller has been defined externally while this detector is a slave one')
-                else:
-                    self.controller = controller
+        if self.settings.child(('controller_status')).value() == "Slave":
+            if controller is None:
+                raise Exception('no controller has been defined externally while this detector is a slave one')
             else:
-                self.controller = "Mock controller"
+                self.controller = controller
+        else:
+            self.controller = "Mock controller"
 
-            self.set_Mock_data()
-            # initialize viewers with the future type of data
-            self.data_grabed_signal_temp.emit(
-                [DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))], dim='DataND',
-                                 nav_axes=(0, 1)), ])
+        self.set_Mock_data()
+        # # initialize viewers with the future type of data
+        # self.dte_signal_temp.emit(DataToExport('MockND',
+        #                                        data=[DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))],
+        #                                                              dim='DataND',
+        #                                                              nav_indexes=(0, 1))]))
 
-            self.status.x_axis = self.x_axis
-            self.status.y_axis = self.y_axis
-            self.status.initialized = True
-            self.status.controller = self.controller
-            return self.status
-
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-            self.status.info = getLineInfo() + str(e)
-            self.status.initialized = False
-            return self.status
+        initialized = True
+        return 'ok', initialized
 
     def close(self):
         """
@@ -208,12 +198,12 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             while self.live:
                 data = self.average_data(Naverage)
                 QThread.msleep(100)
-                self.data_grabed_signal.emit(data)
+                self.dte_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
             data = self.average_data(Naverage)
             QThread.msleep(000)
-            self.data_grabed_signal.emit(data)
+            self.dte_signal.emit(data)
 
     def average_data(self, Naverage):
         data_tmp = np.zeros_like(self.image)
@@ -221,10 +211,12 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             data_tmp += self.set_Mock_data()
         data_tmp = data_tmp / Naverage
 
-        data = [DataFromPlugins(name='MockND_{:d}'.format(ind), data=[data_tmp], dim='DataND', nav_axes=(1, 0),
-                                nav_x_axis=NavAxis(data=self.x_axis, label='X space', nav_index=1),
-                                nav_y_axis=NavAxis(data=self.y_axis, label='Y space', nav_index=0),
-                                x_axis=Axis(data=self.time_axis, label='time label'))]
+        data = DataToExport('MockND',
+                            data=[DataFromPlugins(name='MockND_{:d}'.format(ind), data=[data_tmp], dim='DataND',
+                                                  nav_indexes=(0, 1),
+                                                  axes=[Axis(data=self.x_axis, label='X space', index=1),
+                                                        Axis(data=self.y_axis, label='Y space', index=0),
+                                                        Axis(data=self.time_axis, label='time label', index=2)])])
         return data
 
     def stop(self):
@@ -233,3 +225,7 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
         """
         self.live = False
         return ""
+
+
+if __name__ == '__main__':
+    main(__file__, init=True)

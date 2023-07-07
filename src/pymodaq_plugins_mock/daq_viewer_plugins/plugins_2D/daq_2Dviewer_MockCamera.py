@@ -4,7 +4,7 @@ import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 
 from pymodaq.utils.daq_utils import ThreadCommand
-from pymodaq.utils.data import DataFromPlugins, Axis
+from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
 from pymodaq.utils.parameter import Parameter
 from pymodaq.utils.parameter.utils import iter_children
 
@@ -88,7 +88,7 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
                 setattr(self.controller, settings.name(), settings.value())
 
         # initialize viewers with the future type of data but with 0value data
-        self.data_grabed_signal_temp.emit(self.average_data(1, True),)
+        self.dte_signal_temp.emit(self.average_data(1, True),)
 
         initialized = True
         info = 'Controller ok'
@@ -147,7 +147,7 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
             while self.live:
                 data = self.average_data(Naverage)
                 QThread.msleep(kwargs.get('wait_time', 100))
-                self.data_grabed_signal.emit(data)
+                self.dte_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
             data = self.average_data(Naverage)
@@ -173,7 +173,7 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
                 data.append(DataFromPlugins(name='Mock2D_{:d}'.format(ind), data=datatmptmp, dim='Data2D'))
         if self._update_axes:
             self._update_axes = False
-        return data
+        return DataToExport('MockCamera', data=data)
 
     def stop(self):
         """

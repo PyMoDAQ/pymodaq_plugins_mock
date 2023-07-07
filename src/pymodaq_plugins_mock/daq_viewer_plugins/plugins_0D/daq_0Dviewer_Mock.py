@@ -1,7 +1,7 @@
 from qtpy import QtWidgets
 
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.data import DataFromPlugins
+from pymodaq.utils.data import DataFromPlugins, DataToExport
 import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, comon_parameters, main
 
@@ -92,8 +92,9 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                                                                 self.settings.child('wait_time').value(), 'value']))
 
         # initialize viewers with the future type of data
-        self.data_grabed_signal.emit(
-            [DataFromPlugins(name='Mock1', data=[np.array([0])], dim='Data0D', labels=['Mock1', 'label2'])])
+        self.dte_signal_temp.emit(DataToExport('Mock0D', data=[DataFromPlugins(name='Mock1', data=[np.array([0])],
+                                                                               dim='Data0D',
+                                                                               labels=['Mock1', 'label2'])]))
 
         initialized = True
         info = 'RAS'
@@ -131,13 +132,16 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
                 data_tot.append(np.array([data[0]]))
 
         if self.settings.child('sep_viewers').value():
-            dat = [DataFromPlugins(name=f'Mock_{ind:03}', data=[data], dim='Data0D',
-                                   labels=[f'mock data {ind:03}']) for ind, data in enumerate(data_tot)]
-            self.data_grabed_signal.emit(dat)
+            dat = DataToExport('Mock0D',
+                               data=[DataFromPlugins(name=f'Mock_{ind:03}', data=[data], dim='Data0D',
+                                                     labels=[f'mock data {ind:03}']) for ind, data in
+                                     enumerate(data_tot)])
+            self.dte_signal.emit(dat)
 
         else:
-            self.data_grabed_signal.emit([DataFromPlugins(name='Mock0D', data=data_tot,
-                                                          dim='Data0D', labels=['dat0', 'data1'])])
+            self.dte_signal.emit(DataToExport('Mock0D',
+                                              data=[DataFromPlugins(name='Mock0D', data=data_tot,
+                                                                    dim='Data0D', labels=['dat0', 'data1'])]))
         self.ind_data += 1
         if self.settings['lcd']:
             if not self.lcd_init:

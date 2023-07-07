@@ -3,7 +3,7 @@ from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_TCP_server
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.data import DataFromPlugins, Axis
+from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
 
 
 class DAQ_1DViewer_TCPServer(DAQ_Viewer_TCP_server):
@@ -39,4 +39,4 @@ class DAQ_1DViewer_TCPServer(DAQ_Viewer_TCP_server):
         """
             Send the grabed data signal.
         """
-        self.data_grabed_signal.emit([DataFromPlugins(name='TCP Server', data=data, dim='Data1D')])
+        self.dte_signal.emit(DataToExport('TCP1D', data=[DataFromPlugins(name='TCP Server', data=data, dim='Data1D')]))
