@@ -152,7 +152,7 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
         else:
             data = self.average_data(Naverage)
             QThread.msleep(000)
-            self.data_grabed_signal.emit(data)
+            self.dte_signal.emit(data)
 
     def average_data(self, Naverage, init=False):
         data = []  # list of image (at most 3 for red, green and blue channels)
