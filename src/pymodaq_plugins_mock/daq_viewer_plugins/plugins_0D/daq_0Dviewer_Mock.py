@@ -1,4 +1,4 @@
-from qtpy import QtWidgets
+from qtpy import QtWidgets, QtCore
 
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, DataToExport
@@ -84,18 +84,23 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
         initialized: bool
             False if initialization failed otherwise True
         """
+        self.emit_status(ThreadCommand('show_splash', 'Starting initialization'))
+        QtCore.QThread.msleep(500)
         self.ini_detector_init(old_controller=controller,
                                new_controller='Mock controller')
 
+        self.emit_status(ThreadCommand('show_splash', 'generating Mock Data'))
+        QtCore.QThread.msleep(500)
         self.set_Mock_data()
         self.emit_status(ThreadCommand('update_main_settings', [['wait_time'],
                                                                 self.settings.child('wait_time').value(), 'value']))
-
+        self.emit_status(ThreadCommand('show_splash', 'Displaying initial data'))
+        QtCore.QThread.msleep(500)
         # initialize viewers with the future type of data
         self.dte_signal_temp.emit(DataToExport('Mock0D', data=[DataFromPlugins(name='Mock1', data=[np.array([0])],
                                                                                dim='Data0D',
                                                                                labels=['Mock1', 'label2'])]))
-
+        self.emit_status(ThreadCommand('close_splash'))
         initialized = True
         info = 'RAS'
         return info, initialized
