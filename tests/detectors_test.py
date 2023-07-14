@@ -6,8 +6,7 @@ Created the 14/07/2023
 """
 
 import pytest
-from pymodaq.control_modules.utils import DET_TYPES, get_viewer_plugins, DAQTypesEnum, DetectorError
-
+from pymodaq.control_modules.utils import DET_TYPES
 from pymodaq.utils.daq_utils import get_plugins
 
 DET_TYPES = {'DAQ0D': get_plugins('daq_0Dviewer'),
