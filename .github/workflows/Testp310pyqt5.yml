@@ -1,0 +1,10 @@
+name: '3.10 PyQt5'
+
+on: [push]
+
+jobs:
+  call_workflow:
+    uses: PyMoDAQ/pymodaq_plugins_mock/.github/workflows/Testbase.yml@main
+    with:
+      python: '3.10'
+      qt5: 'pyqt5'
