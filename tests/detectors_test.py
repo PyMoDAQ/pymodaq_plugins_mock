@@ -6,7 +6,8 @@ Created the 14/07/2023
 """
 
 import pytest
-from pymodaq.control_modules.utils import DET_TYPES
+from importlib import metadata
+
 from pymodaq.utils.daq_utils import get_plugins
 
 DET_TYPES = {'DAQ0D': get_plugins('daq_0Dviewer'),
@@ -14,6 +15,12 @@ DET_TYPES = {'DAQ0D': get_plugins('daq_0Dviewer'),
              'DAQ2D': get_plugins('daq_2Dviewer'),
              'DAQND': get_plugins('daq_NDviewer'),
              }
+
+
+def test_metadata():
+    discovered_plugins = metadata.entry_points()['pymodaq.plugins']
+    print(discovered_plugins)
+    assert len(discovered_plugins) != 0
 
 
 def test_mock_detectors():
