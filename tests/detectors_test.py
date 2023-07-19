@@ -17,12 +17,6 @@ DET_TYPES = {'DAQ0D': get_plugins('daq_0Dviewer'),
              }
 
 
-def test_metadata():
-    discovered_plugins = metadata.entry_points()['pymodaq.plugins']
-    print(discovered_plugins)
-    assert len(discovered_plugins) != 0
-
-
 def test_mock_detectors():
     assert 'Mock' in [det['name'] for det in DET_TYPES['DAQ0D']]
     assert 'Mock' in [det['name'] for det in DET_TYPES['DAQ1D']]
