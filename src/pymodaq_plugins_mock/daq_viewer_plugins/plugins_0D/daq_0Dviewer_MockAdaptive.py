@@ -8,7 +8,6 @@ from easydict import EasyDict as edict
 from collections import OrderedDict
 from pymodaq.utils.daq_utils import gauss1D
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
-from pymodaq.utils.scanner import ScanParameters
 from PIL import Image
 from pathlib import Path
 
