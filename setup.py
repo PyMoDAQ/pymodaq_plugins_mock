@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     entry_points={'pymodaq.plugins': f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}',
                   'pymodaq.pid_models': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}",
-                  'pymodaq.extensions': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}"},
+                  },
     install_requires=['toml', ]+config['plugin-install']['packages-required'],
     **setupOpts
 )
