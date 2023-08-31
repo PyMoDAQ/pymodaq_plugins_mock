@@ -7,7 +7,7 @@ PLUGIN_NAME = f"pymodaq_plugins_{SHORT_PLUGIN_NAME}"
 
 from pathlib import Path
 
-with open(str(Path(__file__).parent.joinpath(f'src/{PLUGIN_NAME}/VERSION')), 'r') as fvers:
+with open(str(Path(__file__).parent.joinpath(f'src/{PLUGIN_NAME}/resources/VERSION')), 'r') as fvers:
     version = fvers.read().strip()
 
 
@@ -43,7 +43,7 @@ setup(
     include_package_data=True,
     entry_points={'pymodaq.plugins': f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}',
                   'pymodaq.pid_models': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}",
-                  'pymodaq.extensions': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}"},
+                  },
     install_requires=['toml', ]+config['plugin-install']['packages-required'],
     **setupOpts
 )

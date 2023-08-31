@@ -3,15 +3,15 @@ from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  #
 
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
-from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
+from pymodaq_plugins_mock.hardware.multiaxis_wrapper import MultiAxis
 
 from pymodaq_plugins_mock import config
 
-if 'MockCamera' not in config('displayed', 'actuators'):
+if 'MockNamedAxes' not in config('displayed', 'actuators'):
     raise ValueError('Plugin configured to be not displayed')
 
 
-class DAQ_Move_MockCamera(DAQ_Move_base):
+class DAQ_Move_MockNamedAxes(DAQ_Move_base):
     """
         Wrapper object to access the Mock fonctionnalities, similar wrapper for all controllers.
 
@@ -22,13 +22,13 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
     """
     _controller_units = 'whatever'
     is_multiaxes = True
-    stage_names = Camera.axes
+    stage_names = dict(zip(['Xaxis', 'Yaxis', 'Zaxis'], MultiAxis.axes_indexes))
     _epsilon = 0.01
 
     params = comon_parameters_fun(is_multiaxes, stage_names)
 
     def ini_attributes(self):
-        self.controller: Camera = None
+        self.controller: MultiAxis = None
 
     def get_actuator_value(self):
         axis = self.settings['multiaxes', 'axis']
@@ -65,8 +65,8 @@ class DAQ_Move_MockCamera(DAQ_Move_base):
             --------
              daq_utils.ThreadCommand
         """
-        self.ini_stage_init(controller, Camera())
-        info = "Mock Camera"
+        self.ini_stage_init(controller, MultiAxis())
+        info = "Mock MultiAxis"
         initialized = True
         return info, initialized
 
