@@ -16,7 +16,7 @@ class MultiAxis:
         self._image = None
         self._current_value = [0., 0., 0.]
 
-    def get_value(self, axis: int):
+    def get_value(self, axis: int = 0):
         return self._current_value[self.axes_indexes.index(axis)]
 
     def set_value(self, axis: int = 0, value: float = 0.):
