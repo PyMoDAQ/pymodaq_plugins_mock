@@ -7,7 +7,7 @@ PLUGIN_NAME = f"pymodaq_plugins_{SHORT_PLUGIN_NAME}"
 
 from pathlib import Path
 
-with open(str(Path(__file__).parent.joinpath(f'src/{PLUGIN_NAME}/VERSION')), 'r') as fvers:
+with open(str(Path(__file__).parent.joinpath(f'src/{PLUGIN_NAME}/resources/VERSION')), 'r') as fvers:
     version = fvers.read().strip()
 
 

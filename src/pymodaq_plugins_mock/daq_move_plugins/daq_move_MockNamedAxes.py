@@ -5,6 +5,11 @@ from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo  # object used to
 from easydict import EasyDict as edict  # type of dict
 from pymodaq_plugins_mock.hardware.multiaxis_wrapper import MultiAxis
 
+from pymodaq_plugins_mock import config
+
+if 'MockNamedAxes' not in config('displayed', 'actuators'):
+    raise ValueError('Plugin configured to be not displayed')
+
 
 class DAQ_Move_MockNamedAxes(DAQ_Move_base):
     """

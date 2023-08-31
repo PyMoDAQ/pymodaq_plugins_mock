@@ -1,0 +1,12 @@
+#this is the configuration file of the Mock plugin
+
+[displayed]
+actuators = ["Mock", "MockCamera", "MockNamedAxes", "MockTau", "MockTauMulti", "TCPServer"]
+0D_detectors = ["Mock", "MockAdaptive", "TCPServer"]
+1D_detectors = ["Mock", "Mock_spectro", "TCPServer"]
+2D_detectors = ["Mock", "MockCamera", "TCPServer"]
+ND_detectors = ["Mock"]
+
+[actuators]
+    [actuators.mocktau]
+    tau = 20  # ms
