@@ -1,5 +1,5 @@
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, main  # base class
-from pymodaq.control_modules.move_utility_classes import comon_parameters_fun  # common set of parameters for all actuators
+from pymodaq.control_modules.move_utility_classes import comon_parameters_fun, DataActuatorType  # common set of parameters for all actuators
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
 from easydict import EasyDict as edict  # type of dict
 
@@ -21,6 +21,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
     _controller_units = 'whatever'
     is_multiaxes = False
     stage_names = []
+    data_actuator_type = DataActuatorType['DataActuator']
 
     params = comon_parameters_fun(is_multiaxes, stage_names)
 
@@ -129,41 +130,16 @@ class DAQ_Move_Mock(DAQ_Move_base):
             self.status.initialized = False
             return self.status
 
-    def move_Abs(self, position):
+    def move_abs(self, position):
         """
-            Make the absolute move from the given position after thread command signal was received in DAQ_Move_main.
-
-            =============== ========= =======================
-            **Parameters**  **Type**   **Description**
-
-            *position*       float     The absolute position
-            =============== ========= =======================
-
-            See Also
-            --------
-            DAQ_Move_base.set_position_with_scaling, DAQ_Move_base.poll_moving
-
         """
         position = self.check_bound(position)
-        # position=self.set_position_with_scaling(position)
-        # print(position)
         self.target_position = position
 
         self.current_position = position  # +np.random.rand()-0.5
 
-    def move_Rel(self, position):
+    def move_rel(self, position):
         """
-            Make the relative move from the given position after thread command signal was received in DAQ_Move_main.
-
-            =============== ========= =======================
-            **Parameters**  **Type**   **Description**
-
-            *position*       float     The absolute position
-            =============== ========= =======================
-
-            See Also
-            --------
-            hardware.set_position_with_scaling, DAQ_Move_base.poll_moving
 
         """
         position = self.check_bound(self.current_position + position) - self.current_position
