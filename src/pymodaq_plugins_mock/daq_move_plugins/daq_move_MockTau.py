@@ -1,6 +1,6 @@
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main, DataActuatorType
 from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTau
-
+from pymodaq.utils.data import DataActuator
 from pymodaq_plugins_mock import config
 
 if 'MockTau' not in config('displayed', 'actuators'):
@@ -21,6 +21,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
     is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
     axes_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
     _epsilon = 0.01
+    data_actuator_type = DataActuatorType['DataActuator']
     params = \
         [
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': config('actuators', 'mocktau', 'tau'),
@@ -32,7 +33,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
 
     def get_actuator_value(self):
         # TODO for your custom plugin
-        pos = self.controller.get_value()
+        pos = DataActuator(data=self.controller.get_value())
         pos = self.get_position_with_scaling(pos)
         return pos
 
@@ -47,7 +48,6 @@ class DAQ_Move_MockTau(DAQ_Move_base):
             self.controller.tau = param.value() / 1000  # controller need a tau in seconds while the param tau is in ms
         elif param.name() == 'epsilon':
             self.controller.epsilon = param.value()
-
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
@@ -82,7 +82,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         position = self.set_position_with_scaling(position)  # apply scaling if the user specified one
 
         ## TODO for your custom plugin
-        self.controller.move_at(position)
+        self.controller.move_at(position.value())
 
     def move_rel(self, position):
         """ Move the actuator to the relative target actuator value defined by position
@@ -94,7 +94,7 @@ class DAQ_Move_MockTau(DAQ_Move_base):
         position = self.check_bound(self.current_value+position)-self.current_value
         self.target_value = position + self.current_value
         self.set_position_relative_with_scaling(position)
-        self.controller.move_at(self.target_value)
+        self.controller.move_at(self.target_value.value())
 
     def move_home(self):
         """
