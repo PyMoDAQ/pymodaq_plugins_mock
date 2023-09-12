@@ -1,5 +1,10 @@
-from pymodaq.extensions.pid.utils import PIDModelGeneric, OutputToActuator, InputFromDetector, main
+from typing import List
+
+import numpy as np
 from scipy.ndimage import center_of_mass
+
+from pymodaq.utils.data import DataToExport, DataActuator, DataCalculated
+from pymodaq.extensions.pid.utils import PIDModelGeneric, DataToActuatorPID, main
 
 
 class PIDModelBeamSteering(PIDModelGeneric):
@@ -7,7 +12,7 @@ class PIDModelBeamSteering(PIDModelGeneric):
                   min=dict(state=False, value=-100),)
     konstants = dict(kp=0.1, ki=0.000, kd=0.0000)
 
-    setpoint_ini = [128, 128]
+    setpoint_ini = [128., 128.]
     setpoints_names = ['Xaxis', 'Yaxis']
 
     actuators_name = ["Xpiezo", "Ypiezo"]
@@ -32,46 +37,49 @@ class PIDModelBeamSteering(PIDModelGeneric):
     def ini_model(self):
         super().ini_model()
 
-    def convert_input(self, measurements):
+    def convert_input(self, measurements: DataToExport) -> DataToExport:
         """
         Convert the measurements in the units to be fed to the PID (same dimensionality as the setpoint)
         Parameters
         ----------
-        measurements: (Ordereddict) Ordereded dict of object from which the model extract a value of the same units as the setpoint
+        measurements: DataToExport
+         DataToExport object from which the model extract a value of the same units as the setpoint
 
         Returns
         -------
-        float: the converted input
-
+        DataToExport: the converted input as 0D DataCalculated stored in a DataToExport
         """
-        #print('input conversion done')
-        key = list(measurements['Camera']['data2D'].keys())[0]  # so it can also be used from another plugin having another key
-        image = measurements['Camera']['data2D'][key]['data']
-        image = image - self.settings.child('threshold').value()
+        image = measurements.get_data_from_dim('Data2D')[0][0]
+        image = image - self.settings['threshold']
         image[image < 0] = 0
         x, y = center_of_mass(image)
         self.curr_input = [y, x]
-        return InputFromDetector([y, x])
+        return DataToExport('inputs',
+                            data=[DataCalculated(self.setpoints_names[ind],
+                                                 data=[np.array([self.curr_input[ind]])])
+                                  for ind in range(len(self.curr_input))])
 
-    def convert_output(self, outputs, dt, stab=True):
+    def convert_output(self, outputs: List[float], dt, stab=True) -> DataToActuatorPID:
         """
         Convert the output of the PID in units to be fed into the actuator
         Parameters
         ----------
-        output: (float) output value from the PID from which the model extract a value of the same units as the actuator
-
+        outputs: (list of float) output value from the PID from which the model extract a value of the same units as the actuator
+        dt: (float) elapsed time in seconds since last call
         Returns
         -------
-        list: the converted output as a list (if there are a few actuators)
+        DataToActuatorPID: the converted output as a DataToActuatorPID object (derived from DataToExport)
 
         """
         #print('output converted')
         
         self.curr_output = outputs
-        return OutputToActuator(mode='rel', values=outputs)
+        return DataToActuatorPID('pid', mode='rel',
+                                 data=[DataActuator(self.actuators_name[ind], data=outputs[ind])
+                                       for ind in range(len(outputs))])
 
 
 if __name__ == '__main__':
-    main("BeamSteeringMockNoModel.xml")
+    main("beam_steering_mock.xml")
 
 
