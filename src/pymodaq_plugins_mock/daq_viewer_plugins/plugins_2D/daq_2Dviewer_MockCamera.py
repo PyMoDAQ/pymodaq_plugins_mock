@@ -15,6 +15,7 @@ from pymodaq_plugins_mock.hardware.camera_wrapper import Camera
 class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
 
     live_mode_available = True
+    hardware_averaging = True
 
     params = comon_parameters + [
         {'title': 'Wait time (ms)', 'name': 'wait_time', 'type': 'int', 'value': 100, 'default': 100, 'min': 0},
@@ -145,12 +146,12 @@ class DAQ_2DViewer_MockCamera(DAQ_Viewer_base):
 
         if self.live:
             while self.live:
-                data = self.average_data(Naverage)
+                data = self.average_data(Naverage)  # hardware averaging
                 QThread.msleep(kwargs.get('wait_time', 100))
                 self.dte_signal.emit(data)
                 QtWidgets.QApplication.processEvents()
         else:
-            data = self.average_data(Naverage)
+            data = self.average_data(Naverage)  # hardware averaging
             QThread.msleep(000)
             self.dte_signal.emit(data)
 
