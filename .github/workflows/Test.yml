@@ -1,4 +1,4 @@
-name: '3.10 PyQt5'
+name: 'Tests'
 
 on: [push]
 
