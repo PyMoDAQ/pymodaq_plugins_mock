@@ -1,16 +1,20 @@
-PyMoDAQ Plugins
-###############
+PyMoDAQ Plugins Mock
+####################
 
-.. image:: https://img.shields.io/pypi/v/pymodaq_plugins.svg
-   :target: https://pypi.org/project/pymodaq_plugins/
+.. image:: https://img.shields.io/pypi/v/pymodaq_plugins_mock.svg
+   :target: https://pypi.org/project/pymodaq_plugins_mock/
    :alt: Latest Version
 
 .. image:: https://readthedocs.org/projects/pymodaq/badge/?version=latest
    :target: https://pymodaq.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://github.com/PyMoDAQ/pymodaq_plugins/workflows/Upload%20Python%20Package/badge.svg
-    :target: https://github.com/PyMoDAQ/pymodaq_plugins
+.. image:: https://github.com/PyMoDAQ/pymodaq_plugins_mock/workflows/Upload%20Python%20Package/badge.svg
+    :target: https://github.com/PyMoDAQ/pymodaq_plugins_mock
+
+.. image:: https://github.com/PyMoDAQ/pymodaq_plugins_mock/actions/workflows/Test.yml/badge.svg
+    :target: https://github.com/PyMoDAQ/pymodaq_plugins_mock/actions/workflows/Test.yml
+
 
 Plugins initially developed with PyMoDAQ. Includes Mock plugins that are plugins of virtual instruments dedicated
 to code testing for new functionalities or development. From version 4.0.0 onwards, these plugins will only work with
