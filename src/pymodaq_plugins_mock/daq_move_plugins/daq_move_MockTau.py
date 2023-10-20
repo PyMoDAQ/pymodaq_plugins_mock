@@ -19,14 +19,14 @@ class DAQ_Move_MockTau(DAQ_Move_base):
     _controller_units = ActuatorWrapperWithTau.units
     config = config
     is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
-    axes_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
+    _axis_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
     _epsilon = 0.01
     data_actuator_type = DataActuatorType['DataActuator']
     params = \
         [
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': config('actuators', 'mocktau', 'tau'),
              'tip': 'Characteristic evolution time'},
-             ] + comon_parameters_fun(is_multiaxes, axes_names, epsilon=_epsilon)
+             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
     def ini_attributes(self):
         self.controller: ActuatorWrapperWithTau = None

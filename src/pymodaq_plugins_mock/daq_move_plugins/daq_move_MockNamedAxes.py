@@ -22,17 +22,16 @@ class DAQ_Move_MockNamedAxes(DAQ_Move_base):
     """
     _controller_units = 'whatever'
     is_multiaxes = True
-    stage_names = dict(zip(['Xaxis', 'Yaxis', 'Zaxis'], MultiAxis.axes_indexes))
+    _axis_names = dict(zip(['Xaxis', 'Yaxis', 'Zaxis'], MultiAxis.axes_indexes))
     _epsilon = 0.01
 
-    params = comon_parameters_fun(is_multiaxes, stage_names)
+    params = comon_parameters_fun(is_multiaxes, axis_names=_axis_names)
 
     def ini_attributes(self):
         self.controller: MultiAxis = None
 
     def get_actuator_value(self):
-        axis = self.settings['multiaxes', 'axis']
-        pos = self.controller.get_value(axis)
+        pos = self.controller.get_value(self.axis_value)
         pos = self.get_position_with_scaling(pos)
         return pos
 
@@ -74,16 +73,14 @@ class DAQ_Move_MockNamedAxes(DAQ_Move_base):
         position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
         self.target_value = position
         position = self.set_position_with_scaling(position)
-        axis = self.settings['multiaxes', 'axis']
-        pos = self.controller.set_value(axis, position)
+        pos = self.controller.set_value(self.axis_value, position)
 
     def move_rel(self, position):
         position = self.check_bound(self.current_position + position) - self.current_position
         self.target_value = position + self.current_position
         position = self.set_position_with_scaling(self.target_value)
 
-        axis = self.settings['multiaxes', 'axis']
-        pos = self.controller.set_value(axis, position)
+        pos = self.controller.set_value(self.axis_value, position)
 
     def move_home(self):
         """
