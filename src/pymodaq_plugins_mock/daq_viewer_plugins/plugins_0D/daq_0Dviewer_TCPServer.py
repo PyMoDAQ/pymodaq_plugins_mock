@@ -30,10 +30,3 @@ class DAQ_0DViewer_TCPServer(DAQ_Viewer_TCP_server):
         self.x_axis = None
         self.y_axis = None
         self.data = None
-
-    def data_ready(self, data: list):
-        """
-            Send the grabed data signal.
-        """
-
-        self.dte_signal.emit(DataToExport('TCP0D', data=[DataFromPlugins(name='TCPServer', data=data, dim='Data0D')]))

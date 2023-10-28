@@ -32,10 +32,3 @@ class DAQ_2DViewer_TCPServer(DAQ_Viewer_TCP_server):
         self.y_axis = None
         self.data = None
 
-    @Slot(list)
-    def data_ready(self, data):
-        """
-            Send the grabed data signal.
-        """
-        self.dte_signal.emit(DataToExport('TCP2D',
-                                          data=[DataFromPlugins(name='TCP Server 2D', data=data, type='Data2D')]))
