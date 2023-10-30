@@ -1,11 +1,4 @@
-from qtpy.QtCore import QThread
-from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main
-import numpy as np
-from easydict import EasyDict as edict
-from collections import OrderedDict
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.daq_utils import gauss1D
-from pymodaq.control_modules.viewer_utility_classes import comon_parameters
+from pymodaq.control_modules.viewer_utility_classes import main
 from pymodaq_plugins_mock.daq_viewer_plugins.plugins_1D.daq_1Dviewer_Mock_spectro import DAQ_1DViewer_Mock_spectro
 
 

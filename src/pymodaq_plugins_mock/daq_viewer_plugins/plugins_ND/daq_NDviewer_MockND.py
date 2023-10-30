@@ -1,16 +1,30 @@
+"""
+This plugin instrument class is showing how to deal with acquisition of events having information of various kind:
+
+* timestamp
+* position (x, y)
+* ...
+
+Each event is a detection of let's say a photon time of arrival and it's position on a 2D detector
+(this can be generalized or simplified)
+
+The idea is to show how to treat this to:
+* plot interesting physical information during the events collection
+* save all the events (and not plot them)
+"""
+from collections import OrderedDict
+
+import numpy as np
 from qtpy.QtCore import QThread
 from qtpy import QtWidgets
-import numpy as np
-import pymodaq.utils.daq_utils as utils
-from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main
-from easydict import EasyDict as edict
-from collections import OrderedDict
+
+from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
 from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from pymodaq.utils.data import Axis, DataFromPlugins, NavAxis, DataToExport
-from pymodaq.control_modules.viewer_utility_classes import comon_parameters
+from pymodaq.utils.data import Axis, DataFromPlugins, DataToExport
+from pymodaq.utils import math_utils as mutils
 
 
-class DAQ_NDViewer_MockEvents(DAQ_Viewer_base):
+class DAQ_NDViewer_MockND(DAQ_Viewer_base):
     """
         =============== ==================
         **Attributes**   **Type**
@@ -49,9 +63,8 @@ class DAQ_NDViewer_MockEvents(DAQ_Viewer_base):
         {'title': 'Cam. Prop.:', 'name': 'cam_settings', 'type': 'group', 'children': []},
     ]
 
-    def __init__(self, parent=None,
-                 params_state=None):  # init_params is a list of tuple where each tuple contains info on a 1D channel (Ntps,amplitude, width, position and noise)
-        super().__init__(parent, params_state)
+    def ini_attributes(self):
+        self.controller = None
         self.x_axis = None
         self.y_axis = None
         self.live = False
@@ -107,7 +120,7 @@ class DAQ_NDViewer_MockEvents(DAQ_Viewer_base):
                                   endpoint=False)
 
         data_mock = self.settings.child('spatial_settings', 'amp').value() * (
-            utils.gauss2D(self.x_axis, self.settings.child('spatial_settings', 'x0').value(),
+            mutils.gauss2D(self.x_axis, self.settings.child('spatial_settings', 'x0').value(),
                           self.settings.child('spatial_settings', 'dx').value(),
                           self.y_axis, self.settings.child('spatial_settings', 'y0').value(),
                           self.settings.child('spatial_settings', 'dy').value(),
@@ -123,7 +136,7 @@ class DAQ_NDViewer_MockEvents(DAQ_Viewer_base):
         for indy in range(data_mock.shape[0]):
             for indx in range(data_mock.shape[1]):
                 image[indy, indx, :] = data_mock[indy, indx] * \
-                    utils.gauss1D(self.time_axis, self.settings.child('temp_settings', 't0').value(),
+                    mutils.gauss1D(self.time_axis, self.settings.child('temp_settings', 't0').value(),
                                   self.settings.child('temp_settings', 'dt').value(),
                                   self.settings.child('temp_settings', 'n').value()) * \
                     np.sin(np.roll(self.time_axis, ind) / 4) ** 2
@@ -147,21 +160,10 @@ class DAQ_NDViewer_MockEvents(DAQ_Viewer_base):
             --------
             daq_utils.ThreadCommand, get_xaxis, get_yaxis
         """
-        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        if self.settings.child(('controller_status')).value() == "Slave":
-            if controller is None:
-                raise Exception('no controller has been defined externally while this detector is a slave one')
-            else:
-                self.controller = controller
-        else:
-            self.controller = "Mock controller"
+
+        self.controller = self.ini_detector_init(controller, 'Mock Controller')
 
         self.set_Mock_data()
-        # # initialize viewers with the future type of data
-        # self.dte_signal_temp.emit(DataToExport('MockND',
-        #                                        data=[DataFromPlugins(name='MockND', data=[np.zeros((128, 30, 10))],
-        #                                                              dim='DataND',
-        #                                                              nav_indexes=(0, 1))]))
 
         initialized = True
         return 'ok', initialized
