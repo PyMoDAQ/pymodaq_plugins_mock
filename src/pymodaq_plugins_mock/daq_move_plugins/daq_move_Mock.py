@@ -1,12 +1,7 @@
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, main  # base class
-from pymodaq.control_modules.move_utility_classes import comon_parameters_fun, DataActuatorType  # common set of parameters for all actuators
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo  # object used to send info back to the main thread
-from easydict import EasyDict as edict  # type of dict
-
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main, DataActuatorType
+from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTau
+from pymodaq.utils.data import DataActuator
 from pymodaq_plugins_mock import config
-
-if 'Mock' not in config('displayed', 'actuators'):
-    raise ValueError('Plugin configured to be not displayed')
 
 
 class DAQ_Move_Mock(DAQ_Move_base):
@@ -18,153 +13,107 @@ class DAQ_Move_Mock(DAQ_Move_base):
         *params*          dictionnary
         =============== ==============
     """
-    _controller_units = 'whatever'
-    is_multiaxes = False
-    stage_names = []
+    _controller_units = ActuatorWrapperWithTau.units
+    config = config
+    is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
+    _axis_names = ['X', 'Y', 'Z']  # "list of strings of the multiaxes
+    _epsilon = 0.01
     data_actuator_type = DataActuatorType['DataActuator']
+    params = \
+        [
+            {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': config('actuators', 'mocktau', 'tau'),
+             'tip': 'Characteristic evolution time'},
+             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
-    params = comon_parameters_fun(is_multiaxes, stage_names)
+    def ini_attributes(self):
+        self.controller: ActuatorWrapperWithTau = None
 
-    def __init__(self, parent=None, params_state=None):
-        """
-            Initialize the the class
-
-            ============== ================================================ ==========================================================================================
-            **Parameters**  **Type**                                         **Description**
-
-            *parent*        Caller object of this plugin                    see DAQ_Move_main.DAQ_Move_stage
-            *params_state*  list of dicts                                   saved state of the plugins parameters list
-            ============== ================================================ ==========================================================================================
-
-        """
-
-        super().__init__(parent, params_state)
-
-    def check_position(self):
-        """
-            Get the current position from the hardware with scaling conversion.
-
-            Returns
-            -------
-            float
-                The position obtained after scaling conversion.
-
-            See Also
-            --------
-            DAQ_Move_base.get_position_with_scaling, daq_utils.ThreadCommand
-        """
-        pos = self.current_position
-        # print('Pos from controller is {}'.format(pos))
-        # pos=self.get_position_with_scaling(pos)
-        # self.current_position=pos
-        self.emit_value(pos)
+    def get_actuator_value(self):
+        # TODO for your custom plugin
+        pos = DataActuator(data=self.controller.get_value())
+        pos = self.get_position_with_scaling(pos)
         return pos
 
     def close(self):
         """
-          not implemented.
+        Terminate the communication protocol
         """
-        pass
+        self.controller.close_communication()
 
     def commit_settings(self, param):
-        """
-            | Activate any parameter changes on the PI_GCS2 hardware.
-            |
-            | Called after a param_tree_changed signal from DAQ_Move_main.
-
-        """
-
-        pass
+        if param.name() == 'tau':
+            self.controller.tau = param.value() / 1000  # controller need a tau in seconds while the param tau is in ms
+        elif param.name() == 'epsilon':
+            self.controller.epsilon = param.value()
 
     def ini_stage(self, controller=None):
+        """Actuator communication initialization
+
+        Parameters
+        ----------
+        controller: (object)
+            custom object of a PyMoDAQ plugin (Slave case). None if only one actuator by controller (Master case)
+
+        Returns
+        -------
+        info: str
+        initialized: bool
+            False if initialization failed otherwise True
         """
-            Initialize the controller and stages (axes) with given parameters.
-
-            ============== ================================================ ==========================================================================================
-            **Parameters**  **Type**                                         **Description**
-
-            *controller*    instance of the specific controller object       If defined this hardware will use it and will not initialize its own controller instance
-            ============== ================================================ ==========================================================================================
-
-            Returns
-            -------
-            Easydict
-                dictionnary containing keys:
-                 * *info* : string displaying various info
-                 * *controller*: instance of the controller object in order to control other axes without the need to init the same controller twice
-                 * *stage*: instance of the stage (axis or whatever) object
-                 * *initialized*: boolean indicating if initialization has been done corretly
-
-            See Also
-            --------
-             daq_utils.ThreadCommand
-        """
-        try:
-            # initialize the stage and its controller status
-            # controller is an object that may be passed to other instances of DAQ_Move_Mock in case
-            # of one controller controlling multiaxes
-
-            self.status.update(edict(info="", controller=None, initialized=False))
-
-            # check whether this stage is controlled by a multiaxe controller (to be defined for each plugin)
-
-            # if mutliaxes then init the controller here if Master state otherwise use external controller
-            if self.settings.child('multiaxes', 'ismultiaxes').value() and self.settings.child('multiaxes',
-                                                                                               'multi_status').value() == "Slave":
-                if controller is None:
-                    raise Exception('no controller has been defined externally while this axe is a slave one')
-                else:
-                    self.controller = controller
-            else:  # Master stage
-                self.controller = "master_controller"  # any object that will control the stages
-
-            info = "Mock stage"
-            self.status.info = info
-            self.status.controller = self.controller
-            self.status.initialized = True
-            return self.status
-
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-            self.status.info = getLineInfo() + str(e)
-            self.status.initialized = False
-            return self.status
+        self.controller: ActuatorWrapperWithTau = self.ini_stage_init(controller, ActuatorWrapperWithTau())
+        self.controller.tau = self.settings['tau'] / 1000
+        info = "Controller initialized"
+        initialized = True
+        return info, initialized
 
     def move_abs(self, position):
-        """
-        """
-        position = self.check_bound(position)
-        self.target_position = position
+        """ Move the actuator to the absolute target defined by position
 
-        self.current_position = position  # +np.random.rand()-0.5
+        Parameters
+        ----------
+        position: (float) value of the absolute target positioning
+        """
+
+        position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
+        self.target_value = position
+        position = self.set_position_with_scaling(position)  # apply scaling if the user specified one
+
+        ## TODO for your custom plugin
+        self.controller.move_at(position.value())
 
     def move_rel(self, position):
+        """ Move the actuator to the relative target actuator value defined by position
+
+        Parameters
+        ----------
+        position: (flaot) value of the relative target positioning
         """
+        position = self.check_bound(self.current_value+position)-self.current_value
+        self.target_value = position + self.current_value
+        self.set_position_relative_with_scaling(position)
+        self.controller.move_at(self.target_value.value())
 
-        """
-        position = self.check_bound(self.current_position + position) - self.current_position
-        self.target_position = position + self.current_position
-
-        self.current_position = self.target_position  # +np.random.rand()-0.5
-
-    def move_Home(self):
+    def move_home(self):
         """
           Send the update status thread command.
             See Also
             --------
             daq_utils.ThreadCommand
         """
-        self.emit_status(ThreadCommand('Update_Status', ['Move Home not implemented']))
+
+        ## TODO for your custom plugin
+        self.controller.move_at(0)
 
     def stop_motion(self):
-        """
-          Call the specific move_done function (depending on the hardware).
+      """
+        Call the specific move_done function (depending on the hardware).
 
-          See Also
-          --------
-          move_done
-        """
-        self.move_done()
+        See Also
+        --------
+        move_done
+      """
+      self.controller.stop()
+      self.move_done()
 
 
 if __name__ == '__main__':

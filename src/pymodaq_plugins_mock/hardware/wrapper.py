@@ -262,7 +262,6 @@ class ActuatorWrapperWithTauMultiAxes(ActuatorWrapper):
         return self._current_values[self._get_index_from_name(axis)]
 
 
-
 if __name__ == '__main__':
     actuator = ActuatorWrapperWithTau()
     init_pos = actuator.get_value()
