@@ -17,5 +17,5 @@ instruments = true  # true if plugin contains instrument classes (else false, no
 extensions = false  # true if plugins contains dashboard extensions
 pid_models = false  # true if plugins contains pid models
 h5exporters = false  # true if plugin contains custom h5 file exporters
-scans = false  # true if plugin contains custom scan layout (daq_scan extensions)
+scanners = false  # true if plugin contains custom scan layout (daq_scan extensions)
 
