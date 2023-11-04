@@ -10,5 +10,12 @@ author-email = 'sebastien.weber@cemes.fr'
 [plugin-install]
 #packages required for your plugin:
 
-packages-required = ["pymodaq>=4.0.0", "pillow"] #list of required packages within quotes, eg: ["pyvisa", "numpy==1.19.3"] ...
+packages-required = ["pymodaq>=4.0.0",] #list of required packages within quotes, eg: ["pyvisa", "numpy==1.19.3"] ...
+
+[features]  # defines the plugin features contained into this plugin
+instruments = true  # true if plugin contains instrument classes (else false, notice the lowercase for toml files)
+extensions = false  # true if plugins contains dashboard extensions
+pid_models = false  # true if plugins contains pid models
+h5exporters = false  # true if plugin contains custom h5 file exporters
+scans = false  # true if plugin contains custom scan layout (daq_scan extensions)
 

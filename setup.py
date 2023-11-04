@@ -36,14 +36,27 @@ setupOpts = dict(
     ], )
 
 
+entrypoints = {}
+if 'features' in config:
+    if config['features'].get('instruments', False):
+        entrypoints['pymodaq.instruments'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+    if config['features'].get('extensions', False):
+        entrypoints['pymodaq.extensions'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+    if config['features'].get('pid_models', False):
+        entrypoints['pymodaq.pid_models'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+    if config['features'].get('h5exporters', False):
+        entrypoints['pymodaq.h5exporters'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+    if config['features'].get('scans', False):
+        entrypoints['pymodaq.scans'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+else:
+    entrypoints['pymodaq.instruments'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+
 setup(
     version=version,
     packages=find_packages(where='./src'),
     package_dir={'': 'src'},
     include_package_data=True,
-    entry_points={'pymodaq.plugins': f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}',
-                  'pymodaq.pid_models': f"{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}",
-                  },
+    entry_points=entrypoints,
     install_requires=['toml', ]+config['plugin-install']['packages-required'],
     **setupOpts
 )
