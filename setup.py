@@ -46,8 +46,8 @@ if 'features' in config:
         entrypoints['pymodaq.pid_models'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
     if config['features'].get('h5exporters', False):
         entrypoints['pymodaq.h5exporters'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
-    if config['features'].get('scans', False):
-        entrypoints['pymodaq.scans'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
+    if config['features'].get('scanners', False):
+        entrypoints['pymodaq.scanners'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
 else:
     entrypoints['pymodaq.instruments'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
 
