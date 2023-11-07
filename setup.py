@@ -51,6 +51,8 @@ if 'features' in config:
 else:
     entrypoints['pymodaq.instruments'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
 
+entrypoints['pymodaq.plugins'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'  # for backcompatibility
+
 setup(
     version=version,
     packages=find_packages(where='./src'),
