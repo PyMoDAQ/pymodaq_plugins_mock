@@ -51,6 +51,8 @@ if 'features' in config:
 else:
     entrypoints['pymodaq.instruments'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'
 
+entrypoints['pymodaq.plugins'] = f'{SHORT_PLUGIN_NAME} = {PLUGIN_NAME}'  # generic plugin, usefull for the plugin manager
+
 setup(
     version=version,
     packages=find_packages(where='./src'),
