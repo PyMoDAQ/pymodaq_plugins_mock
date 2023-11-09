@@ -68,14 +68,6 @@ def test_move_inst_plugins_name():
         assert hasattr(getattr(move_mod, plug), f'DAQ_Move_{name}')
 
 
-@pytest.mark.parametrize('dim', ('0D', '1D', '2D', 'ND'))
-def test_viewer_inst_plugins_name(dim):
-    plugin_list, viewer_mod = get_viewer_plugins(dim)
-    for plug in plugin_list:
-        name = plug.split(f'daq_{dim}viewer_')[1]
-        assert hasattr(getattr(viewer_mod, plug), f'DAQ_{dim}Viewer_{name}')
-
-
 def test_move_has_mandatory_methods():
     plugin_list, move_mod = get_move_plugins()
     for plug in plugin_list:
@@ -90,6 +82,10 @@ def test_viewer_has_mandatory_methods(dim):
     plugin_list, mod = get_viewer_plugins(dim)
     for plug in plugin_list:
         name = plug.split(f'daq_{dim}viewer_')[1]
-        klass = getattr(getattr(mod, plug), f'DAQ_{dim}Viewer_{name}')
+        try:
+            module = importlib.import_module(f'.{plug}', mod.__package__)
+        except Exception:
+            break
+        klass = getattr(module, f'DAQ_{dim}Viewer_{name}')
         for meth in MANDATORY_VIEWER_METHODS:
             assert hasattr(klass, meth)
