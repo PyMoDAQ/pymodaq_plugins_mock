@@ -59,7 +59,7 @@ class ActuatorWrapperWithTau(ActuatorWrapper):
     def __init__(self):
         super().__init__()
         self._epsilon = 1e-2
-        self._tau = 3  # s
+        self._tau = .5  # s
         self._alpha = None
         self._init_value = 0.
         self._current_value = 0.
@@ -145,10 +145,10 @@ class ActuatorWrapperWithTauMultiAxes(ActuatorWrapper):
     axes = ['X', 'Y', 'Theta']
     _units = ['mm', 'mm', '°']
     _epsilon = 0.01
+    _tau = 0.5  # in s
 
     def __init__(self):
         super().__init__()
-        self._tau = 0.5  # s
         self._alpha = None
         self._as_group = False
         self._grouped_axes = []
