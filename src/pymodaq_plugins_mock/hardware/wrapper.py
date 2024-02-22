@@ -1,5 +1,5 @@
 """
-Demo Wrapper to illustrate the plugin developpement. This Mock wrapper will emulate communication with an instrument
+Demo Wrapper to illustrate the plugin development. This Mock wrapper will emulate communication with an instrument
 """
 
 from time import perf_counter, sleep

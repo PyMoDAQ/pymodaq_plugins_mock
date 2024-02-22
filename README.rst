@@ -33,31 +33,36 @@ Below is the list of instruments included in this plugin
 Actuators
 +++++++++
 
-* **Mock** actuator to test PyMoDAQ functionnalities
-* **MockTau** mock actuator with caracteristic time to reach set value
+* **Mock** actuator to test PyMoDAQ functionalities
+* **MockTau** mock actuator with characteristic time to reach set value
 * **TCP server** to communicate with other DAQ_Move or third party applications
+* **LECO director** to communicate with other DAQ_Move or third party applications
 
 Viewer0D
 ++++++++
 
-* **Mock 0D** detector to test PyMoDAQ functionnalities
+* **Mock 0D** detector to test PyMoDAQ functionalities
 * **Mock Adaptive** detector to test PyMoDAQ adaptive scan mode
 * **TCP server** to communicate with other DAQ_Viewer or third party applications
+* **LECO director** to communicate with other DAQ_Viewer or third party applications
 
 Viewer1D
 ++++++++
 
-* **Mock 1D** detector to test PyMoDAQ functionnalities
+* **Mock 1D** detector to test PyMoDAQ functionalities
 * **Mock Spectro** detector to test pymodaq_spectro functionalities
 * **TCP server** to communicate with other DAQ_Viewer or third party applications
+* **LECO director** to communicate with other DAQ_Viewer or third party applications
 
 Viewer2D
 ++++++++
 
-* **Mock 2D** detector to test PyMoDAQ functionnalities
+* **Mock 2D** detector to test PyMoDAQ functionalities
 * **TCP server** to communicate with other DAQ_Viewer or third party applications
+* **LECO director** to communicate with other DAQ_Viewer or third party applications
 
 ViewerND
 ++++++++
 
-* **Mock ND** detector to test PyMoDAQ functionnalities
+* **Mock ND** detector to test PyMoDAQ functionalities
+* **LECO director** to communicate with other DAQ_Viewer or third party applications
