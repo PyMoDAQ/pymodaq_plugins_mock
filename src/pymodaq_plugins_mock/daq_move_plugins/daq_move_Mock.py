@@ -6,11 +6,11 @@ from pymodaq_plugins_mock import config
 
 class DAQ_Move_Mock(DAQ_Move_base):
     """
-        Wrapper object to access the Mock fonctionnalities, similar wrapper for all controllers.
+        Wrapper object to access the Mock functionalities, similar wrapper for all controllers.
 
         =============== ==============
         **Attributes**    **Type**
-        *params*          dictionnary
+        *params*          dictionary
         =============== ==============
     """
     _controller_units = ActuatorWrapperWithTauMultiAxes.units
@@ -90,7 +90,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
 
         Parameters
         ----------
-        position: (flaot) value of the relative target positioning
+        position: (float) value of the relative target positioning
         """
         position = self.check_bound(self.current_value+position)-self.current_value
         self.target_value = position + self.current_value
