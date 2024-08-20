@@ -1,11 +1,11 @@
 from qtpy.QtCore import QThread
 from qtpy import QtWidgets
 import numpy as np
-import pymodaq.utils.daq_utils as utils
+import pymodaq_utils.utils as utils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main
 from easydict import EasyDict as edict
 from collections import OrderedDict
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq_utils.utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import Axis, DataFromPlugins, NavAxis, DataToExport
 from pymodaq.control_modules.viewer_utility_classes import comon_parameters
 

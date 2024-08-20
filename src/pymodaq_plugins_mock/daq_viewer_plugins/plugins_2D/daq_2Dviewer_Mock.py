@@ -1,11 +1,11 @@
 from qtpy.QtCore import QThread, Slot, QRectF
 from qtpy import QtWidgets
 import numpy as np
-import pymodaq.utils.math_utils as mutils
+import pymodaq_utils.math_utils as mutils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq_utils.utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
-from pymodaq.utils.array_manipulation import crop_array_to_axis
+from pymodaq_utils.array_manipulation import crop_array_to_axis
 
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):

@@ -1,6 +1,6 @@
 import importlib
 from pathlib import Path
-from pymodaq.utils.logger import set_logger
+from ...utils import set_logger
 logger = set_logger('viewer0D_plugins', add_to_console=False)
 
 for path in Path(__file__).parent.iterdir():

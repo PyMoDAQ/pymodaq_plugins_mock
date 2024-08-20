@@ -1,11 +1,11 @@
 from qtpy import QtWidgets, QtCore
 
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq_utils.utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, DataToExport
 import numpy as np
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, comon_parameters, main
 
-from pymodaq.utils.math_utils import gauss1D
+from pymodaq_utils.math_utils import gauss1D
 
 
 class DAQ_0DViewer_Mock(DAQ_Viewer_base):
