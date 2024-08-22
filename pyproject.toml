@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.9.0", "hatch-vcs", "toml", "pymodaq_utils"]
+build-backend = "hatchling.build"
+
+[project]
+dynamic = ["name", "version", "authors", "dependencies", "description", "urls", "entry-points"]
+readme = "README.rst"
+license = { file="LICENSE" }
+requires-python = ">=3.8"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Other Environment",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: User Interfaces",
+]
+
+[tool.hatch.metadata.hooks.custom]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
