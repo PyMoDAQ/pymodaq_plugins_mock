@@ -4,5 +4,5 @@ from .utils import Config
 config = Config()
 
 
-with open(str(Path(__file__).parent.joinpath('resources/VERSION')), 'r') as fvers:
-    __version__ = fvers.read().strip()
+from pymodaq_utils.utils import get_version
+__version__ = get_version(__package__)
