@@ -21,11 +21,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine toml
-    - name: Build and publish
+        pip install hatch hatchling toml
+    - name: Build
+      run: hatch build
+    - name: publish
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        HATCH_INDEX_USER: ${{ secrets.PYPI_USERNAME }}
+        HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+        hatch publish
