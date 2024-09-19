@@ -123,16 +123,9 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
             --------
             set_Mock_data, daq_utils.ThreadCommand
         """
-        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        try:
+        self.ini_detector_init(controller, "Mock controller")
 
-            if self.settings['controller_status'] == "Slave":
-                if controller is None:
-                    raise Exception('no controller has been defined externally while this detector is a slave one')
-                else:
-                    self.controller = controller
-            else:
-                self.controller = "Mock controller"
+        if self.is_master:
 
             self.settings.child('x_axis', 'Npts').setValue(512)
             self.settings.child('x_axis', 'x0').setValue(256)
@@ -156,16 +149,9 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
                                                                          axes=[self.x_axis],
                                                                          labels=['Mock1', 'Mock2']),]))
 
-            self.status.initialized = True
-            self.status.controller = self.controller
-            self.status.x_axis = self.x_axis
-            return self.status
-
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-            self.status.info = getLineInfo() + str(e)
-            self.status.initialized = False
-            return self.status
+            initialized = True
+            info = ''
+            return info, initialized
 
     def close(self):
         """
