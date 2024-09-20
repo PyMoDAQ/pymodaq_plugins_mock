@@ -21,7 +21,8 @@ class DAQ_Move_Mock(DAQ_Move_base):
     data_actuator_type = DataActuatorType['DataActuator']
     params = \
         [
-            {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': ActuatorWrapperWithTauMultiAxes._tau * 1000,
+            {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int',
+             'value': ActuatorWrapperWithTauMultiAxes._tau * 1000,
              'tip': 'Characteristic evolution time'},
              ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
@@ -30,7 +31,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
 
     def get_actuator_value(self):
         pos = DataActuator(data=self.controller.get_value(self.axis_name),
-                           units = self.controller_units)
+                           units=self.controller_units)
         pos = self.get_position_with_scaling(pos)
         return pos
 
@@ -63,8 +64,8 @@ class DAQ_Move_Mock(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        self.controller: ActuatorWrapperWithTauMultiAxes = self.ini_stage_init(controller,
-                                                                               ActuatorWrapperWithTauMultiAxes())
+        self.controller: ActuatorWrapperWithTauMultiAxes = (
+            self.ini_stage_init(controller, ActuatorWrapperWithTauMultiAxes()))
         self.controller.tau = self.settings['tau'] / 1000
         self.settings.child('units').setValue(self.controller.get_units(self.axis_name))
         info = "Controller initialized"
@@ -82,8 +83,6 @@ class DAQ_Move_Mock(DAQ_Move_base):
         position = self.check_bound(position)  #if user checked bounds, the defined bounds are applied here
         self.target_value = position
         position = self.set_position_with_scaling(position)  # apply scaling if the user specified one
-
-        ## TODO for your custom plugin
         self.controller.move_at(position.value(), self.axis_name)
 
     def move_rel(self, position):
