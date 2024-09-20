@@ -29,7 +29,8 @@ class DAQ_Move_Mock(DAQ_Move_base):
         self.controller: ActuatorWrapperWithTauMultiAxes = None
 
     def get_actuator_value(self):
-        pos = DataActuator(data=self.controller.get_value(self.axis_name))
+        pos = DataActuator(data=self.controller.get_value(self.axis_name),
+                           units = self.controller_units)
         pos = self.get_position_with_scaling(pos)
         return pos
 
