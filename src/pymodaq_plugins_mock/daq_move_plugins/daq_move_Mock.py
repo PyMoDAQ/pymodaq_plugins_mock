@@ -1,4 +1,7 @@
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main, DataActuatorType
+from qtpy import QtWidgets
+
+from pymodaq.control_modules.move_utility_classes import (DAQ_Move_base, comon_parameters_fun,
+                                                          main, DataActuatorType, ThreadCommand)
 from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTauMultiAxes
 from pymodaq.utils.data import DataActuator
 from pymodaq_plugins_mock import config
@@ -18,7 +21,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
     is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
     _axis_names = ActuatorWrapperWithTauMultiAxes.axes  # "list of strings of the multiaxes
     _epsilon = 0.01
-    data_actuator_type = DataActuatorType['DataActuator']
+    data_actuator_type = DataActuatorType.DataActuator
     params = \
         [
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': ActuatorWrapperWithTauMultiAxes._tau * 1000,
@@ -46,7 +49,9 @@ class DAQ_Move_Mock(DAQ_Move_base):
         elif param.name() == 'epsilon':
             self.controller.epsilon = param.value()
         elif param.name() == 'axis':
-            self.settings.child('units').setValue(self.controller.get_units(self.axis_name))
+            self.controller_units = self.controller.get_units(self.axis_name)
+            self.emit_status(ThreadCommand('units', self.controller_units))
+            QtWidgets.QApplication.processEvents()
             self.emit_value(self.get_actuator_value())
 
     def ini_stage(self, controller=None):
