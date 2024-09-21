@@ -8,9 +8,8 @@ author = 'Sébastien Weber'
 author-email = 'sebastien.weber@cemes.fr'
 
 [plugin-install]
-#packages required for your plugin:
-
 packages-required = ['pymodaq>=5.0.0'] #list of required packages within quotes, eg: ["pyvisa", "numpy==1.19.3"] ...
+
 
 [features]  # defines the plugin features contained into this plugin
 instruments = true  # true if plugin contains instrument classes (else false, notice the lowercase for toml files)

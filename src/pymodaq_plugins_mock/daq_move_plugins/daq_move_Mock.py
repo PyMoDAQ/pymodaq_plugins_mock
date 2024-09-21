@@ -18,15 +18,16 @@ class DAQ_Move_Mock(DAQ_Move_base):
     """
     _controller_units = ActuatorWrapperWithTauMultiAxes.units
     config = config
-    is_multiaxes = True  # set to True if this plugin is controlled for a multiaxis controller (with a unique communication link)
-    _axis_names = ActuatorWrapperWithTauMultiAxes.axes  # "list of strings of the multiaxes
-    _epsilon = 0.01
+    is_multiaxes = True
+    _axis_names = ActuatorWrapperWithTauMultiAxes.axes
+    _epsilon = ActuatorWrapperWithTauMultiAxes.epsilons
+
     data_actuator_type = DataActuatorType.DataActuator
     params = \
         [
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int', 'value': ActuatorWrapperWithTauMultiAxes._tau * 1000,
              'tip': 'Characteristic evolution time'},
-             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
+             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon[0])
 
     def ini_attributes(self):
         self.controller: ActuatorWrapperWithTauMultiAxes = None
@@ -48,11 +49,6 @@ class DAQ_Move_Mock(DAQ_Move_base):
             self.controller.tau = param.value() / 1000  # controller need a tau in seconds while the param tau is in ms
         elif param.name() == 'epsilon':
             self.controller.epsilon = param.value()
-        elif param.name() == 'axis':
-            self.controller_units = self.controller.get_units(self.axis_name)
-            self.emit_status(ThreadCommand('units', self.controller_units))
-            QtWidgets.QApplication.processEvents()
-            self.emit_value(self.get_actuator_value())
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
