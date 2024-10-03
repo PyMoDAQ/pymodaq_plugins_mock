@@ -1,10 +1,10 @@
 from pathlib import Path
-
-from pymodaq_utils.resources.hatch_build_plugins import PluginInfoTomlHook
+from hatchling.metadata.plugin.interface import MetadataHookInterface
+from pymodaq_utils.resources.hatch_build_plugins import update_metadata_from_toml
 
 here = Path(__file__).absolute().parent
 
 
-class PluginInfoTomlHook(PluginInfoTomlHook):
+class PluginInfoTomlHook(MetadataHookInterface):
     def update(self, metadata: dict) -> None:
-        super().update_custom(metadata, here)
+        update_metadata_from_toml(metadata, here)

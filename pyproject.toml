@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.9.0", "hatch-vcs", "toml", "pymodaq_utils"]
+requires = ["hatchling>=1.9.0", "hatch-vcs", "toml", "pymodaq_utils>=0.0.3"]
 build-backend = "hatchling.build"
 
 [project]
@@ -36,3 +36,4 @@ source = "vcs"
 include = [
     "/src",
 ]
+
