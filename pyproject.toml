@@ -1,18 +1,34 @@
-[build-system]
-requires = ["hatchling>=1.9.0", "hatch-vcs", "toml", "pymodaq_utils>=0.0.3"]
-build-backend = "hatchling.build"
+[features]  # defines the plugin features contained into this plugin
+instruments = true  # true if plugin contains instrument classes (else false, notice the lowercase for toml files)
+extensions = false  # true if plugins contains dashboard extensions
+pid_models = false  # true if plugins contains pid models
+h5exporters = false  # true if plugin contains custom h5 file exporters
+scanners = false  # true if plugin contains custom scan layout (daq_scan extensions)
+
+[urls]
+package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_mock'
 
 [project]
-dynamic = ["version", "authors", "dependencies", "description", "urls", "entry-points"]
+name = "pymodaq_plugins_mock"
+description = 'Set of base PyMoDAQ plugins including Mock ones for development'
+dependencies = [
+  "pymodaq>=5.0.0",
+]
+
+authors = [
+  {name = "Sébastien Weber", email = "sebastien.weber@cemes.fr"},
+]
+maintainers = [
+  {name = "Sébastien Weber", email = "sebastien.weber@cemes.fr"},
+]
+
+dynamic = ["version", "urls", "entry-points"]
 readme = "README.rst"
 license = { file="LICENSE" }
 requires-python = ">=3.8"
 
-name = "pymodaq_plugins_mock"
-
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Environment :: Other Environment",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
@@ -26,6 +42,15 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: User Interfaces",
 ]
+
+[build-system]
+requires = [
+    "hatchling>=1.9.0",
+    "hatch-vcs", "toml",
+    "pymodaq_utils>=0.0.5",
+    #"pymodaq_utils @ file:///C:/Users/weber/Labo/ProgrammesPython/PyMoDAQ_Git/pymodaq_utils"
+]
+build-backend = "hatchling.build"
 
 [tool.hatch.metadata.hooks.custom]
 
