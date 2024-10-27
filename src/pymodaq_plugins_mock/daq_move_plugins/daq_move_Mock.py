@@ -28,7 +28,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
             {'title': 'Tau (ms):', 'name': 'tau', 'type': 'int',
              'value': ActuatorWrapperWithTauMultiAxes._tau * 1000,
              'tip': 'Characteristic evolution time'},
-             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon[0])
+             ] + comon_parameters_fun(axis_names=_axis_names)
 
     def ini_attributes(self):
         self.controller: ActuatorWrapperWithTauMultiAxes = None
