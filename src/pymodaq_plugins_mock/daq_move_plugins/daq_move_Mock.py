@@ -4,7 +4,6 @@ from pymodaq.control_modules.move_utility_classes import (DAQ_Move_base, comon_p
                                                           main, DataActuatorType, ThreadCommand)
 from pymodaq_plugins_mock.hardware.wrapper import ActuatorWrapperWithTauMultiAxes
 from pymodaq.utils.data import DataActuator
-from pymodaq_plugins_mock import config
 
 
 class DAQ_Move_Mock(DAQ_Move_base):
@@ -17,7 +16,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
         =============== ==============
     """
     _controller_units = ActuatorWrapperWithTauMultiAxes.units
-    config = config
+
     is_multiaxes = True
     _axis_names = ActuatorWrapperWithTauMultiAxes.axes
     _epsilon = ActuatorWrapperWithTauMultiAxes.epsilons
