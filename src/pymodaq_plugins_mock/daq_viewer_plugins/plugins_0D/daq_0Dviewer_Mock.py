@@ -22,7 +22,6 @@ MOCK_PARAMS = [
 
 class MockScalableGroup(GroupParameter):
     def __init__(self, **opts):
-        opts['type'] = 'group'
         opts['addText'] = 'Add Mock'
         super().__init__(**opts)
 
