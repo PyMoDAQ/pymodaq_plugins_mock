@@ -120,7 +120,10 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         return self.image
 
     def ini_detector(self, controller=None):
-        self.ini_detector_init(controller, "Mock controller")
+        if self.is_master:
+            self.controller = "Mock controller"
+        else:
+            self.controller = controller
 
         self.x_axis = self.get_xaxis()
         self.y_axis = self.get_yaxis()

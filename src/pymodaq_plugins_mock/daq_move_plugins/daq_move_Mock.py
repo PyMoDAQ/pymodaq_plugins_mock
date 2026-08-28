@@ -63,8 +63,11 @@ class DAQ_Move_Mock(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        self.controller: ActuatorWrapperWithTauMultiAxes = self.ini_stage_init(controller,
-                                                                               ActuatorWrapperWithTauMultiAxes())
+        if self.is_master:
+            self.controller = ActuatorWrapperWithTauMultiAxes()
+        else:
+            self.controller = controller
+            
         self.controller.tau = self.settings['tau'] / 1000
         self.settings.child('units').setValue(self.controller.get_units(self.axis_name))
         info = "Controller initialized"

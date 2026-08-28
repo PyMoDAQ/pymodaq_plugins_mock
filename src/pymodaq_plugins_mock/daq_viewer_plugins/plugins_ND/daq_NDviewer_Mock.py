@@ -147,14 +147,10 @@ class DAQ_NDViewer_Mock(DAQ_Viewer_base):
             --------
             daq_utils.ThreadCommand, get_xaxis, get_yaxis
         """
-        self.status.update(edict(initialized=False, info="", x_axis=None, y_axis=None, controller=None))
-        if self.settings.child(('controller_status')).value() == "Slave":
-            if controller is None:
-                raise Exception('no controller has been defined externally while this detector is a slave one')
-            else:
-                self.controller = controller
-        else:
+        if self.is_master:
             self.controller = "Mock controller"
+        else:
+            self.controller = controller
 
         self.set_Mock_data()
         # # initialize viewers with the future type of data

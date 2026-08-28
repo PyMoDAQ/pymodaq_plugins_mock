@@ -129,9 +129,11 @@ class DAQ_0DViewer_Mock(DAQ_Viewer_base):
             False if initialization failed otherwise True
         """
         self.emit_status(ThreadCommand('show_splash', 'Starting initialization'))
-        QtCore.QThread.msleep(500)
-        self.ini_detector_init(old_controller=controller,
-                               new_controller='Mock controller')
+        QtCore.QThread.msleep(100)
+        if self.is_master:
+            self.controller = 'Mock controller'
+        else:
+            self.controller = controller
 
         self.emit_status(ThreadCommand('show_splash', 'generating Mock Data'))
         QtCore.QThread.msleep(500)

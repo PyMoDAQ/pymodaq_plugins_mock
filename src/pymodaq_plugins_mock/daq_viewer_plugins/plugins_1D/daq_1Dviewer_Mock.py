@@ -123,9 +123,8 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
             --------
             set_Mock_data, daq_utils.ThreadCommand
         """
-        self.ini_detector_init(controller, "Mock controller")
-
         if self.is_master:
+            self.controller = 'Mock'
 
             self.settings.child('x_axis', 'Npts').setValue(512)
             self.settings.child('x_axis', 'x0').setValue(256)
@@ -142,16 +141,20 @@ class DAQ_1DViewer_Mock(DAQ_Viewer_base):
 
             self.set_x_axis()
             self.set_Mock_data()
-            # initialize viewers with the future type of data
-            self.dte_signal_temp.emit(DataToExport('Mock1D',
-                                                   data=[DataFromPlugins(name='Mock1', data=self.data_mock,
-                                                                         dim='Data1D',
-                                                                         axes=[self.x_axis],
-                                                                         labels=['Mock1', 'Mock2']),]))
 
-            initialized = True
-            info = ''
-            return info, initialized
+        else:
+            self.controller = controller
+
+        # initialize viewers with the future type of data
+        self.dte_signal_temp.emit(DataToExport('Mock1D',
+                                               data=[DataFromPlugins(name='Mock1', data=self.data_mock,
+                                                                     dim='Data1D',
+                                                                     axes=[self.x_axis],
+                                                                     labels=['Mock1', 'Mock2']),]))
+
+        initialized = True
+        info = ''
+        return info, initialized
 
     def close(self):
         """
