@@ -67,7 +67,7 @@ class DAQ_Move_Mock(DAQ_Move_base):
             self.controller = ActuatorWrapperWithTauMultiAxes()
         else:
             self.controller = controller
-            
+
         self.controller.tau = self.settings['tau'] / 1000
         self.settings.child('units').setValue(self.controller.get_units(self.axis_name))
         info = "Controller initialized"
