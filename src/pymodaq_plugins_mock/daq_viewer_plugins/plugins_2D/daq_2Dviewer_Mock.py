@@ -1,11 +1,9 @@
-from qtpy.QtCore import QThread, Slot, QRectF
+from qtpy.QtCore import QThread
 from qtpy import QtWidgets
 import numpy as np
 import pymodaq_utils.math_utils as mutils
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, main, comon_parameters
-from pymodaq_utils.utils import ThreadCommand, getLineInfo
 from pymodaq.utils.data import DataFromPlugins, Axis, DataToExport
-from pymodaq_utils.array_manipulation import crop_array_to_axis
 
 
 class DAQ_2DViewer_Mock(DAQ_Viewer_base):
@@ -15,7 +13,6 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         {'title': 'Nimages colors:', 'name': 'Nimagescolor', 'type': 'int', 'value': 1, 'default': 1, 'min': 0,
          'max': 3},
         {'title': 'Nimages pannels:', 'name': 'Nimagespannel', 'type': 'int', 'value': 2, 'default': 0, 'min': 0},
-        {'title': 'Use ROISelect', 'name': 'use_roi_select', 'type': 'bool', 'value': False},
         {'title': 'Threshold', 'name': 'threshold', 'type': 'int', 'value': 1, 'min': 0},
         {'title': 'rolling', 'name': 'rolling', 'type': 'int', 'value': 1, 'min': 0},
         {'title': 'Nx', 'name': 'Nx', 'type': 'int', 'value': 100, 'default': 100, 'min': 1},
@@ -39,12 +36,6 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
         self.live = False
         self.ind_commit = 0
         self.ind_data = 0
-        self._ROI = dict(position=[10, 10], size=[5, 5])
-
-    @Slot(QRectF)
-    def ROISelect(self, roi_pos_size: QRectF):
-        self._ROI['position'] = int(roi_pos_size.left()), int(roi_pos_size.top())
-        self._ROI['size'] = int(roi_pos_size.width()), int(roi_pos_size.height())
 
     def commit_settings(self
                         , param):
@@ -94,22 +85,7 @@ class DAQ_2DViewer_Mock(DAQ_Viewer_base):
             data_mock[indy, :] = data_mock[indy, :] * np.sin(x_axis / 4) ** 2
         data_mock = np.roll(data_mock, self.ind_data * self.settings.child('rolling').value(), axis=1)
 
-        if self.settings['use_roi_select']:
-            _, _, data = \
-                crop_array_to_axis(x_axis, y_axis, data_mock,
-                                   (self._ROI['position'][0], self._ROI['position'][0] + self._ROI['size'][0],
-                                    self._ROI['position'][1], self._ROI['position'][1] + self._ROI['size'][1]))
-
-
-            try:
-                self.image[self._ROI['position'][1]:self._ROI['position'][1] + self._ROI['size'][1]+1,
-                     self._ROI['position'][0]:self._ROI['position'][0] + self._ROI['size'][0]+1] = data
-
-            except Exception as e:
-                self.emit_status(ThreadCommand('Update_Status', [getLineInfo() + str(e), 'log']))
-        else:
-
-            self.image = data_mock
+        self.image = data_mock
 
         self.ind_data += 1
 
