@@ -1,0 +1,15 @@
+# Everything is defined once in PyMoDAQ/pymodaq_plugins_template (reusable-*.yml). The template is never released, so the ref after @ is its 5.3.x branch.
+name: Compatibility with pymodaq (latest release)
+
+on:
+  pull_request:
+  push:
+    branches: [main, master, '[0-9]*.x']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    uses: PyMoDAQ/pymodaq_plugins_template/.github/workflows/reusable-compatibility.yml@5.3.x

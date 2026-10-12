@@ -1,0 +1,8 @@
+# Everything is defined once in PyMoDAQ/pymodaq_plugins_template (reusable-*.yml). The template is never released, so the ref after @ is its 5.3.x branch.
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    uses: PyMoDAQ/pymodaq_plugins_template/.github/workflows/reusable-tests.yml@5.3.x

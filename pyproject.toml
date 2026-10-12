@@ -12,7 +12,10 @@ package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_mock'
 name = "pymodaq_plugins_mock"
 description = 'Set of base PyMoDAQ plugins including Mock ones for development'
 dependencies = [
-  "pymodaq>=5.2.9",
+    "pymodaq>=5.3.2",
+    "pymodaq_utils>=5.3.1",
+    "pymodaq_gui>=5.3.0",
+    "pymodaq_data>=5.3.0",
 ]
 
 authors = [
