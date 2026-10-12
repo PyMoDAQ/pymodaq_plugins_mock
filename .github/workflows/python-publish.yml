@@ -1,6 +1,4 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
+# Everything is defined once in PyMoDAQ/pymodaq_plugins_template (reusable-*.yml). The template is never released, so the ref after @ is its 5.3.x branch.
 name: Upload Python Package
 
 on:
@@ -8,31 +6,6 @@ on:
     types: [created]
 
 jobs:
-  deploy:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install hatch hatchling toml
-    - name: Get history and tags for SCM versioning to work
-      run: |
-        git branch
-        git fetch --prune --unshallow
-        git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-        hatch version
-    - name: Build
-      run: hatch build
-    - name: publish
-      env:
-        HATCH_INDEX_USER: ${{ secrets.PYPI_USERNAME }}
-        HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        hatch publish
+  publish:
+    uses: PyMoDAQ/pymodaq_plugins_template/.github/workflows/reusable-publish.yml@5.3.x
+    secrets: inherit
