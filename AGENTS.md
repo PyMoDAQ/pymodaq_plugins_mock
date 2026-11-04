@@ -203,4 +203,8 @@ extensions already does the job and only the conversion of the measurements or o
 - [ ] Tests added for new behaviour using a mock controller (no real hardware in CI).
 - [ ] Docstring of each plugin class states: compatible devices, what was tested, PyMoDAQ and OS versions,
       drivers to install.
-- [ ] `README.rst` updated; target PyMoDAQ version stated.
+- [ ] `README.rst` updated; target PyMoDAQ version stated. Keep its section order: a short description, then `Authors`
+      (then `Contributors` if needed), then `Instruments` (`Actuators`, `Viewer0D`...). `pymodaq_plugin_manager` reads the
+      README from `Authors` to `Instruments` (`extract_authors_from_description` in its `validate.py`), so write nothing
+      else before these sections or between them: requirements, installation, hardware notes or differences with
+      another branch come after the `Instruments` list.
